@@ -1,11 +1,14 @@
 import {
   createLogEntryHash,
+  EMPTY_LOG_FILE_HEADER,
   getNewerLogAnalyzerEntryVersions,
   LOG_ANALYZER_ENTRY_PATTERNS,
   LogAnalyzerEntryType,
   matchLogAnalyzerEntryLine,
   MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH,
+  readLogFileHeader,
   replaceIpAddresses,
+  type LogFileHeader,
 } from "@sam-monorepo/domain";
 import {
   findLastIsoDate,
@@ -14,8 +17,11 @@ import {
 import { getSessionStartFromFileName } from "./selectLogFiles.js";
 import type { LogFile, RawMatch, ReadResult } from "./types.js";
 
-/** A match before its hash. The hash needs an asynchronous call. */
-type MatchWithoutHash = Omit<RawMatch, "hash">;
+/**
+ * A match before its hash and the values of the header of its file. The hash
+ * needs an asynchronous call.
+ */
+type MatchWithoutHash = Omit<RawMatch, "hash" | keyof LogFileHeader>;
 
 const LINE_FEED = 0x0a;
 
@@ -34,6 +40,8 @@ interface ReadPosition {
   readonly isoDateBeforeOffset: string | null;
   /** The first line has the number 1 */
   readonly lineNumberAtOffset: number;
+  /** The values of the header lines before `offset` */
+  readonly header: LogFileHeader;
 }
 
 interface FileState extends ReadPosition {
@@ -47,6 +55,7 @@ const FILE_START: ReadPosition = {
   anchor: new Uint8Array(),
   isoDateBeforeOffset: null,
   lineNumberAtOffset: 1,
+  header: EMPTY_LOG_FILE_HEADER,
 };
 
 /**
@@ -244,10 +253,14 @@ const isBackup = (file: File) =>
   getSessionStartFromFileName(file.name) !== null;
 
 /** One batch, because a hash for each await would walk thousands of turns */
-const addHashes = (matches: readonly MatchWithoutHash[]) =>
+const completeMatches = (
+  matches: readonly MatchWithoutHash[],
+  header: LogFileHeader,
+) =>
   Promise.all(
     matches.map(async (match): Promise<RawMatch> => ({
       ...match,
+      ...header,
       hash: await createLogEntryHash(match.type, match.rawLine),
     })),
   );
@@ -281,6 +294,18 @@ const readFile = async (
    */
   const scannedText = isBackup(file) ? text : text.slice(0, lastLineInText.end);
 
+  /**
+   * A read that continues a file starts with the values of the header lines
+   * of the reads before it. Thus each match of a file gets the header of the
+   * same file. The game writes the header before the first entry.
+   */
+  const header = copyValue(
+    readLogFileHeader(scannedText, {
+      firstLineNumber: position.lineNumberAtOffset,
+      header: position.header,
+    }),
+  );
+
   const fileMatches: MatchWithoutHash[] = [];
   const skippedOverlongLineCount = collectMatches(
     scannedText,
@@ -294,7 +319,8 @@ const readFile = async (
     );
   }
 
-  for (const match of await addHashes(fileMatches)) matches.push(match);
+  for (const match of await completeMatches(fileMatches, header))
+    matches.push(match);
 
   const isoDateBeforeLastLine = findPrecedingIsoDate(
     text,
@@ -317,6 +343,7 @@ const readFile = async (
         ? position.isoDateBeforeOffset
         : copyValue(newestIsoDate),
     lineNumberAtOffset: getLineNumber(lastLineInText.start),
+    header,
   };
 };
 
@@ -348,9 +375,10 @@ interface ReadOptions {
  * seconds. It can give a match a second time. A file which leaves the
  * selection keeps its position, thus a wider window reads only what is new.
  *
- * Each match has the line with the IP marker and its hash (see `RawMatch`).
- * The last line of a live file without a line end gives no match until the
- * game writes its line end (see `readFile`).
+ * Each match has the line with the IP marker, its hash, and the game
+ * environment and the build number of the header of its file (see
+ * `RawMatch`). The last line of a live file without a line end gives no
+ * match until the game writes its line end (see `readFile`).
  */
 export const createLogFileReader = () => {
   const states = new Map<string, FileState>();
@@ -368,6 +396,7 @@ export const createLogFileReader = () => {
 
     const matches: RawMatch[] = [];
     let isStopped = false;
+    let failedFileCount = 0;
 
     for (const logFile of changedFiles) {
       if (shouldStop?.()) {
@@ -380,8 +409,8 @@ export const createLogFileReader = () => {
       try {
         states.set(path, await readFile(logFile, states.get(path), matches));
       } catch (error) {
-        /** The state stays, thus the next read tries the same lines again */
         console.error("[Log Analyzer] Error reading %s:", path, error);
+        failedFileCount += 1;
       }
     }
 
@@ -389,6 +418,7 @@ export const createLogFileReader = () => {
       matches,
       newestIsoDate: findNewestIsoDate(states.values()),
       isStopped,
+      failedFileCount,
     };
   };
 };

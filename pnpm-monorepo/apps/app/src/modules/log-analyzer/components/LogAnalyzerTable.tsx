@@ -8,7 +8,7 @@ import { Entry } from "./Entry";
 import { EntryClock } from "./EntryClock";
 import { useLogAnalyzerContext } from "./LogAnalyzerContext";
 
-const COLUMNS = "120px 140px 32px 200px 1fr";
+const COLUMNS = "120px 140px 200px 1fr 72px 140px";
 
 const ROWS_PER_PAGE = 200;
 
@@ -33,15 +33,14 @@ export const LogAnalyzerTable = ({ className }: Props) => {
 
   return (
     <div className={clsx("rounded-primary bg-secondary p-4", className)}>
-      <Table columns={COLUMNS} minWidth={900}>
+      <Table columns={COLUMNS} minWidth={1090}>
         <THead>
           <th>Datum</th>
           <th>Reporter</th>
-          <th>
-            <span className="sr-only">Upload</span>
-          </th>
           <th>Typ</th>
           <th>Nachricht</th>
+          <th className="text-center">Upload</th>
+          <th>Environment</th>
         </THead>
 
         <EntryClock>

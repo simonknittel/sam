@@ -48,6 +48,8 @@ export const toEntry = (
     isShared,
     uploadState,
     lineNumber: feedEntry.lineNumber,
+    gameEnvironment: feedEntry.gameEnvironment,
+    gameBuild: feedEntry.gameBuild,
   };
   entryCache.set(feedEntry, entry);
   return entry;

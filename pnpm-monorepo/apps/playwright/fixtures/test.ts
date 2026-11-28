@@ -33,7 +33,9 @@ import { startDiscordMock, type DiscordMock } from "./discord-mock";
 import { ONE_DAY_MS } from "./factories";
 import { createMcpClient, type McpTestClient } from "./mcp-client";
 import {
+  authorizeDesktopCompanion,
   authorizeMcpClient,
+  type AuthorizeDesktopCompanionOptions,
   type AuthorizeMcpClientOptions,
   type McpAuthorization,
 } from "./oauth";
@@ -83,6 +85,11 @@ interface Fixtures {
     options?: Pick<AuthorizeMcpClientOptions, "beforeApprove">,
   ) => Promise<McpAuthorization>;
   readonly connectMcpClient: (accessToken: string) => Promise<McpTestClient>;
+  /** The real OAuth login of the desktop companion (see `fixtures/oauth.ts`) */
+  readonly authorizeDesktopCompanion: (
+    user: Pick<User, "id">,
+    options?: Pick<AuthorizeDesktopCompanionOptions, "beforeApprove">,
+  ) => Promise<McpAuthorization>;
   readonly databaseReset: undefined;
 }
 
@@ -360,6 +367,19 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
         baseUrl: stack.baseURL,
         signIn,
         cimdServer,
+        user,
+        ...options,
+      }),
+    );
+  },
+
+  authorizeDesktopCompanion: async ({ page, request, stack, signIn }, use) => {
+    await use((user, options) =>
+      authorizeDesktopCompanion({
+        page,
+        request,
+        baseUrl: stack.baseURL,
+        signIn,
         user,
         ...options,
       }),

@@ -7,6 +7,12 @@ import type {
   StopRequest,
 } from "../logFile/types.js";
 
+/** The part of `LogParserClient` that the log folder reader uses */
+export type LogParser = Pick<
+  LogParserClient,
+  "parse" | "stopReads" | "terminate"
+>;
+
 interface PendingRequest {
   readonly resolve: (result: ReadResult) => void;
   readonly reject: (error: Error) => void;

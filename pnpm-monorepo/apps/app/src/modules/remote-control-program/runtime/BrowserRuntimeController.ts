@@ -10,8 +10,6 @@ import {
   OwnEntryStore,
   type AppliedOwnEntriesChange,
   type LocalAccessLayer,
-  type OwnEntryKeysPage,
-  type OwnEntryKeysQuery,
 } from "@sam-monorepo/remote-control-program-runtime";
 import {
   claimLegacyAutostart,
@@ -24,7 +22,6 @@ import {
   claimLegacyLogFolder,
   isBrowserRuntimeSupported,
   loadLogFolder,
-  LogFolderPick,
   pickLogFolder,
   requestLogFolderPermission,
 } from "./logFolder";
@@ -56,7 +53,6 @@ const ALL_TYPES_OFF = Object.fromEntries(
 
 const INITIAL_SNAPSHOT: BrowserRuntimeSnapshot = {
   ...INITIAL_BROWSER_RUNTIME_STATE,
-  runtimeId: null,
   folder: { state: LogFolderState.Checking, name: null },
   isWaitingForFolderPermission: false,
   tabRole: BrowserRuntimeTabRole.Inactive,
@@ -69,15 +65,10 @@ export interface BrowserRuntimeControllerOptions {
   readonly runtimeVersion: string;
   /** The user of the session. Each citizen has an own runtime. */
   readonly citizenId: string;
-  /** The keys of the own entries that the relay has */
-  readonly findOwnEntryKeys: (
-    query: OwnEntryKeysQuery,
-  ) => Promise<OwnEntryKeysPage>;
 }
 
 /** The runtime of this tab while it holds the Web Lock */
 interface Leadership {
-  readonly runtimeId: string;
   readonly runtime: BrowserRuntime;
   /** The same object while the folder stays the same (see `start()`) */
   folderHandle: FileSystemDirectoryHandle | null;
@@ -104,7 +95,8 @@ interface TabConnection {
  * API. The tab that holds the lock (the leader) runs the `BrowserRuntime`.
  * The other tabs (the followers) get its state and the own entries through a
  * BroadcastChannel, and send their commands to it. When the leader closes, a
- * follower gets the lock and continues the runtime.
+ * follower gets the lock and starts a new runtime with the state of the run
+ * record (see `BrowserRuntime.shouldRun()`).
  */
 export class BrowserRuntimeController {
   readonly #options: BrowserRuntimeControllerOptions;
@@ -131,25 +123,10 @@ export class BrowserRuntimeController {
         writeAutostart(localStorage, citizenId, isEnabled);
         this.#update({ isAutostartEnabled: isEnabled });
       },
+      // A different folder starts the reading again in the tab of the runtime (see `BrowserRuntime.start()`)
       selectFolder: async () => {
-        const connection = this.#requireConnection();
-        const pick = await pickLogFolder(citizenId);
-
-        switch (pick) {
-          case LogFolderPick.Cancelled:
-            return false;
-
-          // The live periods are the times of the previous folder
-          case LogFolderPick.OtherFolder:
-            connection.layer.removeLivePeriods();
-            break;
-
-          case LogFolderPick.SameFolder:
-            break;
-
-          default:
-            throw new Error(`Unknown folder pick: ${pick satisfies never}`);
-        }
+        this.#requireConnection();
+        if (!(await pickLogFolder(citizenId))) return false;
 
         await this.#sendCommand({ type: TabCommandType.Start });
         return true;
@@ -274,16 +251,16 @@ export class BrowserRuntimeController {
     this.#joinElection(connection);
   }
 
-  /** The runtime continues in a different tab (see `handOver()`) */
+  /** A different tab can start a new runtime (see `handOver()`) */
   disconnect() {
     const connection = this.#connection;
     if (connection !== null) this.#close(connection, false);
   }
 
   /**
-   * The user logs out: the runtime of the citizen stops without a
-   * continuation, and all tabs of the citizen leave the election. A tab
-   * starts the runtime again only after a new page load.
+   * The user logs out: the runtime of the citizen stops, the next runtime
+   * obeys the autostart, and all tabs of the citizen leave the election. A
+   * tab starts the runtime again only after a new page load.
    */
   endSession() {
     const connection = this.#connection;
@@ -387,9 +364,9 @@ export class BrowserRuntimeController {
   }
 
   /**
-   * The runtime gives its live period and its run record to the next tab
-   * before the tab releases the lock. At a logout, it ends without a
-   * continuation.
+   * The runtime writes its run record for the next tab before the tab
+   * releases the lock. The next tab starts a new runtime. At a logout, the
+   * runtime removes its run record.
    */
   #leaveElection(connection: TabConnection, endsSession = false) {
     connection.lockRequest?.abort();
@@ -441,7 +418,7 @@ export class BrowserRuntimeController {
   };
 
   async #becomeLeader(connection: TabConnection) {
-    const { citizenId, runtimeVersion, findOwnEntryKeys } = this.#options;
+    const { citizenId, runtimeVersion } = this.#options;
     // The previous leader does not answer the commands of this tab any more
     connection.pendingCommands.setLeader(connection.tabId);
 
@@ -454,12 +431,10 @@ export class BrowserRuntimeController {
       entryStore: this.#entryStore,
       requestConnectionToken: (signal) =>
         requestConnectionToken(runtimeId, citizenId, signal),
-      findOwnEntryKeys,
     });
 
     let previousError = runtime.getState().error;
     const leadership: Leadership = {
-      runtimeId,
       runtime,
       folderHandle: null,
       folder: { state: LogFolderState.Checking, name: null },
@@ -504,7 +479,6 @@ export class BrowserRuntimeController {
   #publishLeaderState(connection: TabConnection, leadership: Leadership) {
     const state: LeaderState = {
       ...leadership.runtime.getState(),
-      runtimeId: leadership.runtimeId,
       folder: leadership.folder,
       isWaitingForFolderPermission: leadership.isWaitingForFolderPermission,
     };
@@ -521,7 +495,7 @@ export class BrowserRuntimeController {
    * runtime
    *
    * @param shouldStart The runtime must run (the autostart, a start, or the
-   * continuation of a previous runtime)
+   * run record of a previous runtime)
    */
   async #applyFolder(
     connection: TabConnection,

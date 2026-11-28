@@ -46,16 +46,12 @@ export interface LogFolderStatus {
 
 /** The state that the tab of the runtime sends to the other tabs */
 export interface LeaderState extends BrowserRuntimeState {
-  /**
-   * The id of the runtime of this browser (`OwnRuntime.runtimeId` of the
-   * sharing popover). Null until a tab has the runtime.
-   */
-  readonly runtimeId: string | null;
   readonly folder: LogFolderStatus;
   /**
-   * The runtime must run (the autostart, a start, or the continuation after
-   * a change of the active tab), but the browser needs a click to give the
-   * access to the folder again. The sharing popover shows a note.
+   * The runtime must run (the autostart, a start, or the run record of the
+   * previous runtime after a change of the active tab), but the browser needs
+   * a click to give the access to the folder again. The sharing popover shows
+   * a note.
    */
   readonly isWaitingForFolderPermission: boolean;
 }
@@ -97,8 +93,9 @@ export interface BrowserRuntimeCommands {
   ) => void;
   /**
    * The window of the entries that a control UI shows. The runtime reads
-   * also the log files of this window, in addition to the last 7 days. Null:
-   * only the last 7 days.
+   * also the log files of this window, in addition to the log files from the
+   * start of the reading. Null: only the log files from the start of the
+   * reading.
    */
   readonly setRequestedWindow: (window: EntryWindow | null) => Promise<void>;
   /**

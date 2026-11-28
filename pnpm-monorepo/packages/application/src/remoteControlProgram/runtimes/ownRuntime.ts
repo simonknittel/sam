@@ -5,7 +5,10 @@ import {
   type RuntimeKind,
 } from "@sam-monorepo/domain";
 
-/** A runtime of the owner, for the status in the sharing popover and the relay */
+/**
+ * A runtime of the owner, for the sharing popover, the control UIs and the
+ * relay
+ */
 export interface OwnRuntime {
   readonly runtimeId: string;
   readonly kind: RuntimeKind;
@@ -38,9 +41,9 @@ type OwnRuntimeRow = Prisma.RemoteControlProgramRuntimeGetPayload<{
 }>;
 
 /**
- * Protocol version 1 is the only version. A later version that changes the
- * announcement selects the schema with `protocolVersion`. A stored value
- * that the schema refuses gives null.
+ * All protocol versions have the same announcement. A later version that
+ * changes the announcement selects the schema with `protocolVersion`. A
+ * stored value that the schema refuses gives null.
  */
 const parseAnnouncement = (
   announcement: Prisma.JsonValue | null,

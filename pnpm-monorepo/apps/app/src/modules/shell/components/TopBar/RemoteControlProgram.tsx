@@ -26,7 +26,7 @@ const SharingPopover = () => {
   const isLargeViewport = useIsLargeViewport();
   const {
     isOpen,
-    tabOfControlUi,
+    locationOfControlUi,
     onOpenChange,
     isWaitingForFolderPermission,
     triggerLabel,
@@ -49,9 +49,9 @@ const SharingPopover = () => {
       childrenClassName="w-[42rem] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain"
       open={isOpen}
       onOpenChange={onOpenChange}
-      moveFocusIntoPopup={tabOfControlUi !== null}
+      moveFocusIntoPopup={locationOfControlUi !== null}
     >
-      <LazySharingPopoverContent tabOfControlUi={tabOfControlUi} />
+      <LazySharingPopoverContent locationOfControlUi={locationOfControlUi} />
     </PopoverBaseUI>
   );
 };

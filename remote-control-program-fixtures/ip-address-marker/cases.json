@@ -349,6 +349,13 @@
       "output": "ns:CEntity::OnSpawn localAddr=ipv6:[::]:64090 addr:: ip:::",
       "input_contains_ip_address": false,
       "output_contains_ip_address": false
+    },
+    {
+      "description": "a character outside the Basic Multilingual Plane between two addresses: JavaScript runs the rule on UTF-16 code units, thus the character counts as two characters",
+      "input": "[2001:db8::1]:443🚀[2001:db8::2]:443🚀[2001:db8::3]:1",
+      "output": "IP_REDACTED🚀IP_REDACTED🚀IP_REDACTED",
+      "input_contains_ip_address": true,
+      "output_contains_ip_address": false
     }
   ]
 }

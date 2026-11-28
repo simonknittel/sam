@@ -2,22 +2,23 @@
  * The rule that removes the IP addresses from a raw log line before the line
  * leaves the machine (decision 22 of `docs/remote-control-program/README.md`).
  * The log file connector applies it before the upload, the relay refuses a
- * line in which `containsIpAddress` finds an address, and the M3 migration
- * applies it once to the stored lines.
+ * line in which `containsIpAddress` finds an address, and the migration
+ * `log_analyzer_entry_ip_marker` applied it once to the stored lines.
  *
  * The rule is immutable data, like the patterns of the Log Analyzer: the hash
  * of an entry contains the line with the marker (see `logEntryHash.ts`). Do
  * not change the marker, the expressions, their order, the replacement or the
  * number of passes. A different rule is a new version with new names, and the
- * old version stays. The shared test data in
+ * old version stays. The export of the shared definitions contains the rule
+ * for the desktop companion. The shared test data in
  * `remote-control-program-fixtures/ip-address-marker/` contains the same
  * values, and its cases show the decisions below.
  *
  * One definition for three engines: JavaScript, PostgreSQL (`regexp_replace`
- * of the M3 migration) and Rust (the `regex` crate, which has no lookahead and
- * no lookbehind). Thus the expressions have no lookaround and no `\d`, `\w` or
- * `\b` (their meaning is different in the engines), only ASCII classes. The
- * engines apply the rule like this:
+ * of the migration `log_analyzer_entry_ip_marker`) and Rust (the `regex`
+ * crate, which has no lookahead and no lookbehind). Thus the expressions have
+ * no lookaround and no `\d`, `\w` or `\b` (their meaning is different in the
+ * engines), only ASCII classes. The engines apply the rule like this:
  *
  * 1. Replace all matches of the IPv6 expression, two times.
  * 2. Replace all matches of the IPv4 expression, two times.
@@ -213,16 +214,23 @@ export const IPV6_ADDRESS_PATTERN_SOURCE = `(${IPV6_START})(?:\\[${IPV6}\\]${POR
 export const IPV4_ADDRESS_PATTERN_SOURCE = `(^|[^0-9A-Za-z_.])${IPV4}(?:${PORT})?([^0-9A-Za-z_.]|\\.[^0-9A-Za-z_]|\\.?$)`;
 
 /** The expressions in the order of their application */
-export const IP_ADDRESS_PATTERN_SOURCES = [
-  IPV6_ADDRESS_PATTERN_SOURCE,
-  IPV4_ADDRESS_PATTERN_SOURCE,
+export const IP_ADDRESS_PATTERNS = [
+  { name: "ipv6", source: IPV6_ADDRESS_PATTERN_SOURCE },
+  { name: "ipv4", source: IPV4_ADDRESS_PATTERN_SOURCE },
 ] as const;
+
+export const IP_ADDRESS_PATTERN_SOURCES = IP_ADDRESS_PATTERNS.map(
+  ({ source }) => source,
+);
 
 /**
  * The replacement for the two expressions, in the syntax of JavaScript (see
- * the top of this file for PostgreSQL and Rust)
+ * the top of this file for PostgreSQL)
  */
 export const IP_ADDRESS_REPLACEMENT = `$1${IP_ADDRESS_MARKER}$2`;
+
+/** The replacement in the syntax of the `regex` crate of Rust */
+export const IP_ADDRESS_REPLACEMENT_FOR_RUST = `\${1}${IP_ADDRESS_MARKER}\${2}`;
 
 /** The passes of each expression, see the top of this file */
 export const IP_ADDRESS_REPLACEMENT_PASSES = 2;

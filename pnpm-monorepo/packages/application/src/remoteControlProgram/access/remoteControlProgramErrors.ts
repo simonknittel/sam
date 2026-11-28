@@ -32,6 +32,12 @@ export enum RemoteControlProgramErrorMessage {
   /** A `ForbiddenError`: the user of a connection token was deleted */
   UserNotFound = "The user does not exist",
   /**
+   * A `ForbiddenError`: the OAuth grant of the connection token of a desktop
+   * companion is revoked, for example after the sign-out in the sharing
+   * popover. The relay service closes the connection with `access_denied`.
+   */
+  OAuthGrantRevoked = "The OAuth grant of the desktop companion is revoked",
+  /**
    * A `ForbiddenError`: the signature, the issuer, the audience, the expiry
    * or the claims of the connection token are not valid, or the token is for
    * a different runtime or citizen. The relay service closes the connection
@@ -51,4 +57,9 @@ export enum RemoteControlProgramErrorMessage {
   TooManyRuntimes = "The owner has the maximum number of runtimes online",
   /** A `NotFoundError`: the owner has no runtime with the id */
   RuntimeNotFound = "The runtime does not exist",
+  /**
+   * A `NotFoundError`: the user has no sign-in of the desktop companion with
+   * the id
+   */
+  DesktopCompanionSignInNotFound = "The sign-in of the desktop companion does not exist",
 }

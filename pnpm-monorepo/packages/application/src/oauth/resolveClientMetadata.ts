@@ -1,3 +1,4 @@
+import { DESKTOP_COMPANION_REDIRECT_URI } from "@sam-monorepo/domain";
 import * as z from "zod";
 import type { ApplicationContext } from "../context.js";
 import { ValidationError } from "../errors.js";
@@ -8,6 +9,10 @@ import {
   parseClientId,
 } from "./clientMetadataDocument.js";
 import { isLoopbackHostname, MAX_URL_LENGTH } from "./constants.js";
+import {
+  DESKTOP_COMPANION_CLIENT_NAME,
+  isDesktopCompanionClientId,
+} from "./desktopCompanionClient.js";
 
 export enum ClientMetadataErrorReason {
   InvalidClientId = "invalid_client_id",
@@ -35,16 +40,31 @@ export const resolveClientMetadataInputSchema = z.object({
 export interface ClientMetadata {
   /** The URL of the Client ID Metadata Document */
   readonly clientId: string;
-  /** The client gives its name itself, thus the name is not trusted */
+  /**
+   * The client gives its name itself, thus the name is not trusted. Only the
+   * name of the desktop companion comes from the app.
+   */
   readonly clientName: string;
   readonly redirectUris: readonly string[];
 }
 
+/**
+ * The document of the desktop companion comes from the code of the app (see
+ * `getDesktopCompanionClientMetadataDocument()`), without a fetch and without
+ * the cache
+ */
 export const resolveClientMetadata = (
   context: ApplicationContext,
   { clientId }: z.infer<typeof resolveClientMetadataInputSchema>,
 ): Promise<ClientMetadata> =>
   withSpan(context, "resolveClientMetadata", async () => {
+    if (isDesktopCompanionClientId(context, clientId))
+      return {
+        clientId,
+        clientName: DESKTOP_COMPANION_CLIENT_NAME,
+        redirectUris: [DESKTOP_COMPANION_REDIRECT_URI],
+      };
+
     const url = parseClientId(clientId, context.allowInsecureLoopbackClientIds);
     if (!url)
       throw new ClientMetadataError(

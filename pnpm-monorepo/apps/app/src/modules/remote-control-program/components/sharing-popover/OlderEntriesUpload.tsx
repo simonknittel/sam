@@ -5,7 +5,6 @@ import {
   BrowserRuntimeErrorCode,
   ChannelStatus,
 } from "@sam-monorepo/remote-control-program-runtime";
-import { useState } from "react";
 import type { BrowserRuntimeHandle } from "../../runtime/types";
 import { BROWSER_RUNTIME_ERROR_TEXTS } from "./browserRuntimeTexts";
 import { OlderEntriesUploadForm } from "./OlderEntriesUploadForm";
@@ -17,17 +16,13 @@ interface Props {
 
 /**
  * The upload of the entries of a date range that did not go up automatically
- * (decision 27). Closed at first.
+ * (decision 27)
  */
 export const OlderEntriesUpload = ({ runtime }: Props) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   return (
     <SharingPopoverCollapsible
       heading="Ältere Game Logs hochladen"
       summary={null}
-      isExpanded={isExpanded}
-      onExpandedChange={setIsExpanded}
     >
       <UploadContent runtime={runtime} />
     </SharingPopoverCollapsible>

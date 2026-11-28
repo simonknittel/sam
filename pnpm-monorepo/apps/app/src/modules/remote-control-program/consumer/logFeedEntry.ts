@@ -43,6 +43,16 @@ export interface LogFeedEntry {
   readonly rawLine: string;
   /** The capture groups of the pattern of `type` */
   readonly groups: Readonly<Record<string, string>>;
+  /**
+   * The game environment from the header of the log file of the entry, for
+   * example `LIVE`. Null when it is unknown, for example for an older entry.
+   */
+  readonly gameEnvironment: string | null;
+  /**
+   * The build number from the header of the log file of the entry, for
+   * example `13220821`. Null when it is unknown.
+   */
+  readonly gameBuild: string | null;
 }
 
 /**
@@ -58,6 +68,8 @@ export interface RelayLogEntry {
   readonly lineNumber: number | null;
   /** The key of the entry for its owner (`createLogEntryHash()`) */
   readonly hash: string;
+  readonly gameEnvironment: string | null;
+  readonly gameBuild: string | null;
 }
 
 const KEY_SEPARATOR = ":";
@@ -97,6 +109,8 @@ export const toRelayLogFeedEntry = (
     lineNumber: entry.lineNumber,
     rawLine: entry.rawLine,
     groups,
+    gameEnvironment: entry.gameEnvironment,
+    gameBuild: entry.gameBuild,
   };
 };
 
@@ -126,6 +140,8 @@ export const toLocalLogFeedEntry = (
     lineNumber: match.lineNumber,
     rawLine: match.rawLine,
     groups: match.groups,
+    gameEnvironment: match.gameEnvironment,
+    gameBuild: match.gameBuild,
   };
   localEntryCache.set(match, entry);
   return entry;

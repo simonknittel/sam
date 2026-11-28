@@ -150,7 +150,7 @@ export const INTEGRATED_APPS: IntegratedApp[] = [
       "Wertet die Game Logs von Star Citizen aus um wichtige Ereignisse zu erkennen.",
     tags: ["security"],
     permissionStrings: ["logAnalyzer;read"],
-    /** The page also needs the Remote Control Program (M7) */
+    /** The page also needs the Remote Control Program (its decision 24) */
     hasAccess: async () => {
       const actor = await getOptionalRequestActor();
       return actor !== null && canUseRemoteControlProgram(actor);

@@ -7,8 +7,6 @@ import {
   Button2Variant,
 } from "@/modules/common/components/Button2";
 import Note from "@/modules/common/components/Note";
-import { ConnectorId } from "@sam-monorepo/domain";
-import { useState } from "react";
 import toast from "react-hot-toast";
 import { FaFolderOpen, FaKey } from "react-icons/fa6";
 import {
@@ -17,16 +15,12 @@ import {
   type BrowserRuntimeSnapshot,
 } from "../../runtime/types";
 import { BROWSER_RUNTIME_ERROR_TEXTS } from "./browserRuntimeTexts";
-import { CONNECTOR_LABELS } from "./catalogTexts";
-import {
-  countLogEntryTypesThatAreOn,
-  formatLogEntryTypeCount,
-} from "./logEntryTypeRules";
 import { LogEntryTypeSettings } from "./LogEntryTypeSettings";
 import { LogFileConnectorGuide } from "./LogFileConnectorGuide";
 import { OlderEntriesUpload } from "./OlderEntriesUpload";
-import { SharingPopoverCollapsible } from "./SharingPopoverCollapsible";
 import { useRuntimeCommand } from "./useRuntimeCommand";
+
+const READING_TEXT = "Logs werden gelesen …";
 
 const getFolderText = ({ folder }: BrowserRuntimeSnapshot) => {
   switch (folder.state) {
@@ -54,47 +48,31 @@ interface Props {
   readonly runtime: BrowserRuntimeHandle;
 }
 
-/** The owner must do something in the settings of the connector */
-const needsOwner = ({ folder, localAccess, error }: BrowserRuntimeSnapshot) =>
-  folder.state === LogFolderState.NotSelected ||
-  folder.state === LogFolderState.PermissionNeeded ||
-  countLogEntryTypesThatAreOn(localAccess.logEntryTypes) === 0 ||
-  error !== null;
-
 /**
- * Open while the connector needs the owner. It does not close by itself: the
- * owner who does the next step is in the middle of the settings.
+ * The content of the sub-tab of the log file connector: its folder and its
+ * rules of the local access layer
  */
-const useIsExpanded = (isNeeded: boolean) => {
-  const [isExpanded, setIsExpanded] = useState(isNeeded);
-
-  const [wasNeeded, setWasNeeded] = useState(isNeeded);
-  if (isNeeded !== wasNeeded) {
-    setWasNeeded(isNeeded);
-    if (isNeeded) setIsExpanded(true);
-  }
-
-  return [isExpanded, setIsExpanded] as const;
-};
-
-/** The folder of the log file connector and its rules of the local access layer */
 export const LogFileConnectorControl = ({ runtime }: Props) => {
   const { state, commands } = runtime;
   const folderText = getFolderText(state);
-  const [isExpanded, setIsExpanded] = useIsExpanded(needsOwner(state));
 
   return (
-    <SharingPopoverCollapsible
-      heading={CONNECTOR_LABELS[ConnectorId.LogFile]}
-      summary={
-        isExpanded
-          ? null
-          : `${folderText}, ${formatLogEntryTypeCount(state.localAccess.logEntryTypes)} Typen`
-      }
-      progressText={state.isReading ? "Logs werden gelesen …" : null}
-      isExpanded={isExpanded}
-      onExpandedChange={setIsExpanded}
-    >
+    <div className="flex flex-col gap-3">
+      {/* Always in the page, else a screen reader does not announce its first text */}
+      <span role="status" className="sr-only">
+        {state.isReading ? READING_TEXT : null}
+      </span>
+
+      {state.isReading && (
+        <p
+          aria-hidden
+          className="flex items-center gap-2 text-sm text-neutral-500"
+        >
+          <AsciiSpinner />
+          {READING_TEXT}
+        </p>
+      )}
+
       <p className="text-sm text-neutral-400">
         Dieser Connector liest die Log-Dateien von Star Citizen und lädt daraus
         neue Einträge der ausgewählten Typen hoch.
@@ -139,7 +117,7 @@ export const LogFileConnectorControl = ({ runtime }: Props) => {
       {state.folder.state === LogFolderState.Granted && (
         <OlderEntriesUpload runtime={runtime} />
       )}
-    </SharingPopoverCollapsible>
+    </div>
   );
 };
 

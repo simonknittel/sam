@@ -1,9 +1,15 @@
 import { calculateJwkThumbprint, decodeJwt, exportJWK } from "jose";
 import { generateKeyPairSync } from "node:crypto";
 import { describe, expect, test } from "vitest";
-import type { ApplicationContext, SigningKey } from "../context.js";
+import {
+  createApplicationUrls,
+  type ApplicationContext,
+  type SigningKey,
+} from "../context.js";
 import { issueAccessToken, verifyAccessToken } from "./accessToken.js";
+import { getDesktopCompanionClientId } from "./desktopCompanionClient.js";
 import { InvalidTokenError } from "./errors.js";
+import { OAuthResource } from "./resources.js";
 
 const GRANT = {
   id: "grant",
@@ -29,18 +35,10 @@ const createSigningKey = async (): Promise<SigningKey> => {
 
 const createContext = (
   signingKey: SigningKey,
-  {
-    issuer = "https://sam.example.com",
-    mcpResourceUrl = "https://sam.example.com/api/mcp",
-  } = {},
+  baseUrl = "https://sam.example.com",
 ) =>
   ({
-    urls: {
-      baseUrl: new URL(issuer),
-      issuer,
-      mcpResourceUrl: new URL(mcpResourceUrl),
-      publicUploadBaseUrl: "",
-    },
+    urls: createApplicationUrls({ baseUrl, publicUploadBaseUrl: "" }),
     now: () => new Date(),
     signingKey: () => Promise.resolve(signingKey),
   }) as unknown as ApplicationContext;
@@ -50,7 +48,11 @@ describe("access tokens", () => {
     const context = createContext(await createSigningKey());
     const token = await issueAccessToken(context, GRANT);
 
-    const verifiedToken = await verifyAccessToken(context, token);
+    const verifiedToken = await verifyAccessToken(
+      context,
+      token,
+      OAuthResource.Mcp,
+    );
 
     expect(verifiedToken).toMatchObject({
       userId: GRANT.userId,
@@ -73,23 +75,45 @@ describe("access tokens", () => {
     expect(firstPayload.jti).not.toBe(secondPayload.jti);
   });
 
-  test("refuses a token of a different audience or issuer", async () => {
+  test("gives the desktop companion a token for the Remote Control Program, which the MCP endpoint refuses", async () => {
+    const context = createContext(await createSigningKey());
+    const token = await issueAccessToken(context, {
+      ...GRANT,
+      clientId: getDesktopCompanionClientId(context),
+      scope: "remote_control_program",
+    });
+
+    const verifiedToken = await verifyAccessToken(
+      context,
+      token,
+      OAuthResource.RemoteControlProgram,
+    );
+
+    expect(verifiedToken.resource.href).toBe(
+      "https://sam.example.com/api/remote-control-program",
+    );
+    await expect(
+      verifyAccessToken(context, token, OAuthResource.Mcp),
+    ).rejects.toThrow(InvalidTokenError);
+  });
+
+  test("refuses a token of a different resource or issuer", async () => {
     const signingKey = await createSigningKey();
     const token = await issueAccessToken(createContext(signingKey), GRANT);
 
     await expect(
       verifyAccessToken(
-        createContext(signingKey, {
-          mcpResourceUrl: "https://sam.example.com/api/other",
-        }),
+        createContext(signingKey),
         token,
+        OAuthResource.RemoteControlProgram,
       ),
     ).rejects.toThrow(InvalidTokenError);
 
     await expect(
       verifyAccessToken(
-        createContext(signingKey, { issuer: "https://other.example.com" }),
+        createContext(signingKey, "https://other.example.com"),
         token,
+        OAuthResource.Mcp,
       ),
     ).rejects.toThrow(InvalidTokenError);
   });
@@ -101,7 +125,11 @@ describe("access tokens", () => {
     );
 
     await expect(
-      verifyAccessToken(createContext(await createSigningKey()), token),
+      verifyAccessToken(
+        createContext(await createSigningKey()),
+        token,
+        OAuthResource.Mcp,
+      ),
     ).rejects.toThrow(InvalidTokenError);
   });
 });

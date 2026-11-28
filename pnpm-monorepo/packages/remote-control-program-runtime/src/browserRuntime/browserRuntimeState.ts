@@ -3,7 +3,6 @@ import {
   INITIAL_CHANNEL_STATE,
   type ChannelState,
 } from "../channel/channelTypes.js";
-import type { OlderEntriesTimeRange } from "../localAccess/localAccessLayer.js";
 
 /**
  * The problems of the browser runtime: in `BrowserRuntimeState.error`, and
@@ -12,6 +11,13 @@ import type { OlderEntriesTimeRange } from "../localAccess/localAccessLayer.js";
 export enum BrowserRuntimeErrorCode {
   /** The last read of the log folder failed (state) */
   ReadFailed = "read_failed",
+  /**
+   * The log folder is no environment folder of the game (for example `LIVE`),
+   * and has no environment folder (state). A browser cannot read the parent
+   * folders, thus the owner must select the installation folder or an
+   * environment folder.
+   */
+  NoEnvironmentFolder = "no_environment_folder",
   /** The browser has no File System Access API (command) */
   NotSupported = "not_supported",
   /** No tab with the runtime answered the command in time (command) */
@@ -28,7 +34,7 @@ export enum BrowserRuntimeErrorCode {
    * (see `ChannelState.closeReason`) (command)
    */
   RelayNotAvailable = "relay_not_available",
-  /** The app did not tell which entries the relay already has (command) */
+  /** The relay did not tell which entries it already has (command) */
   RelayCheckFailed = "relay_check_failed",
   /**
    * A newer request for older entries replaced the request, or a different
@@ -90,8 +96,6 @@ export type BrowserRuntimeStateListener = (state: BrowserRuntimeState) => void;
 /** A request for older entries, which the owner confirms */
 export interface PreparedOlderEntriesRequest {
   readonly id: string;
-  readonly range: OlderEntriesTimeRange;
   /** The number of entries for each type, by the oldest version of the type */
   readonly countsByType: ReadonlyMap<LogAnalyzerEntryType, number>;
-  readonly entryCount: number;
 }

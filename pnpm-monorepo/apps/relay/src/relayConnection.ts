@@ -6,6 +6,7 @@ import {
   claimRuntimePresence,
   ConflictError,
   endRuntimeLease,
+  findOwnFeedEntryKeys,
   ForbiddenError,
   recordFeedEntryUploadCounts,
   RemoteControlProgramErrorMessage,
@@ -15,6 +16,7 @@ import {
   type AppendFeedEntriesOutput,
   type ApplicationContext,
   type Logger,
+  type OwnFeedEntryKeys,
   type OwnRuntime,
   type RuntimeConnection,
 } from "@sam-monorepo/application";
@@ -150,10 +152,11 @@ const MINIMUM_LEASE_RENEWAL_INTERVAL_MILLISECONDS = 10_000;
 const RUNTIME_ID_SPAN_ATTRIBUTE = "remote_control_program.runtime_id";
 
 /**
- * A correct runtime has at most one `heartbeat`, one `token_renewal` and some
- * `announce`s waiting, and the rate limit lets through a burst of
- * `RELAY_LIMITS.uploadBurstBatches` batches. The limit bounds the memory of
- * one connection: 8 batches of the maximum size are 4 MB.
+ * A correct runtime has at most one `heartbeat`, one `token_renewal`, one
+ * `feed_entry_keys_request` and some `announce`s waiting, and the rate limit
+ * lets through a burst of `RELAY_LIMITS.uploadBurstBatches` batches. The
+ * limit bounds the memory of one connection: 8 batches of the maximum size
+ * are 4 MB.
  */
 const MAXIMUM_WAITING_MESSAGES_PER_LANE = 8;
 
@@ -219,10 +222,12 @@ const toText = (data: RawData) => {
  * - The control lane: `heartbeat` and `token_renewal`. Thus a slow upload
  *   never delays the `ack` of a `heartbeat`, which the runtime needs within
  *   `RELAY_LIMITS.heartbeatIntervalMilliseconds`.
- * - The data lane: `announce` and `feed_entries`, and the hourly upload
- *   counts. Thus the relay service checks each batch against the
- *   announcement that the runtime sent before the batch, and stores the
- *   batches in the sequence in which the runtime sent them.
+ * - The data lane: `announce`, `feed_entries` and
+ *   `feed_entry_keys_request`, and the hourly upload counts. Thus the relay
+ *   service checks each batch against the announcement that the runtime sent
+ *   before the batch, stores the batches in the sequence in which the
+ *   runtime sent them, and reads the keys after the batches before the
+ *   request.
  *
  * The rate limits apply at the arrival of a message: a message above its
  * rate gets its `ack` at once and does not go into a lane. The limits of the
@@ -239,6 +244,10 @@ export class RelayConnection {
     CONTROL_MESSAGE_RATES.tokenRenewal,
   );
   readonly #announceRate = createRateLimiter(CONTROL_MESSAGE_RATES.announce);
+  readonly #feedEntryKeyRequestRate = createRateLimiter({
+    intervalMilliseconds: RELAY_LIMITS.feedEntryKeyRequestIntervalMilliseconds,
+    burstSize: RELAY_LIMITS.feedEntryKeyRequestBurstSize,
+  });
   readonly #finished = Promise.withResolvers<void>();
   /** The end of the time for the `welcome` */
   readonly #handshakeTimer: ReturnType<typeof setTimeout>;
@@ -456,6 +465,7 @@ export class RelayConnection {
       runtime = await authenticateRuntimeConnection(context, {
         token: hello.content.token,
         runtime_id: hello.content.runtime_id,
+        runtime_kind: hello.content.runtime_kind,
       });
     } catch (error) {
       this.#closeAfterHandshakeError(error, hello.content.runtime_id);
@@ -611,6 +621,28 @@ export class RelayConnection {
           );
         break;
 
+      case UpMessageType.FeedEntryKeysRequest:
+        if (
+          this.#isWithinRate(
+            this.#feedEntryKeyRequestRate.tryTake(now),
+            message,
+          )
+        )
+          this.#enqueue(this.#dataLane, message, () =>
+            withSpan(
+              this.#hub.context,
+              "handleRuntimeFeedEntryKeysRequest",
+              async (span) => {
+                span.setAttribute(
+                  RUNTIME_ID_SPAN_ATTRIBUTE,
+                  this.#requireRuntime().runtimeId,
+                );
+                await this.#sendOwnFeedEntryKeys(message);
+              },
+            ),
+          );
+        break;
+
       default:
         throw new Error(
           `Unknown message type: ${JSON.stringify(message satisfies never)}`,
@@ -710,6 +742,7 @@ export class RelayConnection {
       const renewed = await authenticateRuntimeConnection(this.#hub.context, {
         token: message.content.token,
         runtime_id: runtime.runtimeId,
+        runtime_kind: runtime.runtimeKind,
       });
       if (
         renewed.userId !== runtime.userId ||
@@ -821,6 +854,37 @@ export class RelayConnection {
         capabilityId: batch.capability_id,
         entries: output.newEntries,
       });
+  }
+
+  /**
+   * Answers with `feed_entry_keys` instead of an `ack`. The actor of the
+   * connection is the owner, thus the keys are only the own keys.
+   */
+  async #sendOwnFeedEntryKeys(
+    message: UpMessageOfType<UpMessageType.FeedEntryKeysRequest>,
+  ) {
+    const runtime = this.#requireRuntime();
+    const { start, end, page_cursor } = message.content;
+
+    let page: OwnFeedEntryKeys;
+    try {
+      page = await findOwnFeedEntryKeys(this.#hub.context, runtime.actor, {
+        start: new Date(start),
+        end: new Date(end),
+        pageCursor: page_cursor,
+      });
+    } catch (error) {
+      this.#handleUseCaseError(error, message);
+      return;
+    }
+
+    this.#send(
+      createDownMessage(DownMessageType.FeedEntryKeys, {
+        message_id: message.id,
+        keys: page.keys,
+        next_page_cursor: page.nextPageCursor,
+      }),
+    );
   }
 
   /**

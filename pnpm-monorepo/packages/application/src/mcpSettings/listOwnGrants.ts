@@ -1,5 +1,6 @@
 import type { Actor } from "../actor.js";
 import type { ApplicationContext } from "../context.js";
+import { getOwnMcpGrantWhere } from "./ownMcpGrant.js";
 
 /**
  * Each consent gives a new grant. This limit is far above the number of
@@ -27,7 +28,8 @@ export interface OwnGrant {
 }
 
 /**
- * A grant has a refresh token from the redemption of its authorization code
+ * The grants of the MCP server. A grant has a refresh token from the
+ * redemption of its authorization code
  * until its revocation or the expiry of its tokens. Thus the list does not show
  * a grant whose code the client did not redeem, for example after an abandoned
  * authorization.
@@ -38,8 +40,7 @@ export const listOwnGrants = async (
 ): Promise<OwnGrant[]> => {
   const grants = await context.prisma.oAuthGrant.findMany({
     where: {
-      userId: actor.userId,
-      revokedAt: null,
+      ...getOwnMcpGrantWhere(context, actor),
       refreshTokens: { some: {} },
     },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],

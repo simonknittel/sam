@@ -21,7 +21,7 @@ Rules for this document:
 | Service | `sc.game.telemetry.v1.GameTelemetryService` |
 | Calls | `TelemetryStream` (server-streaming, approximately 19 frames each second), `ListTriggerableActions` (112 actions), `TriggerGameAction` |
 | Actions | They work. `emote_wave` gave the status `OK`, and the character waved in the game. |
-| Game version | Not in the interface. The Remote Control Program stores no game version until the interface supplies it. |
+| Game build | Not in the interface. The desktop companion finds the build of the running game itself (see [Game build](#game-build)). |
 | Browser | No access. A native program on the machine is necessary. |
 
 ## Enable the server
@@ -146,33 +146,29 @@ Test of 2026-11-21: `emote_wave` without a hold time gave `OK` with an empty mes
 
 `USER.cfg` did not contain `server.game.telemetry.trigger.actions.enabled`. Thus, in the test build, each local program can trigger each listed action as soon as the server is on, also `v_self_destruct`.
 
-## Game version
+## Game build
 
-The interface gives no game version: the messages have no field for it, the responses have no metadata, and there is no reflection.
+The interface gives no game build and no game environment: the messages have no field for them, the responses have no metadata, and there is no reflection.
 
-The first lines of `Game.log` give the version and the build:
+The first lines of `Game.log` give the build number, the folder of the game environment and a file version:
 
 ```text
 BackupNameAttachment=" Build(13248297) 21 Nov 26 (09 42 13)"  -- used by backup system
+Executable: C:\Program Files\Roberts Space Industries\StarCitizen\PTU\Bin64\StarCitizen.exe
 FileVersion: 5.0.202.10025
 ProductVersion: 5.0.202.10025
 ```
 
-Other lines give the environment: the folder of the game (`LIVE` or `PTU`) and the shard (`New Shard Id: ptu_use1b_13248297_010`). The Log Analyzer has no patterns for these lines.
+The RSI Launcher calls LIVE, PTU and the others "Game Environment", and shows a version such as `5.0.0-ptu.13284307`. It gets this version from a web service of RSI: only its last part, the build number, is in the files of the game. `FileVersion` is not the version of the launcher. Other lines give a different environment value (`[Trace] Environment:   PTU`, but `PUB` on LIVE) and the shard (`New Shard Id: ptu_use1b_13248297_010`).
 
-Each installation also has the file `build_manifest.id` (for example `StarCitizen/PTU/build_manifest.id`) with the fields `Branch`, `Version` and `RequestedP4ChangeNum`. Test of 2026-11-21: LIVE had `4.10.201.48085`, and PTU had `5.0.202.10025` with the build `13248297`.
+Each installation also has the file `build_manifest.id` (for example `StarCitizen/PTU/build_manifest.id`) with the fields `Branch`, `Version` and `RequestedP4ChangeNum`. `Version` has the value of `FileVersion`. Test of 2026-11-21: LIVE had `4.10.201.48085`, and PTU had `5.0.202.10025` with the build `13248297`. Both installations can use the same port, and the test could not read the path of the game process.
 
-The Remote Control Program uses none of these sources (see decision 17 in [Decisions](./README.md#decisions)):
-
-- `Game.log` does not always show the actual state, and the gRPC connector must not depend on the log file connector.
-- The desktop companion cannot tell which installation runs the gRPC server. Both installations can use the same port, and the test could not read the path of the game process.
-
-The gRPC connector adds the game version when the interface supplies it.
+Decision 17 of the [architecture](./README.md#decisions) tells how each connector finds the game environment and the build number.
 
 ## Requirements for the gRPC connector
 
 - It runs in the desktop companion (see [Browser access](#browser-access)). It is written in Rust and supports Windows and Linux (see [Decisions](./README.md#decisions)).
-- It connects to `127.0.0.1` on the port that the owner sets in the desktop companion. The default port is 2942. It does not read the port from `Game.log` (see decision 17 in [Decisions](./README.md#decisions)).
+- It connects to `127.0.0.1` on the port that the owner sets in the desktop companion. The default port is 2942. It does not read the port from `Game.log` (see principle 14 in [Principles](./README.md#principles)).
 - It contains the message definitions as `.proto` files and generates the Rust code from them, because the server has no reflection. The interface gives no game build, thus the connector cannot select definitions for each build. It uses only the fields of its definitions and ignores unknown fields. When a call fails or a message does not match the definitions, it stops and shows a note in the desktop companion.
 - It reduces the 19 frames each second to the rate of the channel.
 - It removes each field that no permitted capability needs before the data leaves the machine (for example the wallet balance).
@@ -195,7 +191,7 @@ Tests can answer these questions:
 Only CIG can answer these questions:
 
 - When does the interface come to LIVE, and with which calls?
-- Will the interface supply the game version and the environment (LIVE or PTU)?
+- Will the interface supply the build number and the game environment (LIVE or PTU)?
 - Do the terms of service permit the use of the interface by a third-party program?
 
 ## Test log

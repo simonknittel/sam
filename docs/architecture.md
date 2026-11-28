@@ -67,6 +67,16 @@ The composition root is `apps/relay/src/applicationContext.ts`. It uses the audi
 
 The other modules of the relay service hold only host code: the WebSocket server, the internal HTTP endpoints, the batches of the delivery to Soketi, the limits, the logger and the telemetry. They call the use cases of `application`, not Prisma. The test `apps/relay/src/boundaries.test.ts` enforces this rule, like in the Lambda functions.
 
+### Outside of the monorepo
+
+| Location | Content |
+| - | - |
+| The repository `sam-desktop-companion` | The desktop companion: a Rust program and a runtime of the [Remote Control Program](./remote-control-program/README.md#desktop-companion) (decision 32). It connects to the relay service and gets its tokens from the OAuth server of the app. It is private until step 5 of the [migration](./remote-control-program/migration.md#order-of-the-steps). |
+| `remote-control-program-definitions/` | The export of the shared definitions for the desktop companion (see its [README](../remote-control-program-definitions/README.md)). |
+| `remote-control-program-fixtures/` | The shared test data of the TypeScript and the Rust implementations (see its [README](../remote-control-program-fixtures/README.md)). |
+
+A change of the protocol, the catalog, the patterns or the shared test data goes into SAM first (decision 32 of the [Remote Control Program](./remote-control-program/README.md#decisions)).
+
 ### Tests
 
 See the [Tests section of the application README](../pnpm-monorepo/packages/application/README.md#tests) for the unit tests and the integration tests. The checks of the rules in this document are part of the lint, test and typecheck jobs of `.github/workflows/validate-app.yml`.

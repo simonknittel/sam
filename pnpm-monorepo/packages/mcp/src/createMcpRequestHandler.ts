@@ -12,6 +12,7 @@ import {
   ForbiddenError,
   getProtectedResourceMetadata,
   InvalidTokenError,
+  OAuthResource,
   resolvePrincipal,
   verifyAccessToken,
   type ApplicationContext,
@@ -51,7 +52,11 @@ const authenticate = async (
     verifier: {
       verifyAccessToken: async (token) => {
         try {
-          verifiedToken = await verifyAccessToken(context, token);
+          verifiedToken = await verifyAccessToken(
+            context,
+            token,
+            OAuthResource.Mcp,
+          );
         } catch (error) {
           if (error instanceof InvalidTokenError)
             throw new OAuthError(OAuthErrorCode.InvalidToken, error.message);
@@ -135,7 +140,8 @@ export const createMcpRequestHandler = (
 
     const challengeOptions = {
       // The challenge names the scopes of the metadata document
-      requiredScopes: getProtectedResourceMetadata(context).scopes_supported,
+      requiredScopes: getProtectedResourceMetadata(context, OAuthResource.Mcp)
+        .scopes_supported,
       resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(
         context.urls.mcpResourceUrl,
       ),

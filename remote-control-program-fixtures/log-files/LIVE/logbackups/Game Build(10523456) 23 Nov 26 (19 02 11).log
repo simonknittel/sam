@@ -1,0 +1,9 @@
+<2026-11-23T18:02:11.004Z> Log started on Mon Nov 23 19:02:11 2026
+<2026-11-23T18:02:52.311Z> FileVersion: 4.4.160.10523456
+<2026-11-23T18:03:33.418Z> [Notice] <Join PU> address[192.0.2.44] port[64310] shard[pub_euw1b_10523456_104] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]
+<2026-11-23T18:04:14.520Z> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: Arbor MH1 Mining Laser ÿþ: " [15] to queue. New queue size: 2, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-23T18:04:55.631Z> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: KÃ(nig Helmet: " [16] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-23T18:05:36.742Z> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: MÃ¼ller RÃ¤nge Helmet: " [17] to queue. New queue size: 4, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-23T18:06:17.853Z> [Notice] <Join PU> address[192.0.2.45] port[64311] shard[pub_euw1b_10523456_1Ã¼5] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]
+<2026-11-23T18:0Ù£:58.964Z> [Notice] <Join PU> address[192.0.2.46] port[64312] shard[pub_euw1b_10523456_106] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]
+<2026-11-23T18:07:40.075Z> [Notice] <Disconnect> Log ended

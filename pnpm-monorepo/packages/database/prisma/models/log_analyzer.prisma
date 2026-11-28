@@ -1,8 +1,9 @@
 /// One matched log line a citizen shared with the other citizens. Rows are
 /// immutable and are never deleted, thus there are no update or delete
 /// columns: an opt-out only stops new uploads.
-/// The only exception is the one-time migration `log_analyzer_entry_ip_marker`
-/// (M3 of `docs/remote-control-program/migration.md`).
+/// The only exception is the one-time migration `log_analyzer_entry_ip_marker`,
+/// which replaced the IP addresses (decision 22 of
+/// `docs/remote-control-program/README.md`).
 ///
 /// The capture groups and the rendered message are not stored. Every viewer
 /// runs the type's regex on `rawLine` again, so a change of the presentation
@@ -52,6 +53,14 @@ model LogAnalyzerEntry {
   /// The version of the capability `log_entries` of the batch. NULL like
   /// `runtimeId`.
   capabilityVersion Int?
+  /// The game environment from the header of the log file of the entry, for
+  /// example "LIVE" or "PTU" (`readLogFileHeader()` of the domain). NULL when
+  /// the header has no valid value, and for the entries of the capability
+  /// version 1, which had no game environment.
+  gameEnvironment   String?
+  /// The build number of the game from the header of the log file of the
+  /// entry, for example "13220821". NULL like `gameEnvironment`.
+  gameBuild         String?
 
   /// The uploading citizen, also after a (soft) delete of the citizen
   createdById String?

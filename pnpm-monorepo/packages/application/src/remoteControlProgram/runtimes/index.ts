@@ -26,6 +26,8 @@ export {
   type EndRuntimeLeaseOutput,
 } from "./endRuntimeLease.js";
 export {
+  authenticateDesktopCompanion,
+  issueDesktopCompanionConnectionToken,
   issueRuntimeConnectionToken,
   issueRuntimeConnectionTokenInputSchema,
   type IssueRuntimeConnectionTokenInput,

@@ -87,9 +87,9 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
         <p className="ml-4 text-white/80">
           Öffne das{" "}
           <UiLabel icon={FaTowerBroadcast}>Remote Control Program</UiLabel> in
-          der oberen Leiste. Unter <UiLabel>Runtime: Browser</UiLabel> richtest
-          du die <UiLabel>Game Logs</UiLabel> ein. Dort findest du auch eine{" "}
-          <UiLabel>Anleitung</UiLabel> dazu.
+          der oberen Leiste. Im Tab <UiLabel>Runtimes</UiLabel> richtest du
+          unter <UiLabel>Browser</UiLabel> die <UiLabel>Game Logs</UiLabel> ein.
+          Dort findest du auch eine <UiLabel>Anleitung</UiLabel> dazu.
         </p>
       </GuideSection>
 
@@ -177,7 +177,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
       >
         <GuideNoteList>
           <GuideNote>
-            In der Tabelle zeigt{" "}
+            In der Spalte <UiLabel>Upload</UiLabel> zeigt{" "}
             <FaCloud
               role="img"
               aria-label="die Wolke"
@@ -190,6 +190,13 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
               className="inline-block align-[-0.125em]"
             />{" "}
             Einträge, die es nur auf deinem Computer gibt.
+          </GuideNote>
+
+          <GuideNote>
+            Mit jedem Eintrag gehen auch das Environment und die Build-Nummer
+            des Spiels aus seiner Log-Datei an SAM, zum Beispiel LIVE 13220821.
+            Die Tabelle zeigt sie in der Spalte <UiLabel>Environment</UiLabel>.
+            Bei älteren Einträgen ist die Spalte leer.
           </GuideNote>
 
           <GuideNote>

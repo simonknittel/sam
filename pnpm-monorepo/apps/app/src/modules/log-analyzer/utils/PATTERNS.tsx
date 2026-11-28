@@ -112,6 +112,10 @@ export interface IEntry {
    * shared entry.
    */
   readonly lineNumber: number | null;
+  /** The game environment of the log file, for example `LIVE`, or null */
+  readonly gameEnvironment: string | null;
+  /** The build number of the log file, for example `13220821`, or null */
+  readonly gameBuild: string | null;
 }
 
 const shardRegex = /^pub_(?<region>[a-z0-9]+)_\w+_(?<number>\d+)$/m;

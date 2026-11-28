@@ -1,0 +1,11 @@
+<2026-11-21T08:42:13.204Z> BackupNameAttachment=" Build(13248297) 21 Nov 26 (09 42 13)"  -- used by backup system
+<2026-11-21T08:42:13.204Z> Log started on Sat Nov 21 08:42:13 2026
+<2026-11-21T08:42:13.204Z> Built on Nov 19 2026 22:05:51
+<2026-11-21T08:42:13.204Z> Running 64 bit version
+<2026-11-21T08:42:13.204Z> Executable: C:\Program Files\Roberts Space Industries\StarCitizen\PTU\Bin64\StarCitizen.exe
+<2026-11-21T08:42:13.204Z> FileVersion: 5.0.202.10025
+<2026-11-21T08:42:13.204Z> ProductVersion: 5.0.202.10025
+<2026-11-21T08:42:13.204Z> [Trace] Environment:   PTU
+<2026-11-21T08:44:51.618Z> [Notice] <Join PU> address[192.0.2.77] port[64090] shard[ptu_use1b_13248297_010] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]
+<2026-11-21T08:47:02.930Z> [Notice] <SHUDEvent_OnNotification> Added notification "Entering Armistice Zone - Combat Prohibited: " [3] to queue. New queue size: 1, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]
+<2026-11-21T08:51:40.112Z> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: Morozov-SH Helmet Thule: " [25] to queue. New queue size: 3, MissionId: [00000000-0000-0000-0000-000000000000], ObjectiveId: [] [Team_CoreGameplayFeatures][Missions][Comms]

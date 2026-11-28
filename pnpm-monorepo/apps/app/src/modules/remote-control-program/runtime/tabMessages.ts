@@ -28,7 +28,7 @@ export const getBrowserRuntimeChannelName = (citizenId: string) =>
  * A tab ignores the messages of a different version, for example of a tab
  * that was open during a deploy. Increase it for each change of the messages.
  */
-export const TAB_MESSAGE_VERSION = 1;
+export const TAB_MESSAGE_VERSION = 2;
 
 export enum TabMessageType {
   /** Leader to all: the state of the runtime changed */
@@ -42,8 +42,8 @@ export enum TabMessageType {
   /** Leader to the follower of the command */
   CommandAnswered = "command_answered",
   /**
-   * Any tab to all: the user logs out. The runtime stops without a
-   * continuation, and all tabs leave the election.
+   * Any tab to all: the user logs out. The runtime stops, and all tabs leave
+   * the election.
    */
   SessionEnded = "session_ended",
 }

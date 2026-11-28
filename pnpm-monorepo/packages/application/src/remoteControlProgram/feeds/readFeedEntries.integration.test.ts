@@ -1,5 +1,8 @@
 import { prisma } from "@sam-monorepo/database";
-import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
+import {
+  LOG_ANALYZER_HISTORY_MINIMUM_AGE_HOURS,
+  LogAnalyzerEntryType,
+} from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
   createTestActor,
@@ -118,6 +121,10 @@ test("gives the own entries, the live entries of the valid grants and the histor
     revokedAt: getTimeBeforeNow(MINUTE_MILLISECONDS),
   });
 
+  /** One hour older than the minimum age of the history */
+  const historyEventAt = getTimeBeforeNow(
+    (LOG_ANALYZER_HISTORY_MINIMUM_AGE_HOURS + 1) * HOUR_MILLISECONDS,
+  );
   await createLogEntryRow(viewerId, getTimeBeforeNow(10 * DAY_MILLISECONDS));
   await createLogEntryRow(viewerId, getTimeBeforeNow(HOUR_MILLISECONDS));
   for (const owner of [
@@ -132,7 +139,7 @@ test("gives the own entries, the live entries of the valid grants and the histor
       owner!.id,
       getTimeBeforeNow(100 * MINUTE_MILLISECONDS),
     );
-    await createLogEntryRow(owner!.id, getTimeBeforeNow(3 * HOUR_MILLISECONDS));
+    await createLogEntryRow(owner!.id, historyEventAt);
   }
   const { context } = createTestApplicationContext();
 
@@ -145,7 +152,7 @@ test("gives the own entries, the live entries of the valid grants and the histor
     "revokedGrantOwner",
   ].map((owner) => ({
     owner,
-    eventAt: getTimeBeforeNow(3 * HOUR_MILLISECONDS),
+    eventAt: historyEventAt,
   }));
   expect(summarize(snapshot.entries)).toEqual([
     { owner: "grantOwner", eventAt: getTimeBeforeNow(HOUR_MILLISECONDS) },
@@ -163,6 +170,9 @@ test("gives the own entries, the live entries of the valid grants and the histor
     lineNumber: 1,
     hash: expect.stringMatching(/^[0-9a-f]{64}$/),
     createdAt: TEST_NOW,
+    // An entry without the values of the header, for example of the capability version 1
+    gameEnvironment: null,
+    gameBuild: null,
   });
 
   // The time window of the Log Analyzer

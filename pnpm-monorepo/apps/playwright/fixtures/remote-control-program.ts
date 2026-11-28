@@ -57,12 +57,21 @@ export const expectUploadedLines = (
 /** The accessible name of the popover */
 const SHARING_POPOVER_TITLE = "Remote Control Program";
 
+/** The name of each section is also the name of its tab or sub-tab */
 export enum SharingPopoverSection {
   Start = "Start",
-  Status = "Status",
-  ThisBrowser = "Runtime: Browser",
   Grants = "Freigaben",
+  /** The sub-tabs of the runtimes */
+  Runtimes = "Runtimes",
+  ThisBrowser = "Browser",
+  DesktopCompanion = "Desktop Companion",
 }
+
+/** The sections in a sub-tab of the tab of the runtimes */
+const RUNTIME_SECTIONS: readonly SharingPopoverSection[] = [
+  SharingPopoverSection.ThisBrowser,
+  SharingPopoverSection.DesktopCompanion,
+];
 
 /**
  * The trigger of the popover in the top bar, or on a small viewport in the
@@ -85,15 +94,18 @@ export const sharingPopoverSection = (
   section: SharingPopoverSection,
 ) => sharingPopover(page).getByRole("region", { name: section, exact: true });
 
-/** The tab of the grants also has their count in its name */
+/** The tab or the sub-tab of the section. The tab of the grants also has their count in its name. */
 export const sharingPopoverTab = (page: Page, section: SharingPopoverSection) =>
   sharingPopover(page).getByRole("tab", { name: new RegExp(`^${section}`) });
 
-/** Activates the tab of the section in the open popover */
+/** Activates the tab, and for a runtime the sub-tab, of the section in the open popover */
 export const showSharingPopoverSection = async (
   page: Page,
   section: SharingPopoverSection,
 ) => {
+  if (RUNTIME_SECTIONS.includes(section))
+    await sharingPopoverTab(page, SharingPopoverSection.Runtimes).click();
+
   await sharingPopoverTab(page, section).click();
   const region = sharingPopoverSection(page, section);
   await expect(region).toBeVisible();
@@ -105,7 +117,7 @@ export const showSharingPopoverSection = async (
  * browser. A click on the trigger of an open popover closes it.
  */
 export const openSharingPopover = async (page: Page) => {
-  const tab = sharingPopoverTab(page, SharingPopoverSection.ThisBrowser);
+  const tab = sharingPopoverTab(page, SharingPopoverSection.Runtimes);
   if (!(await tab.isVisible()))
     await clickUntilVisible(sharingPopoverTrigger(page), tab);
 
@@ -124,15 +136,27 @@ export const runtimeState = (page: Page, state: string) =>
     { exact: true },
   );
 
+/** The sub-tab of the log file connector in the section of this browser */
+export const logFileConnectorTab = (section: Locator) =>
+  section.getByRole("tab", { name: "Game Logs", exact: true });
+
+/** The row of the log folder in the sub-tab of the log file connector */
+export const logFolderRow = (section: Locator) =>
+  section.getByRole("term").filter({ hasText: /^Ordner$/ });
+
+/** The toggle of the list of the types in the sub-tab of the log file connector */
+export const logEntryTypesToggle = (section: Locator) =>
+  section.getByRole("button", { name: /^Typen auswählen/ });
+
 /**
- * Opens the settings of the log file connector in the section. They are open
- * already while the connector needs the owner, for example without a folder.
+ * Selects the sub-tab of the log file connector in the section of this
+ * browser. With one connector, it is selected by default.
  */
-export const openLogFileConnector = async (section: Locator) => {
-  const toggle = section.getByRole("button", { name: /^Game Logs/ });
-  await expect(toggle).toBeVisible();
-  if ((await toggle.getAttribute("aria-expanded")) !== "true")
-    await toggle.click();
+export const showLogFileConnector = async (section: Locator) => {
+  const tab = logFileConnectorTab(section);
+  await tab.click();
+  await expect(tab).toHaveAttribute("aria-selected", "true");
+  await expect(logFolderRow(section)).toBeVisible();
 };
 
 /**
@@ -144,7 +168,7 @@ export const pickLogFolderInPopover = async (page: Page) => {
     page,
     SharingPopoverSection.ThisBrowser,
   );
-  await openLogFileConnector(section);
+  await showLogFileConnector(section);
   await section
     .getByRole("button", { name: "Ordner wählen", exact: true })
     .click();
@@ -180,10 +204,8 @@ export const turnOnLogEntryTypes = async (
     page,
     SharingPopoverSection.ThisBrowser,
   );
-  await openLogFileConnector(section);
-  const listToggle = section.getByRole("button", {
-    name: /^Typen auswählen/,
-  });
+  await showLogFileConnector(section);
+  const listToggle = logEntryTypesToggle(section);
   if ((await listToggle.getAttribute("aria-expanded")) !== "true")
     await listToggle.click();
 
@@ -213,7 +235,7 @@ export const openOlderEntriesUpload = async (page: Page) => {
     page,
     SharingPopoverSection.ThisBrowser,
   );
-  await openLogFileConnector(section);
+  await showLogFileConnector(section);
 
   const form = section.getByRole("form", {
     name: "Ältere Game Logs hochladen",

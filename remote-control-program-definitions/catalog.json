@@ -1,0 +1,45 @@
+{
+  "capabilities": [
+    {
+      "id": "log_entries",
+      "version": 2,
+      "kind": "feed",
+      "timing": "realtime",
+      "minimum_upload_interval_milliseconds": 1000,
+      "sensitivity": "high",
+      "maximum_entries_per_batch": 100,
+      "maximum_raw_line_length": 1000
+    }
+  ],
+  "connectors": [
+    {
+      "id": "log_file",
+      "version": 2,
+      "capability_ids": [
+        "log_entries"
+      ]
+    }
+  ],
+  "runtime_kinds": [
+    "browser",
+    "desktop_companion"
+  ],
+  "relay_limits": {
+    "maximum_message_bytes": 524288,
+    "maximum_runtimes_per_owner": 5,
+    "connection_token_lifetime_milliseconds": 120000,
+    "token_renewal_interval_milliseconds": 60000,
+    "token_renewal_grace_milliseconds": 30000,
+    "handshake_timeout_milliseconds": 10000,
+    "heartbeat_interval_milliseconds": 15000,
+    "presence_lease_milliseconds": 90000,
+    "upload_burst_batches": 5,
+    "maximum_feed_entry_keys_per_page": 2000,
+    "maximum_feed_entry_key_pages_per_check": 50,
+    "feed_entry_key_request_interval_milliseconds": 1000,
+    "feed_entry_key_request_burst_size": 50,
+    "maximum_errors_per_minute": 10
+  },
+  "desktop_companion_url_scheme": "sam-desktop-companion",
+  "desktop_companion_open_url": "sam-desktop-companion://open"
+}

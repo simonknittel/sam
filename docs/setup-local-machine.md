@@ -51,6 +51,12 @@ Set the key of the app first (see [Embedded app authentication](#embedded-app-au
 
 The `up.sh` script of the [run-app skill](../.agents/skills/run-app/SKILL.md) does these steps. [compose.yml](../compose.yml) sets one maximum event size for Soketi and for the relay service (see [Set up the relay service](./setup-test-and-production.md#10-set-up-the-relay-service-of-the-remote-control-program)).
 
+To test the desktop companion with the local stack:
+
+- Start the program with `SAM_BASE_URL` set to the address of the local app, for example `http://localhost:3000`. The README of the repository `sam-desktop-companion` tells how to build and start it.
+- On Windows, the program reaches the local stack in WSL2 only with the mirrored network mode of WSL2.
+- The desktop companion never has admin mode (decision 35 of the [concept](./remote-control-program/README.md#decisions)). Thus the user of the development login needs `remoteControlProgram;use` through a role, also when the user is an admin.
+
 ### Uploads
 
 Uploads go to the S3-compatible `rustfs` container. Keep the `S3_*` defaults from `.env.example`. `docker compose up` creates the bucket. You can also use a different S3-compatible provider, for example Cloudflare R2 (see the comments in `.env.example`).

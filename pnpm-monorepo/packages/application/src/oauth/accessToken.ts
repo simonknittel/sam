@@ -4,6 +4,11 @@ import * as z from "zod";
 import type { ApplicationContext } from "../context.js";
 import { ACCESS_TOKEN_LIFETIME_IN_SECONDS } from "./constants.js";
 import { InvalidTokenError, SigningKeyUnavailableError } from "./errors.js";
+import {
+  getOAuthResourceOfClient,
+  getOAuthResourceUrl,
+  type OAuthResource,
+} from "./resources.js";
 
 /** The media type of a JWT access token (RFC 9068 section 2.1) */
 const ACCESS_TOKEN_TYPE = "at+jwt";
@@ -32,9 +37,13 @@ export const requireSigningKey = async (
 };
 
 export interface AccessTokenGrant {
-  /** The private claim `grant_id`: the MCP endpoint loads the grant with it */
+  /**
+   * The private claim `grant_id`: the MCP endpoint and the connection token
+   * route load the grant with it
+   */
   readonly id: string;
   readonly userId: string;
+  /** Selects the resource, thus the audience of the token */
   readonly clientId: string;
   readonly scope: string;
 }
@@ -58,7 +67,12 @@ export const issueAccessToken = async (
       typ: ACCESS_TOKEN_TYPE,
     })
     .setIssuer(context.urls.issuer)
-    .setAudience(context.urls.mcpResourceUrl.href)
+    .setAudience(
+      getOAuthResourceUrl(
+        context,
+        getOAuthResourceOfClient(context, grant.clientId),
+      ).href,
+    )
     .setSubject(grant.userId)
     .setJti(randomBytes(TOKEN_ID_BYTES).toString("base64url"))
     .setIssuedAt(issuedAt)
@@ -82,11 +96,14 @@ export interface VerifiedAccessToken {
   readonly scopes: string[];
   /** Seconds since the epoch, like `exp` and the `AuthInfo` of the MCP SDK */
   readonly expiresAt: number;
+  /** The audience */
   readonly resource: URL;
+  readonly oauthResource: OAuthResource;
 }
 
 /**
- * Does not load the grant: `resolvePrincipal()` checks the revocation.
+ * Does not load the grant: `resolvePrincipal()` checks the revocation. A
+ * token of a different resource is not valid.
  *
  * @throws InvalidTokenError when the token is not valid
  * @throws SigningKeyUnavailableError when the app has no signing key
@@ -94,8 +111,10 @@ export interface VerifiedAccessToken {
 export const verifyAccessToken = async (
   context: Pick<ApplicationContext, "signingKey" | "urls" | "now">,
   token: string,
+  oauthResource: OAuthResource,
 ): Promise<VerifiedAccessToken> => {
   const signingKey = await requireSigningKey(context);
+  const resource = getOAuthResourceUrl(context, oauthResource);
 
   let payload;
   try {
@@ -104,7 +123,7 @@ export const verifyAccessToken = async (
       createPublicKey(signingKey.privateKey),
       {
         issuer: context.urls.issuer,
-        audience: context.urls.mcpResourceUrl.href,
+        audience: resource.href,
         algorithms: [ALGORITHM],
         typ: ACCESS_TOKEN_TYPE,
         currentDate: context.now(),
@@ -129,6 +148,7 @@ export const verifyAccessToken = async (
     scopes: claims.data.scope.split(" ").filter(Boolean),
     expiresAt: claims.data.exp,
     // `jwtVerify()` checked that the audience is this URL
-    resource: new URL(context.urls.mcpResourceUrl),
+    resource: new URL(resource),
+    oauthResource,
   };
 };

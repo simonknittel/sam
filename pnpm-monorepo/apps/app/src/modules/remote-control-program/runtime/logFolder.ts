@@ -23,15 +23,6 @@ const LEGACY_FOLDER_HANDLE_KEY = "directory_handle";
 const DEFAULT_DATABASE_NAME = "keyval-store";
 const DEFAULT_STORE_NAME = "keyval";
 
-/** The result of `pickLogFolder()` */
-export enum LogFolderPick {
-  /** The user closed the picker */
-  Cancelled = "cancelled",
-  SameFolder = "same_folder",
-  /** A different folder, or the first folder of the citizen */
-  OtherFolder = "other_folder",
-}
-
 /** Opens the database only in the browser, at the first use */
 let defaultStore: UseStore | null = null;
 const getDefaultStore = () =>
@@ -121,26 +112,20 @@ export const loadLogFolder = async (
 
 /**
  * Needs a user gesture. Opens the folder picker and keeps the folder for the
- * citizen.
+ * citizen. False when the user closed the picker.
  */
-export const pickLogFolder = async (
-  citizenId: string,
-): Promise<LogFolderPick> => {
+export const pickLogFolder = async (citizenId: string) => {
   let handle: FileSystemDirectoryHandle;
   try {
     handle = await window.showDirectoryPicker({ mode: "read" });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError")
-      return LogFolderPick.Cancelled;
+      return false;
     throw error;
   }
 
-  const previousHandle = await readStoredFolder(citizenId);
   await set(getFolderHandleKey(citizenId), handle, getDefaultStore());
-
-  return previousHandle !== null && (await handle.isSameEntry(previousHandle))
-    ? LogFolderPick.SameFolder
-    : LogFolderPick.OtherFolder;
+  return true;
 };
 
 /**

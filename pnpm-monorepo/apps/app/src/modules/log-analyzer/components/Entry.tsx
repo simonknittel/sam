@@ -9,6 +9,7 @@ import { memo } from "react";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
 import { useEntryClock } from "./EntryClock";
+import { EntryGameBuildCell } from "./EntryGameBuildCell";
 import { EntryUploadState } from "./EntryUploadState";
 import { QuickLookToggle } from "./QuickLookToggle";
 
@@ -71,10 +72,6 @@ export const Entry = memo(function Entry({ entry }: Props) {
         />
       </td>
 
-      <td className="text-white/40">
-        <EntryUploadState uploadState={entry.uploadState} />
-      </td>
-
       <td className="flex items-center gap-2 text-white/40">
         <Icon className="shrink-0" />
         <span className="min-w-0 truncate" title={title}>
@@ -90,6 +87,15 @@ export const Entry = memo(function Entry({ entry }: Props) {
       </td>
 
       <td className="truncate">{entry.message}</td>
+
+      <td className="flex items-center justify-center text-white/40">
+        <EntryUploadState uploadState={entry.uploadState} />
+      </td>
+
+      <EntryGameBuildCell
+        gameEnvironment={entry.gameEnvironment}
+        gameBuild={entry.gameBuild}
+      />
     </TRow>
   );
 });

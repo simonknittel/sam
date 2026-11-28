@@ -1,11 +1,12 @@
 import type { Tracer } from "@opentelemetry/api";
 import type { PrismaClientType } from "@sam-monorepo/database";
-import type {
-  AuditEventInput,
-  CitizenRealtimeChannel,
-  GuildScheduledEventChange,
-  GuildScheduledEventContent,
-  GuildScheduledEventTarget,
+import {
+  REMOTE_CONTROL_PROGRAM_RESOURCE_PATH,
+  type AuditEventInput,
+  type CitizenRealtimeChannel,
+  type GuildScheduledEventChange,
+  type GuildScheduledEventContent,
+  type GuildScheduledEventTarget,
 } from "@sam-monorepo/domain";
 import type { JWK, JWTVerifyGetKey } from "jose";
 import type { KeyObject } from "node:crypto";
@@ -259,8 +260,17 @@ export interface ApplicationContext {
     readonly baseUrl: URL;
     /** The base URL without the trailing slash */
     readonly issuer: string;
-    /** The canonical URL of the MCP endpoint, the audience of the tokens */
+    /**
+     * The canonical URL of the MCP endpoint, the audience of the access
+     * tokens of the MCP clients
+     */
     readonly mcpResourceUrl: URL;
+    /**
+     * The resource of the Remote Control Program, the audience of the access
+     * tokens of the desktop companion. Only the connection token route
+     * accepts these tokens.
+     */
+    readonly remoteControlProgramResourceUrl: URL;
     readonly publicUploadBaseUrl: string;
   };
   /**
@@ -312,6 +322,10 @@ export const createApplicationUrls = ({
     baseUrl,
     issuer: baseUrl.href.replace(/\/$/, ""),
     mcpResourceUrl: new URL("/api/mcp", baseUrl),
+    remoteControlProgramResourceUrl: new URL(
+      REMOTE_CONTROL_PROGRAM_RESOURCE_PATH,
+      baseUrl,
+    ),
     publicUploadBaseUrl: publicUploadBaseUrl.replace(/\/+$/, ""),
   };
 };

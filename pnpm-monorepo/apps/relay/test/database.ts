@@ -1,5 +1,6 @@
 import { prisma } from "@sam-monorepo/database";
 import { AuditEventType } from "@sam-monorepo/domain";
+import { createLogEntryRowData } from "../../../packages/application/test/remoteControlProgram.js";
 
 /**
  * The database steps of the tests. The relay service itself uses Prisma only
@@ -44,11 +45,43 @@ export const createOwner = async (handle = "owner") => {
   return { citizenId: citizen.id, handle, userId: citizen.userId };
 };
 
+/** An OAuth grant of the user, without the consent page */
+export const createOAuthGrant = async ({
+  userId,
+  clientId,
+  scope,
+  resource,
+}: {
+  readonly userId: string;
+  readonly clientId: string;
+  readonly scope: string;
+  readonly resource: string;
+}) =>
+  (
+    await prisma.oAuthGrant.create({
+      data: {
+        userId,
+        clientId,
+        clientName: "SAM Desktop Companion",
+        redirectHost: "127.0.0.1",
+        scope,
+        resource,
+      },
+      select: { id: true },
+    })
+  ).id;
+
 export const findLogEntryRows = (ownerCitizenId: string) =>
   prisma.logAnalyzerEntry.findMany({
     where: { createdById: ownerCitizenId },
     orderBy: { lineNumber: "asc" },
-    select: { type: true, lineNumber: true, runtimeId: true },
+    select: {
+      type: true,
+      lineNumber: true,
+      runtimeId: true,
+      gameEnvironment: true,
+      gameBuild: true,
+    },
   });
 
 export const findRuntimeLease = (ownerCitizenId: string, runtimeId: string) =>
@@ -64,3 +97,18 @@ export const findUploadCountEvents = () =>
     },
     select: { data: true, createdById: true },
   });
+
+/**
+ * Stored entries of `log_entries` of the owner, without the relay service.
+ * Gives their keys.
+ */
+export const createLogEntryRows = async (
+  ownerCitizenId: string,
+  eventAts: readonly Date[],
+) => {
+  const rows = await Promise.all(
+    eventAts.map((eventAt) => createLogEntryRowData(ownerCitizenId, eventAt)),
+  );
+  await prisma.logAnalyzerEntry.createMany({ data: rows });
+  return rows.map((row) => row.hash);
+};

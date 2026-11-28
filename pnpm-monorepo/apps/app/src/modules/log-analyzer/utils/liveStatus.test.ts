@@ -52,6 +52,8 @@ const entry = (
   uploadState: LogEntryUploadState.LocalOnly,
   liveStatusSignal,
   lineNumber,
+  gameEnvironment: null,
+  gameBuild: null,
 });
 
 const sessionStart = (shard = "pub_euw1b_9873572_100"): LiveStatusSignal => ({

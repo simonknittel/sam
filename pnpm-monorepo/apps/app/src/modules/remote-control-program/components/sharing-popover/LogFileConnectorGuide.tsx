@@ -1,7 +1,6 @@
 "use client";
 
 import { UiLabel } from "@/modules/common/components/Guide/UiLabel";
-import { useState } from "react";
 import { SUPPORTED_BROWSERS_TEXT } from "../../utils/remoteControlProgramTexts";
 import { SharingPopoverCollapsible } from "./SharingPopoverCollapsible";
 import {
@@ -9,17 +8,10 @@ import {
   SharingPopoverTopicList,
 } from "./SharingPopoverTopic";
 
-/** How the owner uses the log file connector. Closed at first. */
+/** How the owner uses the log file connector */
 export const LogFileConnectorGuide = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   return (
-    <SharingPopoverCollapsible
-      heading="Anleitung"
-      summary={null}
-      isExpanded={isExpanded}
-      onExpandedChange={setIsExpanded}
-    >
+    <SharingPopoverCollapsible heading="Anleitung" summary={null}>
       <SharingPopoverTopicList>
         <SharingPopoverTopic title="Browser">
           <p>{SUPPORTED_BROWSERS_TEXT}</p>
@@ -36,12 +28,18 @@ export const LogFileConnectorGuide = () => {
               <wbr />
               StarCitizen
             </code>
-            . Er darf nicht unter{" "}
-            <code className="font-mono text-white/90">
-              C:\Program Files
-            </code>{" "}
+            , oder den Ordner eines Environments wie{" "}
+            <code className="font-mono text-white/90">LIVE</code>. Er darf nicht
+            unter{" "}
+            <code className="font-mono text-white/90">C:\Program Files</code>{" "}
             liegen. Nach einem Neustart des Browsers musst du einmal auf{" "}
             <UiLabel>Zugriff erlauben</UiLabel> klicken.
+          </p>
+          <p>
+            Die Runtime liest in jedem Environment nur{" "}
+            <code className="font-mono text-white/90">Game.log</code> und die
+            Logs in <code className="font-mono text-white/90">logbackups</code>,
+            keine anderen Dateien.
           </p>
         </SharingPopoverTopic>
 
@@ -61,9 +59,12 @@ export const LogFileConnectorGuide = () => {
             dem Hochladen entfernt.
           </p>
           <p>
-            Automatisch hochgeladen werden nur neue Einträge, solange die
-            Runtime läuft. Was du ohne laufende Runtime erlebst, bleibt auf
-            deinem Computer. Ältere Einträge kannst du unter{" "}
+            Automatisch hochgeladen werden nur neue Einträge ab dem Start der
+            Runtime, solange sie läuft. Ohne Verbindung zu SAM warten sie, bis
+            die Verbindung wieder besteht. Schließt du den Tab mit der laufenden
+            Runtime, startet ein anderer offener Tab mit SAM sie neu. Was du
+            ohne laufende Runtime erlebst, bleibt auf deinem Computer. Ältere
+            Einträge kannst du unter{" "}
             <UiLabel>Ältere Game Logs hochladen</UiLabel> nachträglich
             hochladen.
           </p>

@@ -1,5 +1,5 @@
 import { getApplicationContext } from "@/modules/application";
-import { isMcpServerDisabled } from "@/modules/oauth/utils/isMcpServerDisabled";
+import { areAllOAuthResourcesTurnedOff } from "@/modules/oauth/utils/isOAuthResourceTurnedOff";
 import {
   corsPreflightResponse,
   temporarilyUnavailableResponse,
@@ -15,10 +15,11 @@ import { revokeToken, revokeTokenInputSchema } from "@sam-monorepo/application";
 /**
  * RFC 7009: `200` also for an unknown token. Public by design: the clients are
  * public clients, and the possession of a token is the proof. A revocation can
- * only remove access.
+ * only remove access, thus it stops only with both kill switches.
  */
 export const POST = async (request: Request) => {
-  if (await isMcpServerDisabled()) return temporarilyUnavailableResponse();
+  if (await areAllOAuthResourcesTurnedOff())
+    return temporarilyUnavailableResponse();
 
   try {
     await revokeToken(

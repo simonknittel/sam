@@ -86,7 +86,8 @@ model OAuthGrant {
 
 /// A refresh token of a grant. The table keeps only the SHA-256 hash of the
 /// token. Each use replaces the token with a new token. The reuse of a used
-/// token revokes the grant.
+/// token revokes the grant, except for one use within the grace time (see
+/// `refreshAccessToken()` of the application package).
 model OAuthRefreshToken {
   id           String             @id @default(cuid(2))
   grantId      String
@@ -95,6 +96,9 @@ model OAuthRefreshToken {
   createdAt    DateTime           @default(now()) @db.Timestamptz(3)
   expiresAt    DateTime           @db.Timestamptz(3)
   usedAt       DateTime?          @db.Timestamptz(3)
+  /// The time of the second use within the grace time. It replaced the
+  /// unused replacement of the first use.
+  usedAgainAt  DateTime?          @db.Timestamptz(3)
   replacedById String?            @unique
   replacedBy   OAuthRefreshToken? @relation("replacement", fields: [replacedById], references: [id], onDelete: SetNull)
   replaces     OAuthRefreshToken? @relation("replacement")

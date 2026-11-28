@@ -13,9 +13,9 @@ export interface OwnRuntimes {
 }
 
 /**
- * The connected runtimes of the actor with their announcement: the status
- * section of the sharing popover. `RELAY_LIMITS.maximumRuntimesPerOwner`
- * limits the list.
+ * The connected runtimes of the actor with their announcement: the sub-tab
+ * of the desktop companion in the sharing popover, and the notes of the
+ * control UIs. `RELAY_LIMITS.maximumRuntimesPerOwner` limits the list.
  *
  * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, or
  * for an admin who assumes the user

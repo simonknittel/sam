@@ -40,6 +40,12 @@ beforeEach(async () => {
 const createOwner = () =>
   createCitizenActor("owner", ["remoteControlProgram;use"]);
 
+/** The values of the header of a log file of LIVE */
+const LIVE_HEADER = {
+  game_environment: "LIVE",
+  game_build: "13220821",
+} as const;
+
 const createJoinPuEntry = (
   time: Date,
   lineNumber: number,
@@ -49,9 +55,13 @@ const createJoinPuEntry = (
   raw_line: createJoinPuLine(time, address),
   event_at: time.toISOString(),
   line_number: lineNumber,
+  ...LIVE_HEADER,
 });
 
-/** A crash report has no time: the runtime gives the time of the preceding line */
+/**
+ * A crash report has no time: the runtime gives the time of the preceding
+ * line. Its log file has no valid header values.
+ */
 const createGameCrashEntry = (
   time: Date,
   lineNumber: number,
@@ -61,11 +71,13 @@ const createGameCrashEntry = (
     "Exception STATUS_CRYENGINE_OUT_OF_SYSMEM(0x2BADFF61) addr=0x00007FFE2CE13CFA digest=114a1cfe538433f07c4a87c536ae0528",
   event_at: time.toISOString(),
   line_number: lineNumber,
+  game_environment: null,
+  game_build: null,
 });
 
 const createInput = (
   entries: LogEntryOfBatch[],
-  connectorVersion = 1,
+  connectorVersion = CONNECTOR_CATALOG[ConnectorId.LogFile].version,
 ): AppendFeedEntriesInput => ({
   runtime_id: RUNTIME_ID,
   batch: {
@@ -92,10 +104,12 @@ const findStoredEntries = () =>
       runtimeId: true,
       connectorVersion: true,
       capabilityVersion: true,
+      gameEnvironment: true,
+      gameBuild: true,
     },
   });
 
-test("stores the new entries with their context and skips a second copy", async () => {
+test("stores the new entries with their context and the values of their header, and skips a second copy", async () => {
   const owner = await createOwner();
   const { context } = createTestApplicationContext();
   // The relay takes the time of the raw line, not the time of the runtime
@@ -119,7 +133,7 @@ test("stores the new entries with their context and skips a second copy", async 
     createdById: owner.citizen!.id,
     createdAt: TEST_NOW,
     runtimeId: RUNTIME_ID,
-    connectorVersion: 1,
+    connectorVersion: CONNECTOR_CATALOG[ConnectorId.LogFile].version,
     capabilityVersion: LOG_ENTRIES_CAPABILITY.version,
   };
   const storedEntries = await findStoredEntries();
@@ -132,6 +146,8 @@ test("stores the new entries with their context and skips a second copy", async 
       eventAt: ONE_HOUR_AGO,
       lineNumber: 12,
       hash: await createLogEntryHash(joinPu.type, joinPu.raw_line),
+      gameEnvironment: "LIVE",
+      gameBuild: "13220821",
     },
     {
       ...entryContext,
@@ -141,6 +157,8 @@ test("stores the new entries with their context and skips a second copy", async 
       eventAt: TEST_NOW,
       lineNumber: 40,
       hash: await createLogEntryHash(gameCrash.type, gameCrash.raw_line),
+      gameEnvironment: null,
+      gameBuild: null,
     },
   ]);
   expect(output).toMatchObject({
@@ -163,6 +181,8 @@ test("stores the new entries with their context and skips a second copy", async 
       lineNumber: entry.lineNumber,
       hash: entry.hash,
       createdAt: entry.createdAt,
+      gameEnvironment: entry.gameEnvironment,
+      gameBuild: entry.gameBuild,
     })),
   );
 
@@ -176,6 +196,7 @@ test("stores the new entries with their context and skips a second copy", async 
       "<2026-06-15T09:30:00.000Z> [Notice] <SystemQuit> CSystem::Quit invoked with - cause=30016, reason=Quit via console command, exitCode=0, thread id=2188, main thread id=2188 [Team_Unknown][System]",
     event_at: "2026-06-15T09:30:00.000Z",
     line_number: 41,
+    ...LIVE_HEADER,
   };
 
   await expect(

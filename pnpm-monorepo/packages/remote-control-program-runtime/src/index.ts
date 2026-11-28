@@ -19,17 +19,12 @@ export {
   type AppliedOwnEntriesChange,
   type OwnEntriesChange,
 } from "./browserRuntime/ownEntryStore.js";
-export type {
-  OwnEntryKeysPage,
-  OwnEntryKeysQuery,
-} from "./browserRuntime/relayKeys.js";
 export { CHANNEL_CLIENT_LIMITS } from "./channel/channelLimits.js";
 export {
   ChannelEndReason,
   ChannelStatus,
   ConnectionTokenRefusedError,
   type ChannelCloseReason,
-  type ChannelState,
   type ConnectionTokenGrant,
 } from "./channel/channelTypes.js";
 export {

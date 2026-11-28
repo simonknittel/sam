@@ -1,11 +1,16 @@
 import * as z from "zod";
-import { LogAnalyzerEntryType } from "../logAnalyzer/logAnalyzerEntries.js";
+import {
+  LOG_ANALYZER_ENTRY_HASH_PATTERN,
+  LogAnalyzerEntryType,
+} from "../logAnalyzer/logAnalyzerEntries.js";
 import {
   CapabilityId,
   ConnectorId,
   LOG_ENTRIES_CAPABILITY,
+  RELAY_LIMITS,
   RuntimeKind,
 } from "./catalog.js";
+import { gameBuildSchema, gameEnvironmentSchema } from "./logFileHeader.js";
 
 /**
  * The protocol between a runtime and the relay service over one WebSocket
@@ -20,22 +25,27 @@ import {
  * 2. The runtime sends `announce` after the `welcome`, and again after each
  *    change of its connectors or of its local access layer.
  * 3. The relay answers each later message of the runtime with an `ack`. The
- *    runtime sends a batch again until it gets the `ack`.
+ *    runtime sends a batch again until it gets the `ack`. Exception: the
+ *    relay answers an accepted `feed_entry_keys_request` with
+ *    `feed_entry_keys`, and a refused one with an `ack`.
  * 4. The relay sends `close` before it closes the connection.
  *
- * Compatibility: the relay accepts the protocol versions from
+ * Compatibility: the relay accepts a `hello` of the protocol versions from
  * `MINIMUM_RELAY_PROTOCOL_VERSION` to `RELAY_PROTOCOL_VERSION`. The schemas
  * refuse unknown message types and unknown enum values. Thus a change that a
  * runtime of an older protocol version cannot read (a new message type, a new
  * required field, a new enum value in a message to the runtime) needs a new
- * protocol version, and the relay sends it only to the runtimes of that
- * version or newer.
+ * protocol version. The two values are the same: the relay accepts only one
+ * version, thus a new version also raises the minimum version. A relay that
+ * accepts an older version next to a newer one must not read or send the
+ * message types of the newer version on a connection of the older version.
  */
 
-export const RELAY_PROTOCOL_VERSION = 1;
+/** Version 2 adds `feed_entry_keys_request` and `feed_entry_keys` (decision 34) */
+export const RELAY_PROTOCOL_VERSION = 2;
 
 /** The relay refuses a `hello` of an older version with `update_necessary` */
-export const MINIMUM_RELAY_PROTOCOL_VERSION = 1;
+export const MINIMUM_RELAY_PROTOCOL_VERSION = 2;
 
 /** The messages from the runtime to the relay */
 export enum UpMessageType {
@@ -44,6 +54,7 @@ export enum UpMessageType {
   Heartbeat = "heartbeat",
   TokenRenewal = "token_renewal",
   FeedEntries = "feed_entries",
+  FeedEntryKeysRequest = "feed_entry_keys_request",
 }
 
 /** The messages from the relay to the runtime */
@@ -52,6 +63,7 @@ export enum DownMessageType {
   Refusal = "refusal",
   Acknowledgement = "ack",
   Close = "close",
+  FeedEntryKeys = "feed_entry_keys",
 }
 
 /**
@@ -78,7 +90,7 @@ export enum RelayCloseReason {
   TooManyRuntimes = "too_many_runtimes",
   /**
    * The user is banned, or has no `remoteControlProgram;use` or no citizen
-   * any more
+   * any more, or the OAuth grant of the desktop companion is revoked
    */
   AccessDenied = "access_denied",
   /** The switch of the full Remote Control Program is off */
@@ -167,7 +179,10 @@ export enum AcknowledgementResult {
  * the same message again after a delay.
  */
 export enum AcknowledgementErrorCode {
-  /** The content does not match the schema of its type. Do not send again. */
+  /**
+   * The content does not match the schema of its type, or the type is newer
+   * than the protocol version of the connection. Do not send again.
+   */
   MessageNotValid = "message_not_valid",
   /**
    * The runtime did not announce the connector or the capability of the
@@ -175,8 +190,10 @@ export enum AcknowledgementErrorCode {
    */
   CapabilityNotAnnounced = "capability_not_announced",
   /**
-   * The runtime sent above the rate of the capability (see
-   * `minimumUploadIntervalMilliseconds`). Send again after the interval.
+   * The runtime sent above the rate of the message type, for example of the
+   * capability of a batch (see `minimumUploadIntervalMilliseconds`) or of
+   * `feed_entry_keys_request` (see `RELAY_LIMITS`). Send again after the
+   * interval.
    */
   RateLimitExceeded = "rate_limit_exceeded",
   /**
@@ -244,6 +261,9 @@ export const protocolVersionSchema = z.int32().min(1);
 
 const messageIdSchema = z.uuid();
 const versionSchema = z.int32().min(1);
+
+/** The unique key of a feed entry: for `log_entries`, its hash (`createLogEntryHash`) */
+const feedEntryKeySchema = z.string().regex(LOG_ANALYZER_ENTRY_HASH_PATTERN);
 
 const envelopeSchema = z.object({
   type: z.string().max(MAXIMUM_MESSAGE_TYPE_LENGTH),
@@ -335,6 +355,17 @@ const logEntrySchema = z.object({
   event_at: z.iso.datetime(),
   /** The number of the line in its log file. The first line has the number 1. */
   line_number: z.int32().min(1),
+  /**
+   * The game environment from the header of the log file of the line, for
+   * example `LIVE` or `PTU` (see `readLogFileHeader`). Null: the header has
+   * no valid value.
+   */
+  game_environment: gameEnvironmentSchema.nullable(),
+  /**
+   * The build number from the header of the log file of the line, for
+   * example `13220821`. Null: the header has no valid value.
+   */
+  game_build: gameBuildSchema.nullable(),
 });
 
 const logEntriesBatchSchema = z.object({
@@ -349,8 +380,9 @@ const logEntriesBatchSchema = z.object({
 });
 
 /**
- * One batch of one feed capability. A new capability is a new option. A new
- * version of a capability is an inner discriminated union on
+ * One batch of one feed capability. A new capability is a new option. The
+ * relay accepts only the current version of each capability. To accept two
+ * versions of a capability, make an inner discriminated union on
  * `capability_version`.
  */
 export const feedEntriesContentSchema = z.discriminatedUnion("capability_id", [
@@ -382,6 +414,26 @@ export const isFeedSourceAnnounced = (
       ),
   );
 
+/**
+ * The keys of the own entries of a feed capability whose time of the
+ * observation is in the time window, for the entries that the relay already
+ * has (decision 34). The keys contain the entries of the accepted batches
+ * that the runtime sent before the request.
+ */
+const feedEntryKeysRequestContentSchema = z.object({
+  capability_id: z.literal(CapabilityId.LogEntries),
+  /** The start of the time window */
+  start: z.iso.datetime(),
+  /** The end of the time window. Exclusive. */
+  end: z.iso.datetime(),
+  /** The `next_page_cursor` of the previous page. Absent for the first page. */
+  page_cursor: feedEntryKeySchema.optional(),
+});
+
+export type FeedEntryKeysRequestContent = z.infer<
+  typeof feedEntryKeysRequestContentSchema
+>;
+
 const closeReasonContentSchema = z.object({
   reason: z.enum(RelayCloseReason),
 });
@@ -396,6 +448,10 @@ export const upMessageSchema = z.discriminatedUnion("type", [
     z.object({ token: connectionTokenSchema }),
   ),
   createMessageSchema(UpMessageType.FeedEntries, feedEntriesContentSchema),
+  createMessageSchema(
+    UpMessageType.FeedEntryKeysRequest,
+    feedEntryKeysRequestContentSchema,
+  ),
 ]);
 
 export const downMessageSchema = z.discriminatedUnion("type", [
@@ -424,6 +480,20 @@ export const downMessageSchema = z.discriminatedUnion("type", [
    * thus the runtime prefers the reason of this message.
    */
   createMessageSchema(DownMessageType.Close, closeReasonContentSchema),
+  /** The answer to an accepted `feed_entry_keys_request` */
+  createMessageSchema(
+    DownMessageType.FeedEntryKeys,
+    z.object({
+      /** The id of the `feed_entry_keys_request` */
+      message_id: messageIdSchema,
+      /** In ascending order */
+      keys: z
+        .array(feedEntryKeySchema)
+        .max(RELAY_LIMITS.maximumFeedEntryKeysPerPage),
+      /** The `page_cursor` of the next page. Null: the last page. */
+      next_page_cursor: feedEntryKeySchema.nullable(),
+    }),
+  ),
 ]);
 
 export type UpMessage = z.infer<typeof upMessageSchema>;

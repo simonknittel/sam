@@ -14,24 +14,32 @@ const TabsContext = createContext<TabsContextInterface | undefined>(undefined);
 interface Props {
   children: ReactNode;
   initialActiveTab?: string;
+  /**
+   * Only when a component outside of the tabs changes the active tab, for
+   * example a link to a sub-tab. Give it together with `onActiveTabChange`.
+   */
+  activeTab?: string;
+  onActiveTabChange?: (tab: string) => void;
 }
 
 export const TabsProvider = ({
   children,
   initialActiveTab,
+  activeTab: controlledActiveTab,
+  onActiveTabChange,
 }: Readonly<Props>) => {
-  const [activeTab, setActiveTab] = useState<string | null>(
-    initialActiveTab || null,
-  );
+  const [uncontrolledActiveTab, setUncontrolledActiveTab] = useState<
+    string | null
+  >(initialActiveTab || null);
 
   const value = {
-    activeTab,
-    setActiveTab,
+    activeTab: controlledActiveTab ?? uncontrolledActiveTab,
+    setActiveTab: onActiveTabChange ?? setUncontrolledActiveTab,
   };
 
   return (
     <TabsContext value={value}>
-      <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
+      <Tabs.Root value={value.activeTab} onValueChange={value.setActiveTab}>
         {children}
       </Tabs.Root>
     </TabsContext>

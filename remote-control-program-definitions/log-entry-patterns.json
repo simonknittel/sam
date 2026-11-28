@@ -1,0 +1,454 @@
+{
+  "patterns": [
+    {
+      "type": "joinPu",
+      "oldest_type": "joinPu",
+      "supersedes": null,
+      "marker": "<Join PU>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]+<Join PU>(?:(?!shard\\[).)+shard\\[(?<shard>[\\d\\w_]+)\\].+$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "ownDeath",
+      "oldest_type": "ownDeath",
+      "supersedes": null,
+      "marker": "<[ActorState] Dead>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<\\[ActorState\\] Dead>(?:(?!ejected from zone ').)*ejected from zone '(?<vehicle>[^']+)' \\[\\d+\\] to zone '(?<zone>[^']+)'.*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "blueprintReceivedNotification",
+      "oldest_type": "blueprintReceivedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?:(?!Received Blueprint: ).)*Received Blueprint: (?<blueprint>.+): \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "contractAcceptedNotification",
+      "oldest_type": "contractAcceptedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?:(?!Contract Accepted: ).)*Contract Accepted: (?<contract>.+): \"(?:(?:(?!MissionId: \\[).)*MissionId: \\[(?<missionId>[0-9a-f-]+)\\])?.*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "contractCompleteNotification",
+      "oldest_type": "contractCompleteNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?:(?!Contract Complete: ).)*Contract Complete: (?<contract>.+): \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "contractCompleteNotificationV2",
+      "oldest_type": "contractCompleteNotification",
+      "supersedes": "contractCompleteNotification",
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?:(?!Contract Complete: ).)*Contract Complete: (?<contract>.+): \"(?:(?:(?!MissionId: \\[).)*MissionId: \\[(?<missionId>[0-9a-f-]+)\\])?.*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "contractFailedNotification",
+      "oldest_type": "contractFailedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?:(?!Contract Failed: ).)*Contract Failed: (?<contract>.+): \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "contractFailedNotificationV2",
+      "oldest_type": "contractFailedNotification",
+      "supersedes": "contractFailedNotification",
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?:(?!Contract Failed: ).)*Contract Failed: (?<contract>.+): \"(?:(?:(?!MissionId: \\[).)*MissionId: \\[(?<missionId>[0-9a-f-]+)\\])?.*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "contractSharedNotification",
+      "oldest_type": "contractSharedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?:(?!Contract Shared: ).)*Contract Shared: (?<contract>.+): \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "contractWithdrawnNotification",
+      "oldest_type": "contractWithdrawnNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?:(?!Contract Withdrawn: ).)*Contract Withdrawn: (?<contract>.+): \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "contractWithdrawnNotificationV2",
+      "oldest_type": "contractWithdrawnNotification",
+      "supersedes": "contractWithdrawnNotification",
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?:(?!Contract Withdrawn: ).)*Contract Withdrawn: (?<contract>.+): \"(?:(?:(?!MissionId: \\[).)*MissionId: \\[(?<missionId>[0-9a-f-]+)\\])?.*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "disconnection",
+      "oldest_type": "disconnection",
+      "supersedes": null,
+      "marker": "<Channel Disconnected>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)> \\[Notice\\] \\<Channel Disconnected\\> cause=\\d+ reason=\"(?<reason>Remote Disconnect - Player requested disconnect|DisconnectCmd: disconnect light ExitToMenu|Remote Disconnect - player inactive)\".*uptime_secs=(?<uptimeSeconds>[\\d.]+).*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "injuryDetectedNotification",
+      "oldest_type": "injuryDetectedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?<severity>\\w+) Injury Detected - (?<bodyPart>[^-]+) - Tier (?<tier>\\d+) Treatment Required ?: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "medBedHeal",
+      "oldest_type": "medBedHeal",
+      "supersedes": null,
+      "marker": "<MED BED HEAL>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<MED BED HEAL>(?:(?!-> Perform surgery event ).)*-> Perform surgery event (?<result>\\w+), med bed name: (?<medBed>[^,]+), vehicle name: (?<vehicle>[^,]+), head: (?<head>\\w+) torso: (?<torso>\\w+) leftArm: (?<leftArm>\\w+) rightArm: (?<rightArm>\\w+) leftLeg: (?<leftLeg>\\w+) rightLeg: (?<rightLeg>\\w+).*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "shopPurchase",
+      "oldest_type": "shopPurchase",
+      "supersedes": null,
+      "marker": "Sending SShopBuyRequest",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<(?:CEntityComponentShopUIProvider::SendShopBuyRequest|CEntityComponentShoppingProvider::SendStandardItemBuyRequest)>(?:(?!shopName\\[).)*shopName\\[(?<shop>[^\\]]+)\\](?:(?!client_price\\[).)*client_price\\[(?<price>[\\d.]+)\\](?:(?!itemName\\[).)*itemName\\[(?<item>[^\\]]+)\\] quantity\\[(?<quantity>\\d+)\\].*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "armisticeZoneNotification",
+      "oldest_type": "armisticeZoneNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?<direction>Entering|Leaving) Armistice Zone[^\"]*\".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "jurisdictionNotification",
+      "oldest_type": "jurisdictionNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"Entered (?<jurisdiction>.+) Jurisdiction: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "monitoredSpaceNotification",
+      "oldest_type": "monitoredSpaceNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?<direction>Entered|Exited) Monitored Space: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "privatePropertyNotification",
+      "oldest_type": "privatePropertyNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?<direction>Entering|Leaving) Private Property: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "partyInviteReceivedNotification",
+      "oldest_type": "partyInviteReceivedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?<handle>[^\"\\r\\n]+)\\r?\\n<[\\d\\-T:.Z]+> Party Invite Received: Accept Invitation\\?: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "partyMemberJoinedNotification",
+      "oldest_type": "partyMemberJoinedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"New Member Joined\\r?\\n<[\\d\\-T:.Z]+> (?<handle>.+?) has joined the party\\.: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "partyMemberLeftNotification",
+      "oldest_type": "partyMemberLeftNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"Member Left\\r?\\n<[\\d\\-T:.Z]+> (?<handle>.+?) has left the party\\.: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "partyLeaderChangedNotification",
+      "oldest_type": "partyLeaderChangedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"New Party Leader\\r?\\n<[\\d\\-T:.Z]+> (?<handle>.+?) is now party leader\\.: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "instanceEntered",
+      "oldest_type": "instanceEntered",
+      "supersedes": null,
+      "marker": "<[Instancing] Player entered instance>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<\\[Instancing\\] Player entered instance> (?:(?!Player ).)*Player (?<handle>.+?)\\[\\d+\\] entered instance (?<instance>[^\\[]+)\\[(?<instanceId>\\d+)\\].*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "instanceExited",
+      "oldest_type": "instanceExited",
+      "supersedes": null,
+      "marker": "<[Instancing] Player exited instance>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<\\[Instancing\\] Player exited instance> (?:(?!Player ).)*Player (?<handle>.+?)\\[\\d+\\] left instance (?<instance>[^\\[]+)\\[(?<instanceId>\\d+)\\].*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "gameQuit",
+      "oldest_type": "gameQuit",
+      "supersedes": null,
+      "marker": "<SystemQuit>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)> \\[Notice\\] \\<SystemQuit\\>.*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "gameCrash",
+      "oldest_type": "gameCrash",
+      "supersedes": null,
+      "marker": "Exception STATUS_",
+      "source": "^Exception (?<exception>STATUS_\\w+)\\(0x[0-9A-Fa-f]+\\).*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": true
+    },
+    {
+      "type": "crimeCommittedNotification",
+      "oldest_type": "crimeCommittedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"Crime Committed: (?<crime>[^\"\\r\\n]+)\\r?\\n<[\\d\\-T:.Z]+> against (?<handle>[^:\"\\r\\n]+): \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "crimeAgainstYouNotification",
+      "oldest_type": "crimeAgainstYouNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?<handle>[^ \"\\r\\n]+) committed (?<crime>[^\"\\r\\n]+) against you\\r?\\n<[\\d\\-T:.Z]+> Press '[^'\\r\\n]+' to report[^\"\\r\\n]*: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "crimeStatIncreasedNotification",
+      "oldest_type": "crimeStatIncreasedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"CrimeStat Rating Increased: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "fineNotification",
+      "oldest_type": "fineNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"Fined (?<amount>\\d+) UEC: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "contractAbandoned",
+      "oldest_type": "contractAbandoned",
+      "supersedes": null,
+      "marker": "<EndMission>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<EndMission>(?:(?!MissionId\\[).)*MissionId\\[(?<missionId>[0-9a-f-]+)\\](?:(?!CompletionType\\[).)*CompletionType\\[Abandon\\].*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "contractNotAcceptedNotification",
+      "oldest_type": "contractNotAcceptedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"Contract Not Accepted: (?<reason>[^\"\\r\\n]+): \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "rewardNotification",
+      "oldest_type": "rewardNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?<reward>[^\"\\r\\n]+ (?:Rewards - Tier \\d+|Tier \\d+ Reward))\\r?\\n<[\\d\\-T:.Z]+> You(?: have|'ve) been awarded: (?<items>(?:(?!: \").)+)(?:: \".*)?$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "earnedNotification",
+      "oldest_type": "earnedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"You've Earned: (?<reward>[^\"\\r\\n]+)\\r?\\n<[\\d\\-T:.Z]+> Access (?:It|Them) at [^\"\\r\\n]*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "earnedNotificationV2",
+      "oldest_type": "earnedNotification",
+      "supersedes": "earnedNotification",
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"You've [Ee]arned: (?<reward>[^\\r\\n]+)\\r?\\n<[\\d\\-T:.Z]+> +Access (?:[Ii]t|[Tt]hem) at [^\"\\r\\n]*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "fundsAwardedNotification",
+      "oldest_type": "fundsAwardedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"Awarded (?<amount>\\d+) aUEC: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "restrictedAreaNotification",
+      "oldest_type": "restrictedAreaNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"(?<event>Restricted Area - Vehicles Will Be Impounded|Leaving Restricted Area|Restricted Area\\r?\\n<[\\d\\-T:.Z]+> For your safety, you've been relocated\\.): \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "monitoredSpaceStatusNotification",
+      "oldest_type": "monitoredSpaceStatusNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"Monitored Space (?<status>Down|Restored): \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "errorPopup",
+      "oldest_type": "errorPopup",
+      "supersedes": null,
+      "marker": "<Error Popup Opened>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<Error Popup Opened> errorCode=(?<errorCode>\\d+).*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "shipClaimFailed",
+      "oldest_type": "shipClaimFailed",
+      "supersedes": null,
+      "marker": "<Claim Failed>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<Claim Failed>(?:(?!Claim vehicle failed: ).)*Claim vehicle failed: (?<reason>[^'\\r\\n]+)'.*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "shopRental",
+      "oldest_type": "shopRental",
+      "supersedes": null,
+      "marker": "<CEntityComponentShoppingProvider::SendRentalRequest>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<CEntityComponentShoppingProvider::SendRentalRequest>(?:(?!shopName\\[).)*shopName\\[(?<shop>[^\\]]+)\\](?:(?!client_price\\[).)*client_price\\[(?<price>[\\d.]+)\\](?:(?!itemName\\[).)*itemName\\[(?<item>[^\\]]+)\\].*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "commodityPurchase",
+      "oldest_type": "commodityPurchase",
+      "supersedes": null,
+      "marker": "<CEntityComponentCommodityUIProvider::SendCommodityBuyRequest>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<CEntityComponentCommodityUIProvider::SendCommodityBuyRequest>(?:(?!shopName\\[).)*shopName\\[(?<shop>[^\\]]+)\\](?:(?! price\\[).)* price\\[(?<price>[\\d.]+)\\](?:(?!quantity\\[).)*quantity\\[(?<centiScu>[\\d.]+) cSCU\\].*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "partyJoinedNotification",
+      "oldest_type": "partyJoinedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"You have joined\\r?\\n<[\\d\\-T:.Z]+> party: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "partyCreatedNotification",
+      "oldest_type": "partyCreatedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"You have created\\r?\\n<[\\d\\-T:.Z]+> party: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "partyLeftNotification",
+      "oldest_type": "partyLeftNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"You have left the party\\.\\r?\\n<[\\d\\-T:.Z]+> : \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "partyKickedNotification",
+      "oldest_type": "partyKickedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"You have been kicked from the party\\.\\r?\\n<[\\d\\-T:.Z]+> : \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "partyDisbandedNotification",
+      "oldest_type": "partyDisbandedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"Party Disbanded\\r?\\n<[\\d\\-T:.Z]+> The party has been disbanded\\.: \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "friendAddedNotification",
+      "oldest_type": "friendAddedNotification",
+      "supersedes": null,
+      "marker": "<SHUDEvent_OnNotification>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<SHUDEvent_OnNotification> Added notification \"Friend Added\\r?\\n<[\\d\\-T:.Z]+> (?<handle>[^:\"\\r\\n]+): \".*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    },
+    {
+      "type": "vehicleDestroyed",
+      "oldest_type": "vehicleDestroyed",
+      "supersedes": null,
+      "marker": "<Vehicle Destroyed>",
+      "source": "^<(?<isoDate>[\\d\\-T:.Z]+)>[^<]*<Vehicle Destroyed> Vehicle '(?<vehicle>[^']+)' \\[\\d+\\] class '(?<vehicleClass>[^']+)'(?:(?!destroyed: reason \\[).)*destroyed: reason \\[(?<reason>[^\\]]+)\\] level \\[(?<fromLevel>\\d+)\\] -> \\[(?<toLevel>\\d+)\\](?:(?!killer ').)*killer '(?<killer>[^']+)'.*$",
+      "flags": "gm",
+      "takes_time_of_preceding_line": false
+    }
+  ]
+}

@@ -10,7 +10,7 @@ import { expect } from "./test";
 
 /**
  * The Log Analyzer is a control UI of the Remote Control Program, thus it
- * also needs the permission of the program (M7 of the migration)
+ * also needs the permission of the program (decision 24 of the program)
  */
 export const LOG_ANALYZER_PERMISSIONS = [
   "logAnalyzer;read",
@@ -72,17 +72,27 @@ export const createBackupFile = (at: Date, line: string): BackupFile => {
   };
 };
 
-/** The folder of the stub in the origin private file system of the page */
+/**
+ * The installation folder of the stub in the origin private file system of
+ * the page. The owner selects it, and the runtime reads the log files of its
+ * environment folder.
+ */
 const LOG_FOLDER_NAME = "StarCitizen";
 
+const ENVIRONMENT_FOLDER_NAME = "LIVE";
+
 const LIVE_LOG_FILE_NAME = "Game.log";
+
+const BACKUP_FOLDER_NAME = "logbackups";
 
 /**
  * Replaces the folder picker of the browser, which no test can answer. The
  * picker gives a real folder of the origin private file system, because the
  * browser runtime keeps the handle in IndexedDB and asks it for the read
- * permission. `appendLogLines()` adds lines to `Game.log`, as the game does
- * while it runs.
+ * permission. The folder has the layout of an installation: `Game.log` and
+ * the backups in `logbackups/` of the environment folder `LIVE`.
+ * `appendLogLines()` adds lines to `Game.log`, as the game does while it
+ * runs.
  *
  * The script applies to all pages of the browser context, thus also to a
  * second tab.
@@ -95,12 +105,16 @@ export const stubDirectoryPicker = (
   page.context().addInitScript(
     ({
       folderName,
+      environmentFolderName,
       liveFileName,
+      backupFolderName,
       fileLines,
       backups,
     }: {
       folderName: string;
+      environmentFolderName: string;
       liveFileName: string;
+      backupFolderName: string;
       fileLines: string[];
       backups: BackupFile[];
     }) => {
@@ -144,16 +158,34 @@ export const stubDirectoryPicker = (
           const folder = await root.getDirectoryHandle(folderName, {
             create: true,
           });
+          const environmentFolder = await folder.getDirectoryHandle(
+            environmentFolderName,
+            { create: true },
+          );
 
           // A second pick keeps the lines that the test added
-          const hasLiveFile = await folder.getFileHandle(liveFileName).then(
-            () => true,
-            () => false,
-          );
+          const hasLiveFile = await environmentFolder
+            .getFileHandle(liveFileName)
+            .then(
+              () => true,
+              () => false,
+            );
           if (!hasLiveFile) {
+            const backupFolder = await environmentFolder.getDirectoryHandle(
+              backupFolderName,
+              { create: true },
+            );
             for (const backup of backups)
-              await writeFile(folder, backup.name, toContent(backup.lines));
-            await writeFile(folder, liveFileName, toContent(fileLines));
+              await writeFile(
+                backupFolder,
+                backup.name,
+                toContent(backup.lines),
+              );
+            await writeFile(
+              environmentFolder,
+              liveFileName,
+              toContent(fileLines),
+            );
           }
 
           return folder;
@@ -162,7 +194,9 @@ export const stubDirectoryPicker = (
     },
     {
       folderName: LOG_FOLDER_NAME,
+      environmentFolderName: ENVIRONMENT_FOLDER_NAME,
       liveFileName: LIVE_LOG_FILE_NAME,
+      backupFolderName: BACKUP_FOLDER_NAME,
       fileLines: [...lines],
       backups: backupFiles.map((backup) => ({
         ...backup,
@@ -178,10 +212,13 @@ export const stubDirectoryPicker = (
  */
 export const appendLogLines = (page: Page, lines: readonly string[]) =>
   page.evaluate(
-    async ({ folderName, liveFileName, newLines }) => {
+    async ({ folderName, environmentFolderName, liveFileName, newLines }) => {
       const root = await navigator.storage.getDirectory();
       const folder = await root.getDirectoryHandle(folderName);
-      const fileHandle = await folder.getFileHandle(liveFileName);
+      const environmentFolder = await folder.getDirectoryHandle(
+        environmentFolderName,
+      );
+      const fileHandle = await environmentFolder.getFileHandle(liveFileName);
       const { size } = await fileHandle.getFile();
 
       const writable = await fileHandle.createWritable({
@@ -193,6 +230,7 @@ export const appendLogLines = (page: Page, lines: readonly string[]) =>
     },
     {
       folderName: LOG_FOLDER_NAME,
+      environmentFolderName: ENVIRONMENT_FOLDER_NAME,
       liveFileName: LIVE_LOG_FILE_NAME,
       newLines: [...lines],
     },

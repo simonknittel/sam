@@ -2,6 +2,7 @@ import {
   AcknowledgementErrorCode,
   AcknowledgementResult,
   CAPABILITY_CATALOG,
+  CapabilityId,
   DownMessageType,
   RELAY_LIMITS,
   RateLimiter,
@@ -13,15 +14,14 @@ import {
   parseDownMessage,
   shouldReconnectAfterClose,
   type AnnounceContent,
-  type CapabilityId,
   type DownMessageOfType,
   type FeedEntriesContent,
   type FeedEntriesSource,
+  type FeedEntryKeysRequestContent,
   type UpMessage,
 } from "@sam-monorepo/domain";
 import { CHANNEL_CLIENT_LIMITS } from "./channelLimits.js";
 import {
-  ChannelDropReason,
   ChannelEndReason,
   ChannelStatus,
   ConnectionTokenRefusedError,
@@ -37,6 +37,8 @@ import {
   type ConnectionTokenGrant,
   type CreateChannelWebSocket,
   type FeedEntry,
+  type OwnEntryKeysPage,
+  type OwnEntryKeysQuery,
 } from "./channelTypes.js";
 import { getReconnectDelayMilliseconds } from "./reconnectDelay.js";
 import { UploadQueue, type QueuedBatch } from "./uploadQueue.js";
@@ -102,12 +104,26 @@ interface Connection {
   readonly tokenRequests: Set<AbortController>;
 }
 
+/** A request for one page of the own entry keys (see `requestOwnEntryKeys()`) */
+interface OwnEntryKeysRequest {
+  readonly content: FeedEntryKeysRequestContent;
+  readonly resolve: (page: OwnEntryKeysPage) => void;
+  readonly reject: (error: Error) => void;
+  readonly cancelTimeout: () => void;
+  /**
+   * The id of the message on the current connection. Null: the request
+   * waits for the send.
+   */
+  messageId: string | null;
+}
+
 /**
  * The channel client: the WebSocket client of a runtime for the protocol of
  * the relay service (see `protocol.ts` of the domain package). It does the
  * handshake and the announcement, sends the heartbeats, renews the token,
- * uploads the feed entries until their `ack`, connects again after a lost
- * connection, and obeys the switches and the local access layer.
+ * uploads the feed entries until their `ack`, requests the keys of the own
+ * entries, connects again after a lost connection, and obeys the switches
+ * and the local access layer.
  */
 export class ChannelClient {
   readonly #options: ChannelClientOptions;
@@ -126,6 +142,13 @@ export class ChannelClient {
   #failedAttemptCount = 0;
   #cancelReconnect: (() => void) | null = null;
   #cancelUploadTimer: (() => void) | null = null;
+  /** The requests without an answer, in the order of the calls */
+  readonly #keyRequests = new Set<OwnEntryKeysRequest>();
+  readonly #keyRequestRate = new RateLimiter(
+    RELAY_LIMITS.feedEntryKeyRequestIntervalMilliseconds,
+    CHANNEL_CLIENT_LIMITS.feedEntryKeyRequestBurstSize,
+  );
+  #cancelKeyRequestTimer: (() => void) | null = null;
 
   constructor(options: ChannelClientOptions) {
     this.#options = options;
@@ -163,14 +186,22 @@ export class ChannelClient {
   }
 
   /**
-   * Closes the connection. The queue keeps the entries for a later
-   * `connect()`.
+   * Closes the connection and removes the queue: the entries that wait for
+   * their upload or their `ack` do not go up after a later `connect()`
+   * (decision 27 of the concept). A lost connection keeps the queue for the
+   * reconnect.
    */
   disconnect() {
     this.#cancelReconnect?.();
     this.#cancelReconnect = null;
     if (this.#connection !== null) this.#closeConnection(this.#connection);
-    this.#setState({ status: ChannelStatus.Idle, closeReason: null });
+    this.#queue.clear();
+    this.#setState({
+      status: ChannelStatus.Idle,
+      closeReason: null,
+      queuedEntryCount: this.#queue.entryCount,
+    });
+    this.#rejectUnavailableKeyRequests();
   }
 
   /**
@@ -190,34 +221,55 @@ export class ChannelClient {
   /**
    * Queues the entries for the upload. The client sends them in batches when
    * the relay accepted an announcement that contains the connector and the
-   * capability, and keeps each batch until its `ack`. `onEntriesDropped`
-   * tells about the entries that do not go up.
+   * capability, and keeps each batch until its `ack`.
    */
   sendFeedEntries(content: FeedEntriesContent) {
     const { entries, ...source } = content;
-    if (entries.length === 0) return;
+    if (entries.length === 0 || !this.#canUpload(source)) return;
 
-    const dropReason = this.#getDropReason(source);
-    if (dropReason !== null) {
-      this.#reportDropped(source.capability_id, entries.length, dropReason);
-      return;
-    }
-
-    const { droppedBatches, tooLargeEntryCount } = this.#queue.add(
-      source,
-      entries,
-    );
-    if (tooLargeEntryCount > 0)
-      this.#reportDropped(
-        source.capability_id,
-        tooLargeEntryCount,
-        ChannelDropReason.MessageTooLarge,
-      );
-    for (const batch of droppedBatches)
-      this.#reportDroppedBatch(batch, ChannelDropReason.QueueFull);
-
+    this.#queue.add(source, entries);
     this.#updateQueuedEntryCount();
     this.#sendWaitingBatches();
+  }
+
+  /**
+   * One page of the keys of the own entries of `log_entries` that the relay
+   * has (`feed_entry_keys_request`). The request waits for a connection with
+   * a `welcome`, obeys the rate of the relay, and goes again after a lost
+   * connection or a temporary refusal. It rejects while the client does not
+   * connect (`Idle` or `Ended`) or the Remote Control Program is off, when
+   * the relay refuses it, and after
+   * `CHANNEL_CLIENT_LIMITS.ownEntryKeysTimeoutMilliseconds`.
+   */
+  requestOwnEntryKeys({ start, end, pageCursor }: OwnEntryKeysQuery) {
+    return new Promise<OwnEntryKeysPage>((resolve, reject) => {
+      const unavailableReason = this.#getKeyRequestUnavailableReason();
+      if (unavailableReason !== null) {
+        reject(new Error(unavailableReason));
+        return;
+      }
+
+      const request: OwnEntryKeysRequest = {
+        content: {
+          capability_id: CapabilityId.LogEntries,
+          start: start.toISOString(),
+          end: end.toISOString(),
+          ...(pageCursor !== null && { page_cursor: pageCursor }),
+        },
+        resolve,
+        reject,
+        cancelTimeout: this.#timers.schedule(() => {
+          this.#failKeyRequest(
+            request,
+            "The relay did not answer the request for the keys in time",
+          );
+          this.#sendWaitingKeyRequests();
+        }, CHANNEL_CLIENT_LIMITS.ownEntryKeysTimeoutMilliseconds),
+        messageId: null,
+      };
+      this.#keyRequests.add(request);
+      this.#sendWaitingKeyRequests();
+    });
   }
 
   #setState(changes: Partial<ChannelState>) {
@@ -238,32 +290,14 @@ export class ChannelClient {
    * an explicit request of the owner sends older entries (decision 27 and
    * "Switches" of the concept).
    */
-  #getDropReason(source: FeedEntriesSource) {
-    if (isProgramTurnedOff(this.#state)) return ChannelDropReason.TurnedOff;
+  #canUpload(source: FeedEntriesSource) {
+    if (isProgramTurnedOff(this.#state)) return false;
 
     // All is off by default (principle 2): a capability without a rule does
     // not upload
     const { capability_rules: rules } = this.#announcement.local_access_layer;
-    const isCapabilityOn = rules.some(
+    return rules.some(
       (rule) => rule.capability_id === source.capability_id && rule.is_on,
-    );
-
-    return isCapabilityOn ? null : ChannelDropReason.LocalAccessLayer;
-  }
-
-  #reportDropped(
-    capabilityId: CapabilityId,
-    entryCount: number,
-    reason: ChannelDropReason,
-  ) {
-    this.#options.onEntriesDropped?.({ capabilityId, entryCount, reason });
-  }
-
-  #reportDroppedBatch(batch: QueuedBatch, reason: ChannelDropReason) {
-    this.#reportDropped(
-      batch.source.capability_id,
-      batch.entries.length,
-      reason,
     );
   }
 
@@ -276,28 +310,15 @@ export class ChannelClient {
       batch.source,
       batch.entries,
     );
-    const removedCount = batch.entries.length - permittedEntries.length;
-    if (removedCount > 0) {
+    if (permittedEntries.length < batch.entries.length)
       this.#queue.keepEntries(batch, permittedEntries);
-      this.#reportDropped(
-        batch.source.capability_id,
-        removedCount,
-        ChannelDropReason.LocalAccessLayer,
-      );
-    }
 
     return permittedEntries.length > 0;
   }
 
   /** After a change of the connection or of the local access layer */
   #applyAccessChange() {
-    const droppedBatches = this.#queue.removeWaiting(
-      (batch) => this.#getDropReason(batch.source) !== null,
-    );
-    for (const batch of droppedBatches) {
-      const reason = this.#getDropReason(batch.source);
-      if (reason !== null) this.#reportDroppedBatch(batch, reason);
-    }
+    this.#queue.removeWaiting((batch) => !this.#canUpload(batch.source));
     for (const batch of [...this.#queue.waitingBatches])
       this.#keepPermittedEntries(batch);
 
@@ -445,6 +466,11 @@ export class ChannelClient {
     // The relay removes the duplicates with the key of each entry, thus a
     // resend is safe. The local access layer applies again before it.
     this.#queue.returnSent();
+
+    this.#cancelKeyRequestTimer?.();
+    this.#cancelKeyRequestTimer = null;
+    // The answer does not come on a different connection
+    for (const request of this.#keyRequests) request.messageId = null;
   }
 
   /** @param reason Null for a close without a reason of the relay */
@@ -471,6 +497,7 @@ export class ChannelClient {
     }
 
     this.#applyAccessChange();
+    this.#rejectUnavailableKeyRequests();
   }
 
   #handleMessage(connection: Connection, data: unknown) {
@@ -499,6 +526,10 @@ export class ChannelClient {
         this.#handleAcknowledgement(connection, message);
         break;
 
+      case DownMessageType.FeedEntryKeys:
+        this.#handleOwnEntryKeys(message.content);
+        break;
+
       default:
         throw new Error(
           `Unknown message type: ${JSON.stringify(message satisfies never)}`,
@@ -514,6 +545,7 @@ export class ChannelClient {
     this.#scheduleHeartbeat(connection);
     this.#scheduleTokenTimers(connection);
     this.#sendAnnouncement(connection);
+    this.#sendWaitingKeyRequests();
 
     this.#setState({
       status: ChannelStatus.Connected,
@@ -674,16 +706,19 @@ export class ChannelClient {
       return;
     }
 
+    const keyRequest = this.#findKeyRequest(content.message_id);
+    if (keyRequest !== undefined) {
+      // The relay answers an accepted request with `feed_entry_keys`
+      if (content.result === AcknowledgementResult.Refused)
+        this.#handleRefusedKeyRequest(keyRequest, content.error_code);
+      return;
+    }
+
     const batch = this.#queue.takeSent(content.message_id);
     if (batch === null) return;
 
-    if (content.result === AcknowledgementResult.Accepted)
-      this.#options.onEntriesAccepted?.({
-        capabilityId: batch.source.capability_id,
-        entryCount: batch.entries.length,
-        newEntryCount: content.new_entry_count ?? null,
-      });
-    else this.#handleRefusedBatch(connection, batch, content.error_code);
+    if (content.result === AcknowledgementResult.Refused)
+      this.#handleRefusedBatch(connection, batch, content.error_code);
 
     this.#updateQueuedEntryCount();
   }
@@ -697,9 +732,9 @@ export class ChannelClient {
     const { source } = batch;
 
     switch (errorCode) {
+      // The protocol says: do not send again
       case AcknowledgementErrorCode.MessageNotValid:
       case AcknowledgementErrorCode.EntriesNotValid:
-        this.#reportDroppedBatch(batch, ChannelDropReason.RefusedByRelay);
         break;
 
       // The uploads wait for the `ack` of a new `announce`
@@ -732,6 +767,132 @@ export class ChannelClient {
       default:
         throw new Error(`Unknown error code: ${errorCode satisfies never}`);
     }
+  }
+
+  /** Null while the client can get an answer of the relay */
+  #getKeyRequestUnavailableReason() {
+    const { status } = this.#state;
+    if (status === ChannelStatus.Idle || status === ChannelStatus.Ended)
+      return "The channel client does not connect to the relay";
+    // The relay refuses each connection while the program is off
+    if (isProgramTurnedOff(this.#state))
+      return "The Remote Control Program is turned off";
+    return null;
+  }
+
+  /** After a change of the status or of the close reason */
+  #rejectUnavailableKeyRequests() {
+    const reason = this.#getKeyRequestUnavailableReason();
+    if (reason === null) return;
+
+    for (const request of [...this.#keyRequests])
+      this.#failKeyRequest(request, reason);
+  }
+
+  #failKeyRequest(request: OwnEntryKeysRequest, reason: string) {
+    if (!this.#keyRequests.delete(request)) return;
+
+    request.cancelTimeout();
+    request.reject(new Error(reason));
+  }
+
+  #findKeyRequest(messageId: string) {
+    return [...this.#keyRequests].find(
+      (request) => request.messageId === messageId,
+    );
+  }
+
+  #handleOwnEntryKeys(
+    content: DownMessageOfType<DownMessageType.FeedEntryKeys>["content"],
+  ) {
+    const request = this.#findKeyRequest(content.message_id);
+    if (request === undefined) return;
+
+    this.#keyRequests.delete(request);
+    request.cancelTimeout();
+    request.resolve({
+      keys: content.keys,
+      nextPageCursor: content.next_page_cursor,
+    });
+    this.#sendWaitingKeyRequests();
+  }
+
+  /** Follows the "send again" notes of `AcknowledgementErrorCode` */
+  #handleRefusedKeyRequest(
+    request: OwnEntryKeysRequest,
+    errorCode: AcknowledgementErrorCode,
+  ) {
+    switch (errorCode) {
+      case AcknowledgementErrorCode.MessageNotValid:
+      case AcknowledgementErrorCode.CapabilityNotAnnounced:
+      case AcknowledgementErrorCode.EntriesNotValid:
+        this.#failKeyRequest(
+          request,
+          `The relay refused the request for the keys: ${errorCode}`,
+        );
+        this.#sendWaitingKeyRequests();
+        break;
+
+      case AcknowledgementErrorCode.RateLimitExceeded:
+        request.messageId = null;
+        this.#keyRequestRate.pause(
+          this.#timers.now(),
+          RELAY_LIMITS.feedEntryKeyRequestIntervalMilliseconds,
+        );
+        this.#sendWaitingKeyRequests();
+        break;
+
+      case AcknowledgementErrorCode.TokenNotValid:
+      case AcknowledgementErrorCode.InternalError:
+        request.messageId = null;
+        this.#keyRequestRate.pause(
+          this.#timers.now(),
+          CHANNEL_CLIENT_LIMITS.retryDelayMilliseconds,
+        );
+        this.#sendWaitingKeyRequests();
+        break;
+
+      default:
+        throw new Error(`Unknown error code: ${errorCode satisfies never}`);
+    }
+  }
+
+  /**
+   * Sends the next waiting request on a connection with a `welcome`, as the
+   * rate permits, or schedules it. Only one request at a time: the data lane
+   * of the relay keeps only a few messages, and the relay refuses a message
+   * when the lane is full.
+   */
+  #sendWaitingKeyRequests() {
+    this.#cancelKeyRequestTimer?.();
+    this.#cancelKeyRequestTimer = null;
+
+    const connection = this.#connection;
+    if (!connection?.isWelcomed) return;
+
+    const requests = [...this.#keyRequests];
+    if (requests.some((request) => request.messageId !== null)) return;
+
+    const [request] = requests;
+    if (request === undefined) return;
+
+    const now = this.#timers.now();
+    const requestAt = this.#keyRequestRate.getNextAllowedAt();
+    if (requestAt > now) {
+      this.#cancelKeyRequestTimer = this.#timers.schedule(() => {
+        this.#cancelKeyRequestTimer = null;
+        this.#sendWaitingKeyRequests();
+      }, requestAt - now);
+      return;
+    }
+
+    this.#keyRequestRate.record(now);
+    const message = createUpMessage(
+      UpMessageType.FeedEntryKeysRequest,
+      request.content,
+    );
+    request.messageId = message.id;
+    this.#send(connection, message);
   }
 
   #getRateLimiter(capabilityId: CapabilityId) {

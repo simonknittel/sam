@@ -45,6 +45,8 @@ const relayEntry = (
     eventAt: atSecond(second),
     lineNumber: 1,
     hash: hash(hashCharacter),
+    gameEnvironment: "PTU",
+    gameBuild: "13284307",
   });
   if (!entry) throw new Error("The sample line does not match its type");
   return entry;
@@ -62,6 +64,8 @@ const localEntry = (
       hash: hash(hashCharacter),
       groups: { direction: "Entering" },
       lineNumber: 1,
+      gameEnvironment: "LIVE",
+      gameBuild: "13220821",
     },
     OWN_CITIZEN,
   );
@@ -88,6 +92,15 @@ describe("mergeLogFeedEntries", () => {
       `own:${hash("b")}`,
     ]);
     expect(entries[0]).toBe(ownLocalEntry);
+    expect(
+      entries.map(({ gameEnvironment, gameBuild }) => [
+        gameEnvironment,
+        gameBuild,
+      ]),
+    ).toEqual([
+      ["LIVE", "13220821"],
+      ["PTU", "13284307"],
+    ]);
   });
 
   test("keeps the entries of two owners with the same hash", () => {

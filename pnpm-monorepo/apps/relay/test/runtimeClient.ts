@@ -2,6 +2,7 @@ import {
   createUpMessage,
   DownMessageType,
   parseDownMessage,
+  RELAY_PROTOCOL_VERSION,
   RuntimeKind,
   UpMessageType,
   type DownMessage,
@@ -58,15 +59,27 @@ export class TestRuntimeClient {
     return message;
   }
 
-  sendHello(token: string, runtimeId: string) {
-    return this.send(
-      createUpMessage(UpMessageType.Hello, {
+  /** By default a browser runtime with the newest protocol version */
+  sendHello(
+    token: string,
+    runtimeId: string,
+    {
+      protocolVersion = RELAY_PROTOCOL_VERSION,
+      runtimeKind = RuntimeKind.browser,
+    }: {
+      readonly protocolVersion?: number;
+      readonly runtimeKind?: RuntimeKind;
+    } = {},
+  ) {
+    return this.send({
+      ...createUpMessage(UpMessageType.Hello, {
         token,
         runtime_id: runtimeId,
-        runtime_kind: RuntimeKind.browser,
+        runtime_kind: runtimeKind,
         runtime_version: "1.0.0",
       }),
-    );
+      protocol_version: protocolVersion,
+    });
   }
 
   /** The first message of the type, also when it arrived before the call */

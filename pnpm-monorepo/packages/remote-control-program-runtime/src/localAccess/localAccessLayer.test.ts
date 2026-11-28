@@ -44,9 +44,9 @@ const startRuntime = (browser: ReturnType<typeof createBrowser>) => {
 };
 
 describe("the rule for the upload", () => {
-  it("after a switch turned off the capability, only the lines read live from its end go up", () => {
+  it("only the entries from the start of the reading go up, also after a short restart", () => {
     const browser = createBrowser();
-    const olderLine = createEntry(
+    const lineBeforeStart = createEntry(
       LogAnalyzerEntryType.JoinPu,
       browser.getTime(),
     );
@@ -55,17 +55,65 @@ describe("the rule for the upload", () => {
     const layer = startRuntime(browser);
     layer.setLogEntryTypes([LogAnalyzerEntryType.JoinPu], true);
     browser.advance(5 * SECOND);
-    const liveLine = createEntry(
+    const lineAfterStart = createEntry(
+      LogAnalyzerEntryType.JoinPu,
+      browser.getTime(),
+    );
+    expect(
+      layer.selectAutomaticUploads([lineBeforeStart, lineAfterStart]),
+    ).toEqual([lineAfterStart]);
+
+    // Before the `welcome` of a new connection, the entries wait in the outbox of the runtime
+    layer.setRelayState(RelayUploadState.Unknown);
+    expect(layer.selectAutomaticUploads([lineAfterStart])).toEqual([
+      lineAfterStart,
+    ]);
+
+    // The next runtime, also after a change of the active tab, reads live from its own start
+    layer.stopReading();
+    expect(layer.selectAutomaticUploads([lineAfterStart])).toEqual([]);
+    browser.advance(5 * SECOND);
+    const lineWithoutRuntime = createEntry(
       LogAnalyzerEntryType.JoinPu,
       browser.getTime(),
     );
     browser.advance(5 * SECOND);
-    layer.heartbeat();
-    expect(layer.selectAutomaticUploads([olderLine, liveLine])).toEqual([
-      liveLine,
-    ]);
+    const nextRuntime = startRuntime(browser);
+    browser.advance(5 * SECOND);
+    const lineOfNextRuntime = createEntry(
+      LogAnalyzerEntryType.JoinPu,
+      browser.getTime(),
+    );
+    expect(
+      nextRuntime.selectAutomaticUploads([
+        lineBeforeStart,
+        lineAfterStart,
+        lineWithoutRuntime,
+        lineOfNextRuntime,
+      ]),
+    ).toEqual([lineOfNextRuntime]);
 
-    // The live line did not go up before the stop, for example because the relay was not available
+    // A different log folder starts the reading again
+    nextRuntime.stopReading();
+    browser.advance(5 * SECOND);
+    nextRuntime.startReading();
+    expect(nextRuntime.getReadsLiveSince()).toEqual(
+      new Date(browser.getTime()),
+    );
+    expect(nextRuntime.selectAutomaticUploads([lineOfNextRuntime])).toEqual([]);
+  });
+
+  it("after a switch, only the lines read live from its end go up", () => {
+    const browser = createBrowser();
+    const layer = startRuntime(browser);
+    layer.setLogEntryTypes([LogAnalyzerEntryType.JoinPu], true);
+    browser.advance(5 * SECOND);
+    const liveLine = createEntry(
+      LogAnalyzerEntryType.JoinPu,
+      browser.getTime(),
+    );
+
+    // The live line did not go up before the switch, for example because the relay was not available
     layer.setRelayState(RelayUploadState.Stopped);
     browser.advance(5 * SECOND);
     const stoppedLine = createEntry(
@@ -77,48 +125,14 @@ describe("the rule for the upload", () => {
     browser.advance(5 * SECOND);
     layer.setRelayState(RelayUploadState.Accepting);
     browser.advance(5 * SECOND);
-    const lineAfterStart = createEntry(
+    const lineAfterSwitch = createEntry(
       LogAnalyzerEntryType.JoinPu,
       browser.getTime(),
     );
-
     expect(
-      layer.selectAutomaticUploads([
-        olderLine,
-        liveLine,
-        stoppedLine,
-        lineAfterStart,
-      ]),
-    ).toEqual([lineAfterStart]);
+      layer.selectAutomaticUploads([liveLine, stoppedLine, lineAfterSwitch]),
+    ).toEqual([lineAfterSwitch]);
   });
-
-  it.each([
-    { gapSeconds: 20, isUploaded: true },
-    { gapSeconds: 60, isUploaded: false },
-  ])(
-    "a change of the active tab after $gapSeconds seconds uploads the lines of the gap: $isUploaded",
-    ({ gapSeconds, isUploaded }) => {
-      const browser = createBrowser();
-      const firstTab = startRuntime(browser);
-      firstTab.setLogEntryTypes([LogAnalyzerEntryType.JoinPu], true);
-      browser.advance(10 * SECOND);
-      firstTab.heartbeat();
-
-      // The tab crashes: the period ends at its last heartbeat
-      browser.advance(5 * SECOND);
-      const lineOfGap = createEntry(
-        LogAnalyzerEntryType.JoinPu,
-        browser.getTime(),
-      );
-      browser.advance(gapSeconds * SECOND - 5 * SECOND);
-
-      const secondTab = startRuntime(browser);
-
-      expect(secondTab.selectAutomaticUploads([lineOfGap])).toEqual(
-        isUploaded ? [lineOfGap] : [],
-      );
-    },
-  );
 
   it("uploads the lines of a type that turns on later only from that time, also of its newer versions", () => {
     const browser = createBrowser();
@@ -151,11 +165,18 @@ describe("the rule for the upload", () => {
         lineOfTypeThatIsOff,
       ]),
     ).toEqual([lineAfterTurnOn]);
+
+    // A type that turns off stops also its waiting entries
+    layer.setLogEntryTypes(
+      [LogAnalyzerEntryType.ContractCompleteNotificationV2],
+      false,
+    );
+    expect(layer.selectAutomaticUploads([lineAfterTurnOn])).toEqual([]);
   });
 });
 
 describe("the request for older entries", () => {
-  it("counts the older entries of the range whose types are on, and uploads them after the confirmation", () => {
+  it("selects the older entries of the range whose types are on, and uploads them after the confirmation", () => {
     const browser = createBrowser();
     const firstOlderLine = createEntry(
       LogAnalyzerEntryType.JoinPu,
@@ -190,7 +211,7 @@ describe("the request for older entries", () => {
       browser.getTime(),
     );
 
-    const request = layer.prepareOlderEntriesRequest(
+    const olderEntries = layer.selectOlderEntries(
       [
         firstOlderLine,
         secondOlderLine,
@@ -202,21 +223,20 @@ describe("the request for older entries", () => {
       { start: new Date(firstOlderLine.isoDate), end: null },
     );
 
-    expect(request.countsByType).toEqual(
-      new Map([
-        [LogAnalyzerEntryType.JoinPu, 2],
-        [LogAnalyzerEntryType.EarnedNotification, 1],
-      ]),
-    );
+    expect(olderEntries).toEqual([
+      firstOlderLine,
+      secondOlderLine,
+      olderLineOfOtherType,
+    ]);
 
     layer.setLogEntryTypes([LogAnalyzerEntryType.EarnedNotification], false);
-    expect(layer.selectPermittedUploads(request.entries)).toEqual([
+    expect(layer.selectPermittedUploads(olderEntries)).toEqual([
       firstOlderLine,
       secondOlderLine,
     ]);
 
     layer.setRelayState(RelayUploadState.Stopped);
-    expect(layer.selectPermittedUploads(request.entries)).toEqual([]);
+    expect(layer.selectPermittedUploads(olderEntries)).toEqual([]);
   });
 });
 
@@ -232,5 +252,39 @@ describe("the storage", () => {
     expect(layer.getSettings().logEntryTypes[LogAnalyzerEntryType.JoinPu]).toBe(
       false,
     );
+  });
+
+  it("loads the rules next to the live periods of an earlier version, and removes the periods", () => {
+    const livePeriodsKey = `remote_control_program_live_periods:${CITIZEN_ID}`;
+    const browser = createBrowser({
+      [`remote_control_program_local_access_layer:${CITIZEN_ID}`]:
+        JSON.stringify({
+          version: 1,
+          log_entry_types: [
+            { type: "joinPu", turned_on_at: "2026-11-23T17:00:00.000Z" },
+          ],
+        }),
+      [livePeriodsKey]: JSON.stringify({
+        version: 1,
+        periods: [
+          {
+            started_at: "2026-11-23T17:00:00.000Z",
+            ended_at: "2026-11-23T17:59:50.000Z",
+          },
+        ],
+        can_continue_last_period: true,
+      }),
+    });
+    const lineOfLivePeriod = createEntry(
+      LogAnalyzerEntryType.JoinPu,
+      browser.getTime() - 30 * SECOND,
+    );
+
+    const layer = startRuntime(browser);
+    expect(browser.storage.values.has(livePeriodsKey)).toBe(false);
+    expect(layer.getSettings().logEntryTypes[LogAnalyzerEntryType.JoinPu]).toBe(
+      true,
+    );
+    expect(layer.selectAutomaticUploads([lineOfLivePeriod])).toEqual([]);
   });
 });

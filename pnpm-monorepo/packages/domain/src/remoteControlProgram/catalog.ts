@@ -53,7 +53,10 @@ export enum CapabilityTiming {
 
 export enum CapabilitySensitivity {
   Normal = "normal",
-  /** The sharing popover shows a warning */
+  /**
+   * For example the location or the wallet balance. A fact for the choice of
+   * the defaults: the sharing popover shows no warning for it.
+   */
   High = "high",
 }
 
@@ -64,9 +67,11 @@ export enum ConnectorId {
 /**
  * The kinds of the runtimes: the values of the Prisma enum of the table of
  * the runtimes, which `runtime_kind` of the protocol also uses. The browser
- * runtime runs in a SAM tab of a Chromium browser. The desktop companion
- * comes in step 3. A new kind is a compatible change of the protocol: a
- * runtime of an older release never sends it.
+ * runtime runs in a SAM tab of a Chromium browser. The desktop companion is
+ * a program on the machine with an OAuth login. The relay service accepts a
+ * kind only with the source of its connection token (see
+ * `authenticateRuntimeConnection()`). A new kind is a compatible change of
+ * the protocol: a runtime of an older release never sends it.
  */
 export { RemoteControlProgramRuntimeKind as RuntimeKind } from "@sam-monorepo/database/browser";
 
@@ -91,7 +96,11 @@ export type CapabilityDefinition = FeedCapabilityDefinition;
 /** The matched lines of `Game.log` (see "Log Analyzer" of the concept) */
 export const LOG_ENTRIES_CAPABILITY = {
   id: CapabilityId.LogEntries,
-  version: 1,
+  /**
+   * Version 2 adds the game environment and the build number of the log file
+   * to each entry (decision 17). The relay accepts only version 2.
+   */
+  version: 2,
   kind: CapabilityKind.Feed,
   timing: CapabilityTiming.Realtime,
   /**
@@ -129,15 +138,32 @@ export interface ConnectorDefinition {
   readonly capabilityIds: readonly CapabilityId[];
 }
 
+/**
+ * The URL scheme of the desktop companion (decision 37). The program
+ * registers it for the user of the operating system. A link to
+ * `DESKTOP_COMPANION_OPEN_URL` starts the program, or opens the window of
+ * the copy that runs. The program accepts only this URL and its path
+ * `/settings` (for a click on a notification of the program): a different
+ * path or a parameter does nothing, because each website can open such a
+ * link.
+ */
+export const DESKTOP_COMPANION_URL_SCHEME = "sam-desktop-companion";
+
+export const DESKTOP_COMPANION_OPEN_URL = `${DESKTOP_COMPANION_URL_SCHEME}://open`;
+
 export const CONNECTOR_CATALOG: Readonly<
   Record<ConnectorId, ConnectorDefinition>
 > = {
   [ConnectorId.LogFile]: {
     id: ConnectorId.LogFile,
-    version: 1,
+    /** Version 2 reads the header of each log file (see `logFileHeader.ts`) */
+    version: 2,
     capabilityIds: [CapabilityId.LogEntries],
   },
 };
+
+/** Two limits of `RELAY_LIMITS` have this value */
+const MAXIMUM_FEED_ENTRY_KEY_PAGES_PER_CHECK = 50;
 
 /** The limits of the relay service, which the runtimes also obey */
 export const RELAY_LIMITS = {
@@ -195,6 +221,29 @@ export const RELAY_LIMITS = {
    * arrive closer together than the runtime sent them.
    */
   uploadBurstBatches: 5,
+  /**
+   * The keys on one page of `feed_entry_keys`. A full page (2,000 keys of 64
+   * characters, and the JSON) is approximately 134 KB, thus it stays below
+   * `maximumMessageBytes`.
+   */
+  maximumFeedEntryKeysPerPage: 2_000,
+  /**
+   * The pages of `feed_entry_keys` of one check of a runtime, for example for
+   * the count of a request for older entries: 100,000 keys. Above it, the
+   * runtime sends the entries without a check, and the relay removes the
+   * duplicates.
+   */
+  maximumFeedEntryKeyPagesPerCheck: MAXIMUM_FEED_ENTRY_KEY_PAGES_PER_CHECK,
+  /**
+   * The `feed_entry_keys_request`s of one connection: one in each interval,
+   * and a burst of `feedEntryKeyRequestBurstSize` after a pause. A runtime
+   * requests the pages of one check one after the other, thus the burst
+   * covers the pages of one check. Each page is one query of the database,
+   * thus the limit bounds this work. A request above the rate gets
+   * `rate_limit_exceeded` and counts as an error.
+   */
+  feedEntryKeyRequestIntervalMilliseconds: 1_000,
+  feedEntryKeyRequestBurstSize: MAXIMUM_FEED_ENTRY_KEY_PAGES_PER_CHECK,
   /**
    * A correct runtime almost never gets an error. More errors in one minute
    * show a defect or an attack, thus the relay closes the connection.

@@ -1,8 +1,12 @@
-import { RUNTIME_CONNECTION_TOKEN_AUDIENCE } from "@sam-monorepo/application";
+import {
+  revokeOwnDesktopCompanionSignIn,
+  RUNTIME_CONNECTION_TOKEN_AUDIENCE,
+} from "@sam-monorepo/application";
 import {
   AcknowledgementErrorCode,
   AcknowledgementResult,
   CapabilityId,
+  CONNECTOR_CATALOG,
   ConnectorId,
   createUpMessage,
   DownMessageType,
@@ -12,8 +16,10 @@ import {
   RELAY_LIMITS,
   RELAY_PROTOCOL_VERSION,
   RelayCloseReason,
+  RuntimeKind,
   UpMessageType,
   type FeedEntriesContent,
+  type FeedEntryKeysRequestContent,
 } from "@sam-monorepo/domain";
 import { SignJWT } from "jose";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -22,6 +28,7 @@ import {
   LOG_FILE_ANNOUNCEMENT,
 } from "../../../packages/application/test/remoteControlProgram.js";
 import {
+  createLogEntryRows,
   createOwner,
   findLogEntryRows,
   findRuntimeLease,
@@ -45,22 +52,40 @@ const INTERNAL_ERROR_CLOSE_CODE = 1011;
 
 const DISCONNECT_USER_PATH = "/internal/disconnect-user";
 
-const createJoinPuEntry = (lineNumber: number) => {
+const ONE_HOUR_MILLISECONDS = 60 * 60 * 1000;
+
+/** The values of the header of the log file of the entry */
+interface GameBuild {
+  readonly game_environment: string | null;
+  readonly game_build: string | null;
+}
+
+const LIVE_BUILD: GameBuild = {
+  game_environment: "LIVE",
+  game_build: "13220821",
+};
+
+const createJoinPuEntry = (lineNumber: number, gameBuild = LIVE_BUILD) => {
   const time = new Date(Date.UTC(2026, 10, 1, 12, 0, lineNumber));
   return {
     type: LogAnalyzerEntryType.JoinPu,
     raw_line: createJoinPuLine(time),
     event_at: time.toISOString(),
     line_number: lineNumber,
+    ...gameBuild,
   };
 };
 
+/** The entries of two log files: of LIVE, and of a header without values */
 const BATCH: FeedEntriesContent = {
   capability_id: CapabilityId.LogEntries,
   capability_version: LOG_ENTRIES_CAPABILITY.version,
   connector_id: ConnectorId.LogFile,
-  connector_version: 1,
-  entries: [createJoinPuEntry(1), createJoinPuEntry(2)],
+  connector_version: CONNECTOR_CATALOG[ConnectorId.LogFile].version,
+  entries: [
+    createJoinPuEntry(1),
+    createJoinPuEntry(2, { game_environment: null, game_build: null }),
+  ],
 };
 
 let relay: TestRelay | null = null;
@@ -97,6 +122,37 @@ const upload = (client: TestClient, batch = BATCH) =>
 
 const sendHeartbeat = (client: TestClient) =>
   client.request(createUpMessage(UpMessageType.Heartbeat, {}));
+
+/** A time window of the key requests without entries */
+const EMPTY_KEY_WINDOW = {
+  start: new Date(Date.UTC(2026, 9, 1)).toISOString(),
+  end: new Date(Date.UTC(2026, 9, 2)).toISOString(),
+};
+
+const createKeysRequest = (
+  content: Omit<
+    FeedEntryKeysRequestContent,
+    "capability_id"
+  > = EMPTY_KEY_WINDOW,
+) =>
+  createUpMessage(UpMessageType.FeedEntryKeysRequest, {
+    capability_id: CapabilityId.LogEntries,
+    ...content,
+  });
+
+const requestKeys = async (
+  client: TestClient,
+  content: Omit<FeedEntryKeysRequestContent, "capability_id">,
+) => {
+  const request = createKeysRequest(content);
+  client.send(request);
+  return (
+    await client.waitForMessage(
+      DownMessageType.FeedEntryKeys,
+      (answer) => answer.content.message_id === request.id,
+    )
+  ).content;
+};
 
 const expectRefusal = async (client: TestClient, reason: RelayCloseReason) => {
   await expect(
@@ -139,8 +195,20 @@ test("a runtime with a valid token connects, announces and uploads", async () =>
     new_entry_count: 2,
   });
   await expect(findLogEntryRows(owner.citizenId)).resolves.toEqual([
-    { type: LogAnalyzerEntryType.JoinPu, lineNumber: 1, runtimeId: RUNTIME_ID },
-    { type: LogAnalyzerEntryType.JoinPu, lineNumber: 2, runtimeId: RUNTIME_ID },
+    {
+      type: LogAnalyzerEntryType.JoinPu,
+      lineNumber: 1,
+      runtimeId: RUNTIME_ID,
+      gameEnvironment: "LIVE",
+      gameBuild: "13220821",
+    },
+    {
+      type: LogAnalyzerEntryType.JoinPu,
+      lineNumber: 2,
+      runtimeId: RUNTIME_ID,
+      gameEnvironment: null,
+      gameBuild: null,
+    },
   ]);
   expect(deliveries).toEqual([
     {
@@ -260,6 +328,48 @@ test("renews the token over the open connection, and closes the connection at th
   ).resolves.toMatchObject({ result: AcknowledgementResult.Accepted });
 
   await expectClose(client, RelayCloseReason.TokenNotValid);
+});
+
+test("a desktop companion connects with a token of its OAuth grant, and its sign-out closes the connection at the next renewal", async () => {
+  const {
+    openClient,
+    signInDesktopCompanion,
+    createAppContext,
+    createOwnerActor,
+  } = await start();
+  const owner = await createOwner();
+  const { grantId, issueToken } = await signInDesktopCompanion(owner);
+  // The program got the token of the renewal before the sign-out
+  const helloToken = await issueToken(RUNTIME_ID);
+  const renewalToken = await issueToken(RUNTIME_ID);
+
+  const client = await openClient();
+  client.sendHello(helloToken, RUNTIME_ID, {
+    runtimeKind: RuntimeKind.desktop_companion,
+  });
+  await client.waitForMessage(DownMessageType.Welcome);
+  await announce(client);
+  await expect(upload(client)).resolves.toMatchObject({
+    result: AcknowledgementResult.Accepted,
+    new_entry_count: 2,
+  });
+
+  // The sign-out in the sharing popover
+  await expect(
+    revokeOwnDesktopCompanionSignIn(
+      createAppContext(),
+      createOwnerActor(owner),
+      { grant_id: grantId },
+    ),
+  ).resolves.toEqual({ isChanged: true });
+  await expect(sendHeartbeat(client)).resolves.toMatchObject({
+    result: AcknowledgementResult.Accepted,
+  });
+
+  client.send(
+    createUpMessage(UpMessageType.TokenRenewal, { token: renewalToken }),
+  );
+  await expectClose(client, RelayCloseReason.AccessDenied);
 });
 
 test("limits the uploads of a runtime also across a reconnect, and closes a connection with too many errors or with a message above the size limit", async () => {
@@ -505,4 +615,90 @@ test("a second connection of the same runtime replaces the older connection", as
     signal: AbortSignal.timeout(5_000),
   });
   expect(health.status).toBe(200);
+});
+
+test("a runtime gets the keys of its own entries in the time window in pages", async () => {
+  const { connect } = await start();
+  const owner = await createOwner();
+  const otherOwner = await createOwner("other");
+  const windowStart = new Date(Date.UTC(2026, 10, 1));
+  const windowEnd = new Date(windowStart.getTime() + ONE_HOUR_MILLISECONDS);
+  const getTimeInWindow = (seconds: number) =>
+    new Date(windowStart.getTime() + seconds * 1_000);
+  const ownKeys = await createLogEntryRows(
+    owner.citizenId,
+    Array.from(
+      { length: RELAY_LIMITS.maximumFeedEntryKeysPerPage + 1 },
+      (_, index) => getTimeInWindow(index),
+    ),
+  );
+  await createLogEntryRows(owner.citizenId, [
+    new Date(windowStart.getTime() - 1),
+    windowEnd,
+  ]);
+  await createLogEntryRows(otherOwner.citizenId, [getTimeInWindow(3_000)]);
+  const { client } = await connect(owner, RUNTIME_ID);
+
+  const window = {
+    start: windowStart.toISOString(),
+    end: windowEnd.toISOString(),
+  };
+  const firstPage = await requestKeys(client, window);
+  expect(firstPage.keys).toHaveLength(RELAY_LIMITS.maximumFeedEntryKeysPerPage);
+  expect(firstPage.next_page_cursor).toBe(firstPage.keys.at(-1));
+
+  const lastPage = await requestKeys(client, {
+    ...window,
+    page_cursor: firstPage.next_page_cursor ?? undefined,
+  });
+  expect(lastPage).toEqual({
+    message_id: expect.any(String),
+    keys: [expect.any(String)],
+    next_page_cursor: null,
+  });
+  // No key of a different owner and no key outside of the time window
+  expect([...firstPage.keys, ...lastPage.keys]).toEqual(ownKeys.toSorted());
+  // The answer replaces the `ack`
+  expect(client.getMessages(DownMessageType.Acknowledgement)).toEqual([]);
+});
+
+test("refuses a hello of protocol version 1 with update_necessary", async () => {
+  const { openClient, issueToken } = await start();
+  const owner = await createOwner();
+
+  const client = await openClient();
+  client.sendHello(await issueToken(owner, RUNTIME_ID), RUNTIME_ID, {
+    protocolVersion: 1,
+  });
+  await expectRefusal(client, RelayCloseReason.UpdateNecessary);
+});
+
+test("limits the key requests of a connection", async () => {
+  const { connect } = await start();
+  const owner = await createOwner();
+
+  const { client } = await connect(owner, RUNTIME_ID);
+  // The burst of the limit, then one request above the rate
+  const requests = Array.from(
+    { length: RELAY_LIMITS.feedEntryKeyRequestBurstSize },
+    () => createKeysRequest(),
+  );
+  const requestAboveRate = createKeysRequest();
+  for (const request of [...requests, requestAboveRate]) client.send(request);
+
+  await expect(
+    client.waitForAcknowledgement(requestAboveRate),
+  ).resolves.toMatchObject({
+    content: {
+      result: AcknowledgementResult.Refused,
+      error_code: AcknowledgementErrorCode.RateLimitExceeded,
+    },
+  });
+  // The other requests wait in the data lane, or get `internal_error` when it is full
+  await expect(
+    client.waitForMessage(
+      DownMessageType.FeedEntryKeys,
+      (answer) => answer.content.message_id === requests[0]?.id,
+    ),
+  ).resolves.toMatchObject({ content: { keys: [], next_page_cursor: null } });
 });

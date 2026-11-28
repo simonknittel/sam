@@ -22,6 +22,12 @@ export const REMOTE_CONTROL_PROGRAM_ERROR_TEXTS: ApplicationErrorTexts = {
     "Dir fehlt die Berechtigung „Remote Control Program nutzen“.",
 };
 
+export const DESKTOP_COMPANION_SIGN_IN_ERROR_TEXTS: ApplicationErrorTexts = {
+  ...REMOTE_CONTROL_PROGRAM_ERROR_TEXTS,
+  [RemoteControlProgramErrorMessage.DesktopCompanionSignInNotFound]:
+    "Diese Anmeldung gibt es nicht mehr.",
+};
+
 export const SHARE_GRANT_ERROR_TEXTS: ApplicationErrorTexts = {
   ...REMOTE_CONTROL_PROGRAM_ERROR_TEXTS,
   [ShareGrantErrorMessage.GranteeIsOwner]:

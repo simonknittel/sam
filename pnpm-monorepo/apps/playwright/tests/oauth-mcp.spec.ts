@@ -17,6 +17,7 @@ import {
   buildAuthorizationUrl,
   createPkcePair,
   createState,
+  getDesktopCompanionClientId,
   interceptAuthorizationResponse,
   MCP_CALLBACK_URL,
   postTokenEndpoint,
@@ -117,7 +118,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
       authorization_endpoint: new URL("/app/oauth/authorize", issuer).href,
       token_endpoint: new URL("/api/oauth/token", issuer).href,
       revocation_endpoint: new URL("/api/oauth/revoke", issuer).href,
-      scopes_supported: ["mcp"],
+      scopes_supported: ["mcp", "remote_control_program"],
       response_types_supported: ["code"],
       grant_types_supported: ["authorization_code", "refresh_token"],
       token_endpoint_auth_methods_supported: ["none"],
@@ -267,7 +268,12 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     await expectAuditEvents(prisma, ["OAUTH_GRANT_CREATED_V2"]);
   });
 
-  test("a refresh token works once, and its reuse disconnects the client", async ({
+  /**
+   * Within the grace time, the first refresh token works once more while its
+   * replacement is unused (see `refreshAccessToken()`). The use of the
+   * replacement ends this time.
+   */
+  test("a refresh token works once, and its reuse after the use of its replacement disconnects the client", async ({
     prisma,
     request,
     authorizeMcpClient,
@@ -291,12 +297,19 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     );
     expect(rotatedCall.status()).toBe(200);
 
+    const secondRotation = await authorization.refresh(
+      rotatedTokens.refreshToken,
+    );
+    expect(secondRotation.status).toBe(200);
+    const secondRotatedTokens = secondRotation.tokens;
+    if (!secondRotatedTokens) throw new Error("The refresh gave no tokens");
+
     const reuse = await authorization.refresh(authorization.refreshToken);
     expect(reuse.status).toBe(400);
     expect(reuse.error).toBe("invalid_grant");
 
     const successorRefresh = await authorization.refresh(
-      rotatedTokens.refreshToken,
+      secondRotatedTokens.refreshToken,
     );
     expect(successorRefresh.status).toBe(400);
     expect(successorRefresh.error).toBe("invalid_grant");
@@ -304,7 +317,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     const callAfterReuse = await postMcpEndpoint(
       request,
       modernMcpRequest("tools/list"),
-      rotatedTokens.accessToken,
+      secondRotatedTokens.accessToken,
     );
     expect(callAfterReuse.status()).toBe(401);
   });
@@ -528,7 +541,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
     expect(response.get("code")).toBeNull();
   });
 
-  test("the kill switch takes the MCP endpoint, the token endpoint and the consent page offline", async ({
+  test("the kill switch takes the MCP endpoint, the token endpoint and the consent page offline, but not the desktop companion", async ({
     page,
     prisma,
     request,
@@ -541,7 +554,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
 
     const citizen = await createMcpCitizen(prisma, { handle: "mcp-notaus" });
     await signIn(citizen.user);
-    const { resource } = await readMcpServerMetadata(request);
+    const { issuer, resource } = await readMcpServerMetadata(request);
     const consentUrl = buildAuthorizationUrl(stack.baseURL, {
       clientId: cimdServer.clientId,
       codeChallenge: createPkcePair().challenge,
@@ -559,16 +572,24 @@ test.describe("the OAuth server and the MCP endpoint", () => {
         refresh_token: "unknown-refresh-token",
         client_id: cimdServer.clientId,
       });
+      // The resource of the Remote Control Program has its own kill switch
+      const desktopCompanionTokenResult = await postTokenEndpoint(request, {
+        grant_type: "refresh_token",
+        refresh_token: "unknown-refresh-token",
+        client_id: getDesktopCompanionClientId(issuer),
+      });
 
       return {
         mcpEndpoint: mcpResponse.status(),
         tokenEndpoint: tokenResult.status,
+        desktopCompanionTokenEndpoint: desktopCompanionTokenResult.status,
         consentPage: await readConsentPageState(page, consentUrl),
       };
     };
     const available = {
       mcpEndpoint: 401,
       tokenEndpoint: 400,
+      desktopCompanionTokenEndpoint: 400,
       consentPage: ConsentPageState.Consent,
     };
 
@@ -579,6 +600,7 @@ test.describe("the OAuth server and the MCP endpoint", () => {
       await expectFlagPropagation.poll(readAvailability).toEqual({
         mcpEndpoint: 503,
         tokenEndpoint: 503,
+        desktopCompanionTokenEndpoint: 400,
         consentPage: ConsentPageState.Unavailable,
       });
     } finally {

@@ -8,9 +8,8 @@ import {
   PATTERNS,
 } from "@/modules/log-analyzer/utils/PATTERNS";
 import type { LogAnalyzerEntryType } from "@sam-monorepo/domain";
-import { useId, useState, type ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import {
-  countLogEntryTypesThatAreOn,
   formatLogEntryTypeCount,
   type LogEntryTypeRules,
 } from "./logEntryTypeRules";
@@ -32,17 +31,15 @@ interface Props {
  * type: one rule applies to all versions of a type.
  */
 export const LogEntryTypeSettings = ({ logEntryTypes, onChange }: Props) => {
-  const onCount = countLogEntryTypesThatAreOn(logEntryTypes);
-  // Without a type that is on, the list is the next step of the owner
-  const [isExpanded, setIsExpanded] = useState(onCount === 0);
-
   return (
     <SharingPopoverCollapsible
       heading="Typen auswählen"
       summary={`${formatLogEntryTypeCount(logEntryTypes)} ausgewählt`}
-      isExpanded={isExpanded}
-      onExpandedChange={setIsExpanded}
     >
+      <p className="text-sm text-neutral-400">
+        Wähle, welche Einträge du hochladen möchtest.
+      </p>
+
       <div className="gap-x-8 sm:columns-2">
         {Object.values(EntryCategory).map((category) => (
           <CategorySettings

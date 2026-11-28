@@ -1,0 +1,57 @@
+{
+  "protocol_version": 2,
+  "minimum_protocol_version": 2,
+  "close_reasons": [
+    {
+      "reason": "token_not_valid",
+      "close_code": 4000,
+      "reconnect": true
+    },
+    {
+      "reason": "update_necessary",
+      "close_code": 4001,
+      "reconnect": false
+    },
+    {
+      "reason": "protocol_version_too_new",
+      "close_code": 4002,
+      "reconnect": true
+    },
+    {
+      "reason": "relay_service_restart",
+      "close_code": 4003,
+      "reconnect": true
+    },
+    {
+      "reason": "too_many_errors",
+      "close_code": 4004,
+      "reconnect": true
+    },
+    {
+      "reason": "too_many_runtimes",
+      "close_code": 4005,
+      "reconnect": true
+    },
+    {
+      "reason": "access_denied",
+      "close_code": 4006,
+      "reconnect": false
+    },
+    {
+      "reason": "program_turned_off",
+      "close_code": 4007,
+      "reconnect": true
+    },
+    {
+      "reason": "replaced",
+      "close_code": 4008,
+      "reconnect": false
+    },
+    {
+      "reason": "heartbeat_missing",
+      "close_code": 4009,
+      "reconnect": true
+    }
+  ],
+  "reconnect_after_close_without_reason": true
+}

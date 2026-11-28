@@ -38,6 +38,8 @@ const createEntry = (
     lineNumber: entryNumber,
     hash: entryNumber.toString(16).padStart(64, "0"),
     createdAt: START,
+    gameEnvironment: "LIVE",
+    gameBuild: "13220821",
   };
 };
 
@@ -154,6 +156,10 @@ test("sends a maximum of one publication to a viewer in 2 seconds", async () => 
   expect(event?.payload.entries.map((entry) => entry.id)).toEqual(
     [...second, ...third].map((entry) => entry.id),
   );
+  expect(event?.payload.entries[0]).toMatchObject({
+    game_environment: "LIVE",
+    game_build: "13220821",
+  });
   expect(event?.payload.dropped_entry_count).toBe(0);
 });
 

@@ -1,5 +1,4 @@
-import { LOG_ANALYZER_ENTRY_HASH_PATTERN } from "@sam-monorepo/domain";
-import * as z from "zod";
+import { RELAY_LIMITS } from "@sam-monorepo/domain";
 import type { Actor } from "../../actor.js";
 import type { ApplicationContext } from "../../context.js";
 import { ForbiddenError } from "../../errors.js";
@@ -8,24 +7,17 @@ import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgram
 import { requireRemoteControlProgramUse } from "../access/remoteControlProgramPermissions.js";
 
 /**
- * The upper limit of one read, the same as for the old Log Analyzer. A
- * runtime with more entries in the time window reads more pages, thus the
- * answer stays complete.
+ * The content of a `feed_entry_keys_request`: the relay service checked it
+ * with the schema of the protocol
  */
-export const MAXIMUM_FEED_ENTRY_KEYS_PER_READ = 2_000;
-
-export const findOwnFeedEntryKeysInputSchema = z.object({
-  /** The start of the time window of the observation. Without it: no limit. */
-  start: z.date().optional(),
-  /** Exclusive. Without it: no limit. */
-  end: z.date().optional(),
+export interface FindOwnFeedEntryKeysInput {
+  /** The start of the time window of the observation */
+  readonly start: Date;
+  /** Exclusive */
+  readonly end: Date;
   /** The `nextPageCursor` of the previous page. Absent for the first page. */
-  page_cursor: z.string().regex(LOG_ANALYZER_ENTRY_HASH_PATTERN).optional(),
-});
-
-export type FindOwnFeedEntryKeysInput = z.output<
-  typeof findOwnFeedEntryKeysInputSchema
->;
+  readonly pageCursor?: string;
+}
 
 export interface OwnFeedEntryKeys {
   /** The hashes of the entries (`createLogEntryHash`), in ascending order */
@@ -36,16 +28,17 @@ export interface OwnFeedEntryKeys {
 
 /**
  * The keys of the entries of `log_entries` of the actor (the owner) whose
- * time of the observation is in the time window. The browser runtime leaves
- * out the entries that the relay already has: after a change of the active
- * tab (the runtime offers the entries of up to 7 days again), and for the
- * counts of a request for older entries. Only the keys leave the server, not
- * the raw lines. The cursor is the last key: the unique index of the owner
- * and the hash orders the rows.
+ * time of the observation is in the time window. A runtime leaves out the
+ * entries that the relay already has from the count of a request for older
+ * entries. The runtimes read the keys through the relay service
+ * (`feed_entry_keys_request`, decision 34). Only the keys leave the server,
+ * not the raw lines. The cursor is the last key: the unique index of the
+ * owner and the hash orders the rows. A runtime with more entries in the
+ * time window reads more pages, thus the answer stays complete.
  *
  * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, for
- * an admin who assumes the user, or when a switch turned off the Remote
- * Control Program or the capability
+ * an admin who assumes the user, or when the switch turned off the Remote
+ * Control Program
  */
 export const findOwnFeedEntryKeys = (
   context: ApplicationContext,
@@ -64,21 +57,21 @@ export const findOwnFeedEntryKeys = (
       where: {
         createdById: citizen.id,
         eventAt: { gte: input.start, lt: input.end },
-        hash: input.page_cursor ? { gt: input.page_cursor } : undefined,
+        hash: input.pageCursor ? { gt: input.pageCursor } : undefined,
       },
       orderBy: { hash: "asc" },
-      take: MAXIMUM_FEED_ENTRY_KEYS_PER_READ + 1,
+      take: RELAY_LIMITS.maximumFeedEntryKeysPerPage + 1,
       select: { hash: true },
     });
 
     const keys = rows
-      .slice(0, MAXIMUM_FEED_ENTRY_KEYS_PER_READ)
+      .slice(0, RELAY_LIMITS.maximumFeedEntryKeysPerPage)
       .map((row) => row.hash);
 
     return {
       keys,
       nextPageCursor:
-        rows.length > MAXIMUM_FEED_ENTRY_KEYS_PER_READ
+        rows.length > RELAY_LIMITS.maximumFeedEntryKeysPerPage
           ? (keys.at(-1) ?? null)
           : null,
     };

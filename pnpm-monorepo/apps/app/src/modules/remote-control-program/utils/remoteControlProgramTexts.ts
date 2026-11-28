@@ -12,6 +12,13 @@ export const SUPPORTED_BROWSERS_TEXT =
 
 export const BROWSER_NOT_SUPPORTED_TEXT = `Dieser Browser wird nicht unterstützt. ${SUPPORTED_BROWSERS_TEXT}`;
 
+/** The folders that the runtime reads (see `listLogFiles()` of the runtime package) */
+export const SELECT_LOG_FOLDER_TEXT =
+  "Wähle den Ordner „StarCitizen“ oder ein Environment wie „LIVE“.";
+
+/** The selected log folder has no environment folder */
+export const NO_ENVIRONMENT_FOLDER_TEXT = `Im ausgewählten Ordner sind keine Logs von Star Citizen. ${SELECT_LOG_FOLDER_TEXT}`;
+
 /** The app has no relay service, for example a preview deployment */
 export const NO_RELAY_TEXT =
   "In dieser Umgebung gibt es kein Relay. Es wird nichts hochgeladen oder geteilt, und du siehst nur deine eigenen Einträge aus diesem Browser.";

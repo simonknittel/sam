@@ -13,8 +13,8 @@ import { getSeriesByManufacturerId } from "./routers/manufacturer/getSeriesByMan
 import { list as listOnSiteNotifications } from "./routers/onSiteNotifications/list";
 import { unreadCount as countUnreadOnSiteNotifications } from "./routers/onSiteNotifications/unreadCount";
 import { endWatchLease } from "./routers/remoteControlProgram/endWatchLease";
-import { findOwnFeedEntryKeys } from "./routers/remoteControlProgram/findOwnFeedEntryKeys";
 import { getSharingPopover } from "./routers/remoteControlProgram/getSharingPopover";
+import { listOwnRuntimes } from "./routers/remoteControlProgram/listOwnRuntimes";
 import { listSharingOwners } from "./routers/remoteControlProgram/listSharingOwners";
 import { readFeedEntries } from "./routers/remoteControlProgram/readFeedEntries";
 import { renewWatchLease } from "./routers/remoteControlProgram/renewWatchLease";
@@ -63,8 +63,8 @@ export const appRouter = createTRPCRouter({
   }),
   remoteControlProgram: createTRPCRouter({
     endWatchLease,
-    findOwnFeedEntryKeys,
     getSharingPopover,
+    listOwnRuntimes,
     listSharingOwners,
     readFeedEntries,
     renewWatchLease,

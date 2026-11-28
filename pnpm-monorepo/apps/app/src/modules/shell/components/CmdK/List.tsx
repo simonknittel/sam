@@ -135,7 +135,7 @@ export const List = () => {
     profitDistributionCycleRead,
     iamRead,
     careerRead,
-    /** The Log Analyzer also needs the Remote Control Program (M7) */
+    /** The Log Analyzer also needs the Remote Control Program (its decision 24) */
     logAnalyzerRead: logAnalyzerRead && canUseRemoteControlProgram,
     silcRead,
     spynetRead,

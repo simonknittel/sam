@@ -1,0 +1,19 @@
+{
+  "line_count": 30,
+  "fields": [
+    {
+      "field": "game_environment",
+      "source": "^<[^>]*> Executable: (?:[^\\\\/]*[\\\\/])*(?<value>[^\\\\/]*)[\\\\/]Bin64[\\\\/]StarCitizen\\.exe$",
+      "flags": "",
+      "value_source": "^[A-Z][A-Z0-9._-]*$",
+      "maximum_value_length": 32
+    },
+    {
+      "field": "game_build",
+      "source": "^<[^>]*> BackupNameAttachment=\" Build\\((?<value>[0-9]*)\\)",
+      "flags": "",
+      "value_source": "^[0-9]+$",
+      "maximum_value_length": 12
+    }
+  ]
+}

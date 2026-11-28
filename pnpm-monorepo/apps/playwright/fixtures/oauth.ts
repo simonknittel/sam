@@ -7,9 +7,24 @@ import { waitForAppShellHydration } from "./interactions";
 /**
  * The client document registers the URI without a port. Nothing listens on the
  * port: the test answers the navigation of the browser itself (see
- * interceptAuthorizationResponse).
+ * interceptAuthorizationResponse). The document of the desktop companion
+ * registers the same URI.
  */
 export const MCP_CALLBACK_URL = "http://127.0.0.1:47613/callback";
+
+export const MCP_SCOPE = "mcp";
+
+export const REMOTE_CONTROL_PROGRAM_SCOPE = "remote_control_program";
+
+export const REMOTE_CONTROL_PROGRAM_METADATA_PATH =
+  "/.well-known/oauth-protected-resource/api/remote-control-program";
+
+/** The app knows the client document of the desktop companion without a fetch */
+export const getDesktopCompanionClientId = (issuer: string) =>
+  new URL(
+    "/api/remote-control-program/desktop-companion/client-metadata.json",
+    issuer,
+  ).href;
 
 const CALLBACK_ORIGIN = new URL(MCP_CALLBACK_URL).origin;
 
@@ -47,12 +62,21 @@ export interface McpServerMetadata {
  * setup/stack.ts). Thus the tests take both values from the metadata (RFC
  * 9728), and send their requests to the URL of the worker.
  */
-export const readMcpServerMetadata = async (
-  request: APIRequestContext,
-): Promise<McpServerMetadata> => {
-  const response = await request.get(
+export const readMcpServerMetadata = (request: APIRequestContext) =>
+  readProtectedResourceMetadata(
+    request,
     "/.well-known/oauth-protected-resource/api/mcp",
   );
+
+/** See `readMcpServerMetadata()` */
+export const readRemoteControlProgramMetadata = (request: APIRequestContext) =>
+  readProtectedResourceMetadata(request, REMOTE_CONTROL_PROGRAM_METADATA_PATH);
+
+const readProtectedResourceMetadata = async (
+  request: APIRequestContext,
+  path: string,
+): Promise<McpServerMetadata> => {
+  const response = await request.get(path);
   expect(response.status()).toBe(200);
 
   const metadata = (await response.json()) as {
@@ -72,6 +96,7 @@ export interface AuthorizationRequest {
   readonly codeChallengeMethod?: string;
   readonly state: string;
   readonly resource: string;
+  readonly scope?: string;
 }
 
 export const buildAuthorizationUrl = (
@@ -83,6 +108,7 @@ export const buildAuthorizationUrl = (
     codeChallengeMethod = "S256",
     state,
     resource,
+    scope = MCP_SCOPE,
   }: AuthorizationRequest,
 ) => {
   const url = new URL("/app/oauth/authorize", baseUrl);
@@ -93,7 +119,7 @@ export const buildAuthorizationUrl = (
     code_challenge: codeChallenge,
     code_challenge_method: codeChallengeMethod,
     state,
-    scope: "mcp",
+    scope,
     resource,
   }).toString();
 
@@ -177,6 +203,7 @@ export const postTokenEndpoint = async (
   return { status: response.status(), error: null, tokens: parseTokens(body) };
 };
 
+/** Also the authorization of the desktop companion */
 export interface McpAuthorization {
   readonly clientId: string;
   readonly metadata: McpServerMetadata;
@@ -188,30 +215,67 @@ export interface McpAuthorization {
   readonly revoke: (token: string) => Promise<number>;
 }
 
-export interface AuthorizeMcpClientOptions {
+export interface AuthorizeDesktopCompanionOptions {
   readonly page: Page;
   readonly request: APIRequestContext;
   readonly baseUrl: string;
   readonly signIn: (user: Pick<User, "id">) => Promise<void>;
-  readonly cimdServer: CimdServer;
   readonly user: Pick<User, "id">;
   readonly beforeApprove?: (page: Page) => Promise<void>;
 }
 
+export interface AuthorizeMcpClientOptions extends AuthorizeDesktopCompanionOptions {
+  readonly cimdServer: CimdServer;
+}
+
+interface AuthorizeClientOptions extends AuthorizeDesktopCompanionOptions {
+  readonly metadata: McpServerMetadata;
+  readonly clientId: string;
+  readonly scope: string;
+}
+
 /** Signs the user in (and replaces the session of an earlier user). */
 export const authorizeMcpClient = async ({
+  cimdServer,
+  ...options
+}: AuthorizeMcpClientOptions): Promise<McpAuthorization> =>
+  authorizeClient({
+    ...options,
+    metadata: await readMcpServerMetadata(options.request),
+    clientId: cimdServer.clientId,
+    scope: MCP_SCOPE,
+  });
+
+/**
+ * The login of the desktop companion, like the program does it. Signs the
+ * user in (and replaces the session of an earlier user).
+ */
+export const authorizeDesktopCompanion = async (
+  options: AuthorizeDesktopCompanionOptions,
+): Promise<McpAuthorization> => {
+  const metadata = await readRemoteControlProgramMetadata(options.request);
+
+  return authorizeClient({
+    ...options,
+    metadata,
+    clientId: getDesktopCompanionClientId(metadata.issuer),
+    scope: REMOTE_CONTROL_PROGRAM_SCOPE,
+  });
+};
+
+const authorizeClient = async ({
   page,
   request,
   baseUrl,
   signIn,
-  cimdServer,
   user,
   beforeApprove,
-}: AuthorizeMcpClientOptions): Promise<McpAuthorization> => {
-  const metadata = await readMcpServerMetadata(request);
+  metadata,
+  clientId,
+  scope,
+}: AuthorizeClientOptions): Promise<McpAuthorization> => {
   const pkce = createPkcePair();
   const state = createState();
-  const clientId = cimdServer.clientId;
 
   await signIn(user);
   await interceptAuthorizationResponse(page);
@@ -221,6 +285,7 @@ export const authorizeMcpClient = async ({
       codeChallenge: pkce.challenge,
       state,
       resource: metadata.resource,
+      scope,
     }),
   );
 
@@ -275,5 +340,44 @@ export const authorizeMcpClient = async ({
       });
       return response.status();
     },
+  };
+};
+
+export interface ConnectionTokenResult {
+  readonly status: number;
+  readonly wwwAuthenticate: string | null;
+  /** Only for a 200. It holds the token: assert its other fields. */
+  readonly body: {
+    readonly token: string;
+    readonly expires_at: string;
+    readonly relay_url: string | null;
+    readonly citizen_id: string;
+    readonly handle: string | null;
+  } | null;
+}
+
+/**
+ * The request of the desktop companion for a connection token, with its
+ * access token. The `request` fixture has no session cookie.
+ */
+export const requestConnectionTokenWithAccessToken = async (
+  request: APIRequestContext,
+  accessToken: string,
+  runtimeId: string,
+): Promise<ConnectionTokenResult> => {
+  const response = await request.post(
+    "/api/remote-control-program/connection-token",
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { runtime_id: runtimeId },
+    },
+  );
+
+  return {
+    status: response.status(),
+    wwwAuthenticate: response.headers()["www-authenticate"] ?? null,
+    body: response.ok()
+      ? ((await response.json()) as ConnectionTokenResult["body"])
+      : null,
   };
 };

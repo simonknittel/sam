@@ -1,6 +1,5 @@
 import * as z from "zod";
 import type { ApplicationContext } from "../context.js";
-import { canUseMcp } from "../mcpAccess.js";
 import { withSpan } from "../withSpan.js";
 import { requireSigningKey } from "./accessToken.js";
 import {
@@ -10,7 +9,11 @@ import {
 } from "./constants.js";
 import { OAuthTokenError, OAuthTokenErrorCode } from "./errors.js";
 import { createGrantActor, GRANT_ACTOR_SELECT } from "./grantActor.js";
-import { isMcpResource } from "./resource.js";
+import {
+  canUseOAuthResource,
+  findOAuthResource,
+  getOAuthResourceOfClient,
+} from "./resources.js";
 import { revokeGrant } from "./revokeGrant.js";
 import { hashOpaqueToken, verifyCodeVerifier } from "./secrets.js";
 import {
@@ -115,10 +118,14 @@ export const redeemAuthorizationCode = (
     if (!verifyCodeVerifier(input.code_verifier, code.codeChallenge))
       throw invalidGrant("The code_verifier does not match the code_challenge");
 
-    if (input.resource !== undefined && !isMcpResource(context, input.resource))
+    const oauthResource = getOAuthResourceOfClient(context, code.clientId);
+    if (
+      input.resource !== undefined &&
+      findOAuthResource(context, input.resource) !== oauthResource
+    )
       throw new OAuthTokenError(
         OAuthTokenErrorCode.InvalidTarget,
-        "The resource is not the MCP server of this authorization server",
+        "The resource is not the resource of the grant",
       );
 
     const { grant } = code;
@@ -127,8 +134,8 @@ export const redeemAuthorizationCode = (
 
     // The user lost the clearance or the permission after the consent
     const actor = await createGrantActor(context, grant);
-    if (!actor.hasClearance() || !canUseMcp(actor))
-      throw invalidGrant("The user cannot use the MCP server");
+    if (!actor.hasClearance() || !canUseOAuthResource(actor, oauthResource))
+      throw invalidGrant("The user cannot use the resource");
 
     const refreshToken = createRefreshToken(context, grant.id);
     await context.prisma.oAuthRefreshToken.create({

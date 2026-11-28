@@ -22,6 +22,14 @@ export interface RawMatch {
    * line has the number 1. It orders the lines of one instant.
    */
   readonly lineNumber: number;
+  /**
+   * The game environment of the header of the log file of the match, for
+   * example `LIVE` (`readLogFileHeader` of the domain package). Null: the
+   * header has no valid value.
+   */
+  readonly gameEnvironment: string | null;
+  /** The build number of the header of the log file of the match, or null */
+  readonly gameBuild: string | null;
 }
 
 /**
@@ -63,6 +71,11 @@ export interface ReadResult {
   readonly newestIsoDate: string | null;
   /** A stop ended the read before its last file. The next read continues it. */
   readonly isStopped: boolean;
+  /**
+   * The files that the reader could not read. Their state stays, thus the
+   * next read tries the same lines again.
+   */
+  readonly failedFileCount: number;
 }
 
 export type ResultMessage =
