@@ -44,6 +44,8 @@ const toDeliveredLogEntry = (entry: FeedLogEntry): DeliveredLogEntry => ({
   line_number: entry.lineNumber,
   hash: entry.hash,
   created_at: entry.createdAt.toISOString(),
+  game_channel: entry.gameChannel,
+  game_version: entry.gameVersion,
 });
 
 /**

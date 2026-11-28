@@ -1,6 +1,7 @@
 import * as z from "zod";
 import { LOG_ANALYZER_ENTRY_HASH_PATTERN } from "../logAnalyzer/logAnalyzerEntries.js";
 import { CapabilityId, LOG_ENTRIES_CAPABILITY } from "./catalog.js";
+import { gameChannelSchema, gameVersionSchema } from "./logFileHeader.js";
 
 /**
  * The realtime event with the new entries of a feed for one viewer (see
@@ -19,7 +20,7 @@ export const FEED_DELIVERY_EVENT_NAME = "remote_control_program_feed_entries";
  * realtime server for one event (see
  * `docs/setup-test-and-production.md#10-set-up-the-relay-service-of-the-remote-control-program`)
  * gives fewer entries: one entry of `log_entries` is at least approximately
- * 280 bytes of JSON. The relay service also splits by this number, thus a
+ * 320 bytes of JSON. The relay service also splits by this number, thus a
  * higher size limit of the realtime server does not make an event that the
  * schema refuses.
  */
@@ -59,6 +60,16 @@ const deliveredLogEntrySchema = z.object({
   hash: z.string().regex(LOG_ANALYZER_ENTRY_HASH_PATTERN),
   /** The time of the arrival at the relay */
   created_at: z.iso.datetime(),
+  /**
+   * The game channel from the header of the log file of the entry, for
+   * example `LIVE` (see `readLogFileHeader()`). Null when it is unknown.
+   */
+  game_channel: gameChannelSchema.nullable(),
+  /**
+   * The game version from the header of the log file of the entry, for
+   * example `4.10.201.48085`. Null when it is unknown.
+   */
+  game_version: gameVersionSchema.nullable(),
 });
 
 const logEntriesDeliverySchema = z.object({
