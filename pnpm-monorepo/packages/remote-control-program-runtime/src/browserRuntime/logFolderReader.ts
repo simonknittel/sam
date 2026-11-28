@@ -1,10 +1,10 @@
-import { getLogFilesRecursively } from "../logFile/getLogFilesRecursively.js";
+import { listLogFiles } from "../logFile/listLogFiles.js";
 import {
   findOldestSessionStart,
   selectLogFiles,
 } from "../logFile/selectLogFiles.js";
 import type { EntryWindow, LogFile, RawMatch } from "../logFile/types.js";
-import { LogParserClient } from "./logParserClient.js";
+import { LogParserClient, type LogParser } from "./logParserClient.js";
 
 export interface LogFolderRead {
   /**
@@ -18,6 +18,11 @@ export interface LogFolderRead {
   readonly isStopped: boolean;
   /** See `findOldestSessionStart()`. Of all log files of the folder. */
   readonly oldestSessionStart: number | null;
+  /**
+   * False when the folder has no channel folder of the game, for example
+   * `LIVE` (see `listLogFiles()`). Then it has no log files.
+   */
+  readonly hasChannelFolder: boolean;
 }
 
 /** The log file connector for one log folder */
@@ -30,23 +35,23 @@ export interface LogFolderReader {
 }
 
 /**
- * Reads the log folder in the Web Worker of the log file connector. A backup
- * file is read one time only, and `Game.log` only from the end of the last
- * read (see `createLogFileReader`).
+ * Reads the log folder in the Web Worker of the log file connector (a test
+ * gives a parser without a worker). A backup file is read one time only, and
+ * `Game.log` only from the end of the last read (see `createLogFileReader`).
  */
 export const createLogFolderReader = (
   folder: FileSystemDirectoryHandle,
+  parser: LogParser = new LogParserClient(),
 ): LogFolderReader => {
-  const parser = new LogParserClient();
-  /** The files of the last walk through the folder, by their path */
+  /** The files of the last read of the folder, by their path */
   let knownLogFiles: ReadonlyMap<string, LogFile> = new Map();
 
   return {
     read: async (windows) => {
-      // `Array.fromAsync()` is not in the ES2024 library of this package
-      const logFiles: LogFile[] = [];
-      for await (const logFile of getLogFilesRecursively(folder, knownLogFiles))
-        logFiles.push(logFile);
+      const { channelFolderCount, logFiles } = await listLogFiles(
+        folder,
+        knownLogFiles,
+      );
       knownLogFiles = new Map(
         logFiles.map((logFile) => [logFile.path, logFile]),
       );
@@ -66,6 +71,7 @@ export const createLogFolderReader = (
       return {
         ...result,
         oldestSessionStart: findOldestSessionStart(logFiles),
+        hasChannelFolder: channelFolderCount > 0,
       };
     },
     stopRead: () => parser.stopReads(),

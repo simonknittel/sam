@@ -12,6 +12,12 @@ import type { OlderEntriesTimeRange } from "../localAccess/localAccessLayer.js";
 export enum BrowserRuntimeErrorCode {
   /** The last read of the log folder failed (state) */
   ReadFailed = "read_failed",
+  /**
+   * The log folder is no channel folder of the game (for example `LIVE`), and
+   * has no channel folder (state). A browser cannot read the parent folders,
+   * thus the owner must select the installation folder or a channel folder.
+   */
+  NoChannelFolder = "no_channel_folder",
   /** The browser has no File System Access API (command) */
   NotSupported = "not_supported",
   /** No tab with the runtime answered the command in time (command) */

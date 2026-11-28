@@ -747,7 +747,9 @@ export class BrowserRuntime {
             : newestLogLineAt,
         oldestSessionStart: result.oldestSessionStart,
         isReading: false,
-        error: null,
+        error: result.hasChannelFolder
+          ? null
+          : BrowserRuntimeErrorCode.NoChannelFolder,
       });
 
       this.#handleReadEntries(addedEntries);
