@@ -36,6 +36,10 @@ export const LogEntryTypeSettings = ({ logEntryTypes, onChange }: Props) => {
       heading="Typen auswählen"
       summary={`${formatLogEntryTypeCount(logEntryTypes)} ausgewählt`}
     >
+      <p className="text-sm text-neutral-400">
+        Wähle, welche Einträge du hochladen möchtest.
+      </p>
+
       <div className="gap-x-8 sm:columns-2">
         {Object.values(EntryCategory).map((category) => (
           <CategorySettings
