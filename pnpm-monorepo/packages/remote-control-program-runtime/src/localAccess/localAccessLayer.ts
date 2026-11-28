@@ -5,22 +5,10 @@ import {
   LogAnalyzerEntryType,
 } from "@sam-monorepo/domain";
 import {
-  continueOrStartPeriod,
-  endLastPeriod,
-  isInLivePeriod,
-  type LivePeriods,
-  NO_LIVE_PERIODS,
-  OWN_HEARTBEAT_GAP_MILLISECONDS,
-  pruneLivePeriods,
-  TAB_CHANGE_GAP_MILLISECONDS,
-} from "./livePeriods.js";
-import {
   LEGACY_SHARE_TYPES_STORAGE_KEY,
   type LocalAccessRules,
   type LocalAccessStorage,
-  readLivePeriods,
   readLocalAccessRules,
-  writeLivePeriods,
   writeLocalAccessRules,
 } from "./localAccessStorage.js";
 
@@ -58,27 +46,23 @@ export interface LocalAccessSettings {
   readonly logEntryTypes: Readonly<Record<LogAnalyzerEntryType, boolean>>;
 }
 
-export interface StopReadingOptions {
-  /** Only a change of the active tab lets a next runtime continue the period */
-  readonly canContinue: boolean;
-}
-
 /** What the relay told the runtime of this tab about the uploads */
 export enum RelayUploadState {
   /**
-   * The runtime did not get the `welcome` of this run yet: no period starts,
-   * because the relay can have a switch that the runtime does not know
+   * The runtime did not get the `welcome` of this run yet: the entries wait
+   * in the outbox of the runtime
    */
   Unknown = "unknown",
   /** The relay accepts the uploads */
   Accepting = "accepting",
   /**
-   * A switch turned off the capability. It removes all periods.
+   * A switch turned off the capability (`program_turned_off`). No entry goes
+   * up automatically.
    */
   Stopped = "stopped",
   /**
    * The connection ended without a new attempt (for example a refused token
-   * or no relay): the period ends without a continuation
+   * or no relay). No entry goes up automatically.
    */
   Ended = "ended",
 }
@@ -102,8 +86,8 @@ const RULE_TYPES = Array.from(
 );
 
 /**
- * NaN for a text that is not a valid time. NaN is in no period and in no
- * range.
+ * NaN for a text that is not a valid time. NaN is in no range, and never
+ * goes up automatically.
  */
 const getEntryTime = (entry: LocalAccessEntry) => Date.parse(entry.isoDate);
 
@@ -111,27 +95,34 @@ const isInRange = (time: number, range: OlderEntriesTimeRange) =>
   (range.start === null || time >= range.start.getTime()) &&
   (range.end === null || time < range.end.getTime());
 
+const isUploadStopped = (relayState: RelayUploadState) =>
+  relayState === RelayUploadState.Stopped ||
+  relayState === RelayUploadState.Ended;
+
 /**
  * The local access layer of the browser runtime (see "Local access layer" of
  * `docs/remote-control-program/README.md`): the rules of `log_entries` for
- * each log entry type, and the rule for the upload (decision 27).
+ * each log entry type, and the rule for the automatic upload (decision 27).
  *
  * All is off by default. A log entry goes up automatically only when:
  *
- * - its type is on, and was on at the time of the entry,
- * - its time is in a live period (see `livePeriods.ts`),
- * - the relay told that it accepts the uploads.
+ * - the runtime of this tab reads live, and the time of the entry is not
+ *   before the time since which it reads live (`readsLiveSince`),
+ * - its type is on, and its time is not before the time when the owner
+ *   turned the type on,
+ * - no switch turned off the capability, and the connection did not end.
  *
- * A switch that turned off the capability removes all live periods: when it
- * is on again, only the lines that a runtime reads live from then on go up
- * automatically. Older entries go up only through a request that the owner
- * confirms
- * (`prepareOlderEntriesRequest` and `confirmOlderEntriesRequest`).
+ * The time since which the runtime reads live is only in memory: the start of
+ * the reading sets it, and the end of a switch or of an ended connection sets
+ * it again. Thus the entries of a time without a reading, with a switch or
+ * with an ended connection never go up automatically, also not after the
+ * next start. Older entries go up only through a request that the owner
+ * confirms (`prepareOlderEntriesRequest` and `confirmOlderEntriesRequest`).
  *
- * Each tab can make a layer on the same storage. The values in the storage
- * are the source of truth: each method reads them again. Only the tab with
- * the running runtime (the holder of the Web Lock) calls the methods of the
- * reading (`startReading`, `heartbeat`, `stopReading`, `setRelayState`).
+ * Each tab can make a layer on the same storage. The rules in the storage are
+ * the source of truth: each method reads them again. Only the tab with the
+ * running runtime (the holder of the Web Lock) calls the methods of the
+ * reading (`startReading`, `stopReading`, `setRelayState`).
  *
  * The layer removes the share settings of the old Log Analyzer (M1).
  */
@@ -142,95 +133,30 @@ export const createLocalAccessLayer = ({
 }: LocalAccessLayerOptions) => {
   storage.removeItem(LEGACY_SHARE_TYPES_STORAGE_KEY);
 
-  /** The runtime of this tab reads the log */
-  let isReading = false;
+  /**
+   * In milliseconds since the epoch. Null while the runtime of this tab does
+   * not read.
+   */
+  let readsLiveSince: number | null = null;
   let relayState = RelayUploadState.Unknown;
-  /** The runtime of this tab extends the last period with its heartbeats */
-  let isOwnPeriodOpen = false;
 
   const getTime = () => now().getTime();
 
   const readRules = () => readLocalAccessRules(storage, citizenId);
 
-  const readPeriods = (time: number) =>
-    pruneLivePeriods(readLivePeriods(storage, citizenId), time);
-
-  const isStopped = () => relayState === RelayUploadState.Stopped;
-
-  /** False when a switch removed the own period */
-  const isLastPeriodOpen = (livePeriods: LivePeriods, time: number) => {
-    const lastPeriod = livePeriods.periods.at(-1);
-
-    return (
-      isOwnPeriodOpen &&
-      livePeriods.canContinueLastPeriod &&
-      lastPeriod !== undefined &&
-      time - lastPeriod.endedAt <= OWN_HEARTBEAT_GAP_MILLISECONDS
-    );
-  };
-
   const goesUpAutomatically = (
     rules: LocalAccessRules,
-    livePeriods: LivePeriods,
-    isOpen: boolean,
     entry: LocalAccessEntry,
   ) => {
+    if (readsLiveSince === null) return false;
+
     const turnedOnAt = rules.turnedOnAtByType.get(
       getOldestLogAnalyzerEntryVersion(entry.type),
     );
     if (turnedOnAt === undefined) return false;
 
     const time = getEntryTime(entry);
-    return time >= turnedOnAt && isInLivePeriod(livePeriods, time, isOpen);
-  };
-
-  /**
-   * Brings the stored periods in line with the reading, the switches and the
-   * clock
-   *
-   * @param canContinue False when the end of the reading must not let a
-   * next runtime continue the last period (see `stopReading`)
-   */
-  const updatePeriods = (canContinue = true) => {
-    const time = getTime();
-
-    // When the capability is on again, only the lines that a runtime reads live from then on go up automatically (decision 27)
-    if (isStopped()) {
-      isOwnPeriodOpen = false;
-      writeLivePeriods(storage, citizenId, NO_LIVE_PERIODS);
-      return;
-    }
-
-    const livePeriods = readPeriods(time);
-    const isOpenWanted = isReading && relayState === RelayUploadState.Accepting;
-    const isOwnPeriodStillOpen =
-      isOwnPeriodOpen && livePeriods.canContinueLastPeriod;
-    const gapLimit = isOwnPeriodStillOpen
-      ? OWN_HEARTBEAT_GAP_MILLISECONDS
-      : TAB_CHANGE_GAP_MILLISECONDS;
-
-    let nextLivePeriods = livePeriods;
-    if (isOpenWanted) {
-      nextLivePeriods = continueOrStartPeriod(livePeriods, time, gapLimit);
-    } else if (isOwnPeriodStillOpen) {
-      // Only the end of the reading for a change of the active tab lets a next runtime continue the period
-      nextLivePeriods = endLastPeriod(
-        livePeriods,
-        time,
-        gapLimit,
-        canContinue && relayState === RelayUploadState.Accepting,
-      );
-    } else if (!canContinue) {
-      // A stop before the period opened (for example a period of the previous runtime): no runtime can continue it
-      nextLivePeriods = { ...livePeriods, canContinueLastPeriod: false };
-    }
-
-    isOwnPeriodOpen = isOpenWanted;
-    writeLivePeriods(
-      storage,
-      citizenId,
-      pruneLivePeriods(nextLivePeriods, time),
-    );
+    return time >= readsLiveSince && time >= turnedOnAt;
   };
 
   return {
@@ -274,16 +200,6 @@ export const createLocalAccessLayer = ({
       writeLocalAccessRules(storage, citizenId, { turnedOnAtByType });
     },
 
-    /**
-     * Removes all live periods: only the lines that a runtime reads live from
-     * now on go up automatically. For a different log folder, because the
-     * periods are the times of the previous folder.
-     */
-    removeLivePeriods: () => {
-      isOwnPeriodOpen = false;
-      writeLivePeriods(storage, citizenId, NO_LIVE_PERIODS);
-    },
-
     /** The summary for the `announce` message */
     getAnnouncementSummary: (): AnnounceContent["local_access_layer"] => {
       const rules = readRules();
@@ -303,80 +219,75 @@ export const createLocalAccessLayer = ({
     },
 
     /**
-     * The runtime of this tab starts to read the log (it has the access to
-     * the folder)
+     * The time since which the runtime of this tab reads live. Null while it
+     * does not read.
+     */
+    getReadsLiveSince: () =>
+      readsLiveSince === null ? null : new Date(readsLiveSince),
+
+    /**
+     * The runtime of this tab starts to read the log, also with a different
+     * log folder: it reads live from now on
      */
     startReading: () => {
-      isReading = true;
-      updatePeriods();
+      readsLiveSince = getTime();
     },
 
     /**
-     * Each `LIVE_PERIOD_HEARTBEAT_INTERVAL_MILLISECONDS` while the runtime of
-     * this tab reads
+     * The runtime of this tab stops to read: a stop of the owner, a logout, a
+     * lost access to the folder, or a change of the active tab
      */
-    heartbeat: () => {
-      updatePeriods();
+    stopReading: () => {
+      readsLiveSince = null;
     },
 
     /**
-     * The runtime of this tab stops to read.
-     *
-     * - `canContinue: true`: a change of the active tab. The tab loses the
-     *   Web Lock or closes (`pagehide`), and a next runtime can continue the
-     *   period within `TAB_CHANGE_GAP_MILLISECONDS`.
-     * - `canContinue: false`: the owner stops the runtime or logs out, or the
-     *   runtime lost the access to the folder. The period ends, and the next
-     *   start starts a new period, also within `TAB_CHANGE_GAP_MILLISECONDS`.
-     *   Thus the entries of the stopped time stay on the machine (decision
-     *   27). Call it also when the runtime of this tab does not read, so that
-     *   a next start does not continue the period of a previous runtime.
-     */
-    stopReading: ({ canContinue }: StopReadingOptions) => {
-      isReading = false;
-      updatePeriods(canContinue);
-    },
-
-    /**
-     * What the relay told: the `welcome` of each connection, the Unleash flag, and
-     * the end of the connection
+     * What the relay told: the `welcome` of each connection, the switch, and
+     * the end of the connection. When the uploads start again after a switch
+     * or after an ended connection, the runtime reads live from this time:
+     * the entries of the time before never go up automatically.
      */
     setRelayState: (state: RelayUploadState) => {
+      if (
+        isUploadStopped(relayState) &&
+        state === RelayUploadState.Accepting &&
+        readsLiveSince !== null
+      )
+        readsLiveSince = getTime();
+
       relayState = state;
-      updatePeriods();
     },
 
     /**
-     * The entries that go up automatically now. Call it for the entries of
-     * each read, and again for the waiting entries before each send: a
-     * switch or a type that turned off stops them.
+     * The entries that go up automatically. Call it for the entries of each
+     * read, and again for the waiting entries right before each send: a
+     * switch or a type that turned off stops them. Before the `welcome`, the
+     * entries can go up, and wait in the outbox of the runtime.
      */
     selectAutomaticUploads: <Entry extends LocalAccessEntry>(
       entries: Iterable<Entry>,
     ): Entry[] => {
-      const rules = readRules();
-      if (relayState !== RelayUploadState.Accepting) return [];
+      if (isUploadStopped(relayState)) return [];
 
-      const time = getTime();
-      const livePeriods = readPeriods(time);
-      const isOpen = isLastPeriodOpen(livePeriods, time);
+      const rules = readRules();
 
       return Array.from(entries).filter((entry) =>
-        goesUpAutomatically(rules, livePeriods, isOpen, entry),
+        goesUpAutomatically(rules, entry),
       );
     },
 
     /**
      * The entries that can go up now after a confirmation of the owner, or
-     * that wait for their send: their types are on, and no switch turned off the
-     * capability. It does not read the live periods.
+     * that wait for their send: their types are on, and no switch turned off
+     * the capability. It does not read the time since which the runtime reads
+     * live.
      */
     selectPermittedUploads: <
       Entry extends { readonly type: LogAnalyzerEntryType },
     >(
       entries: Iterable<Entry>,
     ): Entry[] => {
-      if (isStopped()) return [];
+      if (relayState === RelayUploadState.Stopped) return [];
 
       const rules = readRules();
 
@@ -396,10 +307,7 @@ export const createLocalAccessLayer = ({
       entries: Iterable<Entry>,
       range: OlderEntriesTimeRange,
     ): OlderEntriesRequest<Entry> => {
-      const time = getTime();
       const rules = readRules();
-      const livePeriods = readPeriods(time);
-      const isOpen = isLastPeriodOpen(livePeriods, time);
 
       const requestedEntries: Entry[] = [];
       const countsByType = new Map<LogAnalyzerEntryType, number>();
@@ -410,7 +318,7 @@ export const createLocalAccessLayer = ({
         if (
           !rules.turnedOnAtByType.has(ruleType) ||
           !isInRange(getEntryTime(entry), range) ||
-          goesUpAutomatically(rules, livePeriods, isOpen, entry)
+          goesUpAutomatically(rules, entry)
         )
           continue;
 
