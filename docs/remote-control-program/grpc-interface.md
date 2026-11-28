@@ -21,7 +21,7 @@ Rules for this document:
 | Service | `sc.game.telemetry.v1.GameTelemetryService` |
 | Calls | `TelemetryStream` (server-streaming, approximately 19 frames each second), `ListTriggerableActions` (112 actions), `TriggerGameAction` |
 | Actions | They work. `emote_wave` gave the status `OK`, and the character waved in the game. |
-| Game version | Not in the interface. The Remote Control Program stores no game version until the interface supplies it. |
+| Game version | Not in the interface. The desktop companion finds the build of the running game itself (see [Game version](#game-version)). |
 | Browser | No access. A native program on the machine is necessary. |
 
 ## Enable the server
@@ -150,29 +150,25 @@ Test of 2026-11-21: `emote_wave` without a hold time gave `OK` with an empty mes
 
 The interface gives no game version: the messages have no field for it, the responses have no metadata, and there is no reflection.
 
-The first lines of `Game.log` give the version and the build:
+The first lines of `Game.log` give the version, the build and the folder of the game channel:
 
 ```text
 BackupNameAttachment=" Build(13248297) 21 Nov 26 (09 42 13)"  -- used by backup system
+Executable: C:\Program Files\Roberts Space Industries\StarCitizen\PTU\Bin64\StarCitizen.exe
 FileVersion: 5.0.202.10025
 ProductVersion: 5.0.202.10025
 ```
 
-Other lines give the environment: the folder of the game (`LIVE` or `PTU`) and the shard (`New Shard Id: ptu_use1b_13248297_010`). The Log Analyzer has no patterns for these lines.
+Other lines give the environment (`[Trace] Environment:   PTU`, `PUB` on LIVE) and the shard (`New Shard Id: ptu_use1b_13248297_010`).
 
-Each installation also has the file `build_manifest.id` (for example `StarCitizen/PTU/build_manifest.id`) with the fields `Branch`, `Version` and `RequestedP4ChangeNum`. Test of 2026-11-21: LIVE had `4.10.201.48085`, and PTU had `5.0.202.10025` with the build `13248297`.
+Each installation also has the file `build_manifest.id` (for example `StarCitizen/PTU/build_manifest.id`) with the fields `Branch`, `Version` and `RequestedP4ChangeNum`. `Version` has the value of `FileVersion`. Test of 2026-11-21: LIVE had `4.10.201.48085`, and PTU had `5.0.202.10025` with the build `13248297`. Both installations can use the same port, and the test could not read the path of the game process.
 
-The Remote Control Program uses none of these sources (see decision 17 in [Decisions](./README.md#decisions)):
-
-- `Game.log` does not always show the actual state, and the gRPC connector must not depend on the log file connector.
-- The desktop companion cannot tell which installation runs the gRPC server. Both installations can use the same port, and the test could not read the path of the game process.
-
-The gRPC connector adds the game version when the interface supplies it.
+The log file connector reads the game channel and the game version from the header of each log file (see decision 17 in [Decisions](./README.md#decisions)). The gRPC connector does not use them, because it does not depend on the log file connector (principle 14). For the gRPC connector, the desktop companion finds the build of the running game itself. Step 4 of the [migration](./migration.md#order-of-the-steps) plans the details.
 
 ## Requirements for the gRPC connector
 
 - It runs in the desktop companion (see [Browser access](#browser-access)). It is written in Rust and supports Windows and Linux (see [Decisions](./README.md#decisions)).
-- It connects to `127.0.0.1` on the port that the owner sets in the desktop companion. The default port is 2942. It does not read the port from `Game.log` (see decision 17 in [Decisions](./README.md#decisions)).
+- It connects to `127.0.0.1` on the port that the owner sets in the desktop companion. The default port is 2942. It does not read the port from `Game.log` (see principle 14 in [Principles](./README.md#principles)).
 - It contains the message definitions as `.proto` files and generates the Rust code from them, because the server has no reflection. The interface gives no game build, thus the connector cannot select definitions for each build. It uses only the fields of its definitions and ignores unknown fields. When a call fails or a message does not match the definitions, it stops and shows a note in the desktop companion.
 - It reduces the 19 frames each second to the rate of the channel.
 - It removes each field that no permitted capability needs before the data leaves the machine (for example the wallet balance).
