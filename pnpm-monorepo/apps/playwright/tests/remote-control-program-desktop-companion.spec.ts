@@ -55,7 +55,7 @@ const showDesktopCompanionSection = async (page: Page) => {
     page,
     SharingPopoverSection.DesktopCompanion,
   );
-  await expect(section.getByText("Lade den Status …")).toHaveCount(0);
+  await expect(section.getByText("Lade die Daten …")).toHaveCount(0);
   return section;
 };
 
@@ -278,7 +278,7 @@ test.describe("the sub-tab of the desktop companion", () => {
     await expect(
       sharingPopoverTab(page, SharingPopoverSection.DesktopCompanion),
     ).toBeFocused();
-    await expect(section.getByText("Lade den Status …")).toHaveCount(0);
+    await expect(section.getByText("Lade die Daten …")).toHaveCount(0);
     await expect(
       section.getByRole("heading", { name: "Anmeldungen" }),
     ).toHaveCount(0);
@@ -328,9 +328,7 @@ test.describe("the sub-tab of the desktop companion", () => {
     await signIn(owner.user);
     await page.goto(LOG_ANALYZER_PAGE_PATH);
     await expect(
-      page.getByText(
-        "Wähle im Remote Control Program den Ordner deiner Star-Citizen-Installation aus",
-      ),
+      page.getByText("braucht das Remote Control Program deinen Log-Ordner"),
     ).toBeVisible();
 
     await createRuntimePresence(prisma, owner.entity.id, "desktop_companion");

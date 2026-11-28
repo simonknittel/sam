@@ -37,7 +37,7 @@ const getReadErrorText = ({ data, message }: ReadError) => {
   if (data?.code === "UNAUTHORIZED") return SESSION_EXPIRED_TEXT;
   // The procedure gives a German text (see `getSharingPopover`)
   if (data?.code === "FORBIDDEN") return message;
-  return "Der Status konnte nicht geladen werden.";
+  return "Die Daten konnten nicht geladen werden.";
 };
 
 interface Props {
@@ -188,7 +188,7 @@ const ServerState = ({ isPending, error, onRetry }: ServerStateProps) => {
     return (
       <p className="flex items-center gap-2 text-sm text-neutral-500">
         <AsciiSpinner />
-        Lade den Status …
+        Lade die Daten …
       </p>
     );
 

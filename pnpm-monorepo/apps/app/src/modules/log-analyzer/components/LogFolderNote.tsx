@@ -16,6 +16,7 @@ import { useBrowserRuntime } from "@/modules/remote-control-program/runtime/useB
 import {
   BROWSER_NOT_SUPPORTED_TEXT,
   NO_ENVIRONMENT_FOLDER_TEXT,
+  SELECT_LOG_FOLDER_TEXT,
 } from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
 import { CapabilityId } from "@sam-monorepo/domain";
 import { BrowserRuntimeErrorCode } from "@sam-monorepo/remote-control-program-runtime";
@@ -59,7 +60,7 @@ const getFolderNote = ({
     case LogFolderState.NotSelected:
       return {
         type: "info",
-        text: "Wähle im Remote Control Program den Ordner „StarCitizen“ oder ein Environment wie „LIVE“ aus, damit der Log Analyzer auch deine eigenen Einträge anzeigt.",
+        text: `Damit der Log Analyzer auch deine eigenen Einträge anzeigt, braucht das Remote Control Program deinen Log-Ordner. ${SELECT_LOG_FOLDER_TEXT}`,
         location: BROWSER_RUNTIME_LOCATION,
       };
 

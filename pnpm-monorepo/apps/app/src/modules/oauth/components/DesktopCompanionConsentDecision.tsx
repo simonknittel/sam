@@ -1,4 +1,9 @@
 import { Button2Variant } from "@/modules/common/components/Button2";
+import {
+  getSharingPopoverLocationLabel,
+  SharingPopoverRuntimeTab,
+  SharingPopoverTab,
+} from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverTab";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import { approveAuthorization } from "../actions/approveAuthorization";
 import { denyAuthorization } from "../actions/denyAuthorization";
@@ -23,8 +28,12 @@ export const DesktopCompanionConsentDecision = ({ parameters }: Props) => (
       </ul>
 
       <p className="text-neutral-500">
-        Die Anmeldung kannst du jederzeit im Remote Control Program unter
-        Runtimes › Desktop Companion beenden.
+        Die Anmeldung kannst du jederzeit im Remote Control Program unter{" "}
+        {getSharingPopoverLocationLabel({
+          tab: SharingPopoverTab.Runtimes,
+          runtimeTab: SharingPopoverRuntimeTab.DesktopCompanion,
+        })}{" "}
+        beenden.
       </p>
     </div>
 

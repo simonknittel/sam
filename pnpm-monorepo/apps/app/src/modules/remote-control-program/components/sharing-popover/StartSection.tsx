@@ -2,7 +2,10 @@
 
 import type { ReactNode } from "react";
 import { FaCheck } from "react-icons/fa6";
-import { LOG_ENTRIES_HISTORY_TEXT } from "../../utils/remoteControlProgramTexts";
+import {
+  LOG_ENTRIES_HISTORY_TEXT,
+  SELECT_LOG_FOLDER_TEXT,
+} from "../../utils/remoteControlProgramTexts";
 import { SharingPopoverSection } from "./SharingPopoverSection";
 import {
   BROWSER_RUNTIME_LOCATION,
@@ -110,8 +113,8 @@ export const StartSection = ({ onOpenLocation }: Props) => {
 
         <ol className="flex list-decimal flex-col gap-1 pl-5 text-sm text-neutral-400">
           <li>
-            Wähle unter {renderTabLink(BROWSER_RUNTIME_LOCATION)} den Ordner deiner
-            Star-Citizen-Installation aus.
+            Öffne {renderTabLink(BROWSER_RUNTIME_LOCATION)}.{" "}
+            {SELECT_LOG_FOLDER_TEXT}
           </li>
           <li>Wähle aus, welche Daten hochgeladen werden sollen.</li>
           <li>
