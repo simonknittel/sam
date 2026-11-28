@@ -49,14 +49,14 @@ const createLogFolder = (name: string) => {
   const matches: RawMatch[] = [];
   let readMilliseconds = 0;
   /** False: the owner selected a folder without the log files of the game */
-  let hasChannelFolder = true;
+  let hasEnvironmentFolder = true;
 
   return {
     setReadMilliseconds: (milliseconds: number) => {
       readMilliseconds = milliseconds;
     },
-    setHasChannelFolder: (value: boolean) => {
-      hasChannelFolder = value;
+    setHasEnvironmentFolder: (value: boolean) => {
+      hasEnvironmentFolder = value;
     },
     write: (time: number) => {
       const lineNumber = matches.length + 1;
@@ -68,8 +68,8 @@ const createLogFolder = (name: string) => {
         hash: createKey(name, lineNumber),
         groups: {},
         lineNumber,
-        gameChannel: "LIVE",
-        gameVersion: "4.10.201.48085",
+        gameEnvironment: "LIVE",
+        gameBuild: "13220821",
       };
       matches.push(match);
       return match;
@@ -106,7 +106,7 @@ const createLogFolder = (name: string) => {
             newestIsoDate: matches.at(-1)?.isoDate ?? null,
             isStopped,
             oldestSessionStart: null,
-            hasChannelFolder,
+            hasEnvironmentFolder,
           };
         },
         stopRead: () => stopRead(),
@@ -471,14 +471,14 @@ test("tells that a read takes long, but not for the short reads", async () => {
   expect(runtime.getState().isReading).toBe(false);
 });
 
-test("tells that the log folder has no channel folder until the owner selects a different folder", async () => {
+test("tells that the log folder has no environment folder until the owner selects a different folder", async () => {
   const browser = createBrowser();
-  browser.folder.setHasChannelFolder(false);
+  browser.folder.setHasEnvironmentFolder(false);
   const tab = browser.openTab();
 
   await tab.start(FOLDER);
   expect(tab.runtime.getState().error).toBe(
-    BrowserRuntimeErrorCode.NoChannelFolder,
+    BrowserRuntimeErrorCode.NoEnvironmentFolder,
   );
 
   await tab.start(OTHER_FOLDER);

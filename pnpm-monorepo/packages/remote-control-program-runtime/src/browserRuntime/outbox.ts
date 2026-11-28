@@ -37,8 +37,8 @@ const toFeedEntry = (entry: RawMatch): FeedEntry | null => {
     raw_line: entry.rawLine,
     event_at: new Date(time).toISOString(),
     line_number: entry.lineNumber,
-    game_channel: entry.gameChannel,
-    game_version: entry.gameVersion,
+    game_environment: entry.gameEnvironment,
+    game_build: entry.gameBuild,
   };
 };
 

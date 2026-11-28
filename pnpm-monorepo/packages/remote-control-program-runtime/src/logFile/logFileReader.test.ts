@@ -21,8 +21,12 @@ const LINE_FEED = 0x0a;
  */
 const WHOLE_FILE_WALK_TIMEOUT_MS = 30_000;
 
-const executableLine = (time: string, channel: string) =>
-  `<${time}> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\${channel}\\Bin64\\StarCitizen.exe`;
+const executableLine = (time: string, environment: string) =>
+  `<${time}> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\${environment}\\Bin64\\StarCitizen.exe`;
+
+/** The first line of each log file */
+const backupNameLine = (time: string, build: string) =>
+  `<${time}> BackupNameAttachment=" Build(${build}) 22 Jun 25 (11 00 00)"  -- used by backup system`;
 
 const LOG_CONTENT = [
   "<2026-09-01T10:00:00.000Z> Log started on 01/09/2026 10:00:00",
@@ -50,7 +54,12 @@ const hasNewerVersionMatch = (
 /** The fields of a match without the fields that come from the line */
 type MatchKeyFields = Pick<
   RawMatch,
-  "type" | "isoDate" | "lineNumber" | "rawLine" | "gameChannel" | "gameVersion"
+  | "type"
+  | "isoDate"
+  | "lineNumber"
+  | "rawLine"
+  | "gameEnvironment"
+  | "gameBuild"
 >;
 
 /** One match run over the whole text, for the comparison with the reader */
@@ -95,7 +104,7 @@ const toMatchKeys = (matches: readonly MatchKeyFields[]) =>
   new Set(
     matches.map(
       (match) =>
-        `${match.type} ${match.isoDate} ${match.lineNumber} ${match.rawLine} ${match.gameChannel} ${match.gameVersion}`,
+        `${match.type} ${match.isoDate} ${match.lineNumber} ${match.rawLine} ${match.gameEnvironment} ${match.gameBuild}`,
     ),
   );
 
@@ -166,6 +175,7 @@ describe("createLogFileReader", () => {
     const joinPuLine = SAMPLE_LINES[LogAnalyzerEntryType.JoinPu];
     const laterJoinPuLine = joinPuLine.replace("2025-06-22", "2025-06-23");
     const liveHeader = [
+      backupNameLine("2025-06-22T09:00:00.000Z", "13220821"),
       "<2025-06-22T09:00:00.000Z> Log started",
       executableLine("2025-06-22T09:00:00.000Z", "LIVE"),
       "<2025-06-22T09:00:00.000Z> FileVersion: 4.10.201.48085",
@@ -176,6 +186,7 @@ describe("createLogFileReader", () => {
       file: new File(
         [
           [
+            backupNameLine("2025-06-21T09:00:00.000Z", "13248297"),
             "<2025-06-21T09:00:00.000Z> Log started",
             executableLine("2025-06-21T09:00:00.000Z", "PTU"),
             "<2025-06-21T09:00:00.000Z> FileVersion: 5.0.202.10025",
@@ -187,11 +198,11 @@ describe("createLogFileReader", () => {
       ),
     };
     const toHeaders = (matches: readonly RawMatch[]) =>
-      matches.map(({ gameChannel, gameVersion }) => ({
-        gameChannel,
-        gameVersion,
+      matches.map(({ gameEnvironment, gameBuild }) => ({
+        gameEnvironment,
+        gameBuild,
       }));
-    const liveValues = { gameChannel: "LIVE", gameVersion: "4.10.201.48085" };
+    const liveValues = { gameEnvironment: "LIVE", gameBuild: "13220821" };
 
     const firstRead = await readLogFiles([
       createLogFile([...liveHeader, joinPuLine, ""].join("\r\n"), 1),
@@ -199,7 +210,7 @@ describe("createLogFileReader", () => {
     ]);
     expect(toHeaders(firstRead.matches)).toEqual([
       liveValues,
-      { gameChannel: "PTU", gameVersion: "5.0.202.10025" },
+      { gameEnvironment: "PTU", gameBuild: "13248297" },
     ]);
 
     /**
@@ -226,8 +237,8 @@ describe("createLogFileReader", () => {
     const newSessionRead = await readLogFiles([
       createLogFile(
         [
+          backupNameLine("2025-06-24T09:00:00.000Z", "13284307"),
           "<2025-06-24T09:00:00.000Z> Log started",
-          "<2025-06-24T09:00:00.000Z> FileVersion: 4.10.202.48190",
           joinPuLine.replace("2025-06-22", "2025-06-24"),
           "",
         ].join("\r\n"),
@@ -235,7 +246,7 @@ describe("createLogFileReader", () => {
       ),
     ]);
     expect(toHeaders(newSessionRead.matches)).toEqual([
-      { gameChannel: null, gameVersion: "4.10.202.48190" },
+      { gameEnvironment: null, gameBuild: "13284307" },
     ]);
   });
 

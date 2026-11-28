@@ -375,10 +375,10 @@ interface ReadOptions {
  * seconds. It can give a match a second time. A file which leaves the
  * selection keeps its position, thus a wider window reads only what is new.
  *
- * Each match has the line with the IP marker, its hash, and the game channel
- * and the game version of the header of its file (see `RawMatch`). The last
- * line of a live file without a line end gives no match until the game
- * writes its line end (see `readFile`).
+ * Each match has the line with the IP marker, its hash, and the game
+ * environment and the build number of the header of its file (see
+ * `RawMatch`). The last line of a live file without a line end gives no
+ * match until the game writes its line end (see `readFile`).
  */
 export const createLogFileReader = () => {
   const states = new Map<string, FileState>();

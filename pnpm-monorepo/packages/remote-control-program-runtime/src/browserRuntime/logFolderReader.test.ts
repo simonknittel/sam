@@ -3,8 +3,6 @@ import { createLogFileReader } from "../logFile/logFileReader.js";
 import { createLogFolderReader } from "./logFolderReader.js";
 import type { LogParser } from "./logParserClient.js";
 
-const GAME_VERSION = "4.10.201.48085";
-
 const ALL_TIME = { start: null, end: null };
 
 class FakeFile {
@@ -85,17 +83,26 @@ const joinLine = (port: number) =>
   `<2026-11-25T20:00:00.000Z> [Notice] <Join PU> address[35.187.166.216] port[${port}] shard[pub_euw1b_9873572_100] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]`;
 
 /** A log file of the game with the lines of its header, and one join */
-const createLogFileContent = (channel: string, port: number) =>
+const createLogFileContent = (
+  environment: string,
+  build: string,
+  port: number,
+) =>
   [
+    `<2026-11-25T19:42:06.738Z> BackupNameAttachment=" Build(${build}) 25 Nov 26 (20 41 58)"  -- used by backup system`,
     "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
-    `<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\${channel}\\Bin64\\StarCitizen.exe`,
-    `<2026-11-25T19:42:06.738Z> FileVersion: ${GAME_VERSION}`,
+    `<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\${environment}\\Bin64\\StarCitizen.exe`,
+    "<2026-11-25T19:42:06.738Z> FileVersion: 4.10.201.48085",
     joinLine(port),
     "",
   ].join("\r\n");
 
-const BACKUP_PATH =
-  "StarCitizen/LIVE/logbackups/Game Build(1) 04 Nov 26 (18 48 53).log";
+const LIVE_BUILD = "13220821";
+const PTU_BUILD = "13284307";
+/** A session of the build before */
+const OLDER_LIVE_BUILD = "13198765";
+
+const BACKUP_PATH = `StarCitizen/LIVE/logbackups/Game Build(${OLDER_LIVE_BUILD}) 24 Nov 26 (18 48 53).log`;
 
 /**
  * The folder of the launcher (`Roberts Space Industries`) of an owner: LIVE
@@ -105,14 +112,14 @@ const BACKUP_PATH =
 const createLauncherFolder = () => {
   const files: Readonly<Record<string, string>> = {
     "StarCitizen/LIVE/build_manifest.id": "{}",
-    "StarCitizen/LIVE/Game.log": createLogFileContent("LIVE", 1101),
-    [BACKUP_PATH]: createLogFileContent("LIVE", 1103),
+    "StarCitizen/LIVE/Game.log": createLogFileContent("LIVE", LIVE_BUILD, 1101),
+    [BACKUP_PATH]: createLogFileContent("LIVE", OLDER_LIVE_BUILD, 1103),
     "StarCitizen/LIVE/logbackups/notes.txt": joinLine(1901),
     "StarCitizen/LIVE/USER.cfg": "",
     "StarCitizen/LIVE/Bin64/crash.log": joinLine(1902),
     "StarCitizen/LIVE/Data/Logs/shaders.log": joinLine(1903),
     "StarCitizen/PTU/build_manifest.id": "{}",
-    "StarCitizen/PTU/Game.log": createLogFileContent("PTU", 1102),
+    "StarCitizen/PTU/Game.log": createLogFileContent("PTU", PTU_BUILD, 1102),
     "StarCitizen/EPTU/build_manifest.id": "{}",
     "StarCitizen/PSOCacheGen.log": joinLine(1904),
     "RSI Launcher/logs/log.log": joinLine(1905),
@@ -147,30 +154,30 @@ const readFolder = async (folder: FakeFolder) => {
     folder as unknown as FileSystemDirectoryHandle,
     createParser(),
   );
-  const { matches, hasChannelFolder } = await reader.read([ALL_TIME]);
+  const { matches, hasEnvironmentFolder } = await reader.read([ALL_TIME]);
 
   return {
-    hasChannelFolder,
+    hasEnvironmentFolder,
     entries: matches
-      .map(({ rawLine, gameChannel, gameVersion }) => ({
+      .map(({ rawLine, gameEnvironment, gameBuild }) => ({
         port: Number(/port\[(?<port>\d+)\]/.exec(rawLine)?.groups?.port),
-        gameChannel,
-        gameVersion,
+        gameEnvironment,
+        gameBuild,
       }))
       .toSorted((first, second) => first.port - second.port),
   };
 };
 
-test("reads Game.log and the backups of all channel folders, each entry with the header of its own file", async () => {
+test("reads Game.log and the backups of all environment folders, each entry with the header of its own file", async () => {
   const folder = createLauncherFolder().getFolder("StarCitizen");
 
-  // The game channel is the name of the folder in the header, not its path
+  // The game environment is the name of the folder in the header, not its path
   expect(await readFolder(folder)).toEqual({
-    hasChannelFolder: true,
+    hasEnvironmentFolder: true,
     entries: [
-      { port: 1101, gameChannel: "LIVE", gameVersion: GAME_VERSION },
-      { port: 1102, gameChannel: "PTU", gameVersion: GAME_VERSION },
-      { port: 1103, gameChannel: "LIVE", gameVersion: GAME_VERSION },
+      { port: 1101, gameEnvironment: "LIVE", gameBuild: LIVE_BUILD },
+      { port: 1102, gameEnvironment: "PTU", gameBuild: PTU_BUILD },
+      { port: 1103, gameEnvironment: "LIVE", gameBuild: OLDER_LIVE_BUILD },
     ],
   });
 });
@@ -185,9 +192,9 @@ test.each([
     const folder =
       path === null ? launcherFolder : launcherFolder.getFolder(path);
 
-    const { hasChannelFolder, entries } = await readFolder(folder);
+    const { hasEnvironmentFolder, entries } = await readFolder(folder);
 
-    expect(hasChannelFolder).toBe(true);
+    expect(hasEnvironmentFolder).toBe(true);
     expect(entries.map(({ port }) => port)).toEqual(ports);
   },
 );
@@ -197,12 +204,12 @@ test.each([
   "StarCitizen/LIVE/Bin64",
   "RSI Launcher",
 ])(
-  "finds no channel folder in %s, because a browser cannot read the parent folders",
+  "finds no environment folder in %s, because a browser cannot read the parent folders",
   async (path) => {
     const folder = createLauncherFolder().getFolder(path);
 
     expect(await readFolder(folder)).toEqual({
-      hasChannelFolder: false,
+      hasEnvironmentFolder: false,
       entries: [],
     });
   },

@@ -19,10 +19,10 @@ export interface LogFolderRead {
   /** See `findOldestSessionStart()`. Of all log files of the folder. */
   readonly oldestSessionStart: number | null;
   /**
-   * False when the folder has no channel folder of the game, for example
+   * False when the folder has no environment folder of the game, for example
    * `LIVE` (see `listLogFiles()`). Then it has no log files.
    */
-  readonly hasChannelFolder: boolean;
+  readonly hasEnvironmentFolder: boolean;
 }
 
 /** The log file connector for one log folder */
@@ -48,7 +48,7 @@ export const createLogFolderReader = (
 
   return {
     read: async (windows) => {
-      const { channelFolderCount, logFiles } = await listLogFiles(
+      const { environmentFolderCount, logFiles } = await listLogFiles(
         folder,
         knownLogFiles,
       );
@@ -71,7 +71,7 @@ export const createLogFolderReader = (
       return {
         ...result,
         oldestSessionStart: findOldestSessionStart(logFiles),
-        hasChannelFolder: channelFolderCount > 0,
+        hasEnvironmentFolder: environmentFolderCount > 0,
       };
     },
     stopRead: () => parser.stopReads(),
