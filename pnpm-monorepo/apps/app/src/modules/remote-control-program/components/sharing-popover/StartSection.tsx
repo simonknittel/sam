@@ -7,6 +7,7 @@ import { SharingPopoverSection } from "./SharingPopoverSection";
 import {
   BROWSER_RUNTIME_LOCATION,
   getSharingPopoverLocationLabel,
+  SHARING_POPOVER_RUNTIME_TAB_LABELS,
   SHARING_POPOVER_TAB_LABELS,
   SharingPopoverRuntimeTab,
   SharingPopoverTab,
@@ -26,16 +27,10 @@ interface ConsumerPart extends Part {
   readonly isAvailable: boolean;
 }
 
-/** Also the planned runtimes, which the catalog of the domain does not have */
-enum RuntimeId {
-  Browser = "browser",
-  DesktopCompanion = "desktop_companion",
-}
-
-interface RuntimePart extends Part {
-  readonly id: RuntimeId;
+interface RuntimePart {
   /** The sub-tab of the runtime */
-  readonly location: SharingPopoverLocation;
+  readonly tab: SharingPopoverRuntimeTab;
+  readonly description: string;
 }
 
 enum ConnectorSupport {
@@ -45,24 +40,17 @@ enum ConnectorSupport {
 }
 
 interface ConnectorPart extends Part {
-  readonly support: Readonly<Record<RuntimeId, ConnectorSupport>>;
+  readonly support: Readonly<Record<SharingPopoverRuntimeTab, ConnectorSupport>>;
 }
 
 const RUNTIMES: readonly RuntimePart[] = [
   {
-    id: RuntimeId.Browser,
-    name: "Browser",
+    tab: SharingPopoverRuntimeTab.Browser,
     description: "Läuft, solange ein Tab mit SAM geöffnet ist",
-    location: BROWSER_RUNTIME_LOCATION,
   },
   {
-    id: RuntimeId.DesktopCompanion,
-    name: "Desktop Companion",
+    tab: SharingPopoverRuntimeTab.DesktopCompanion,
     description: "Eine Desktop-App für Windows",
-    location: {
-      tab: SharingPopoverTab.Runtimes,
-      runtimeTab: SharingPopoverRuntimeTab.DesktopCompanion,
-    },
   },
 ];
 
@@ -71,16 +59,16 @@ const CONNECTORS: readonly ConnectorPart[] = [
     name: "Game Logs",
     description: "Liest die Log-Dateien von Star Citizen",
     support: {
-      [RuntimeId.Browser]: ConnectorSupport.Available,
-      [RuntimeId.DesktopCompanion]: ConnectorSupport.Planned,
+      [SharingPopoverRuntimeTab.Browser]: ConnectorSupport.Available,
+      [SharingPopoverRuntimeTab.DesktopCompanion]: ConnectorSupport.Planned,
     },
   },
   {
     name: "gRPC",
     description: "Liest Live-Daten wie Health direkt aus dem laufenden Spiel",
     support: {
-      [RuntimeId.Browser]: ConnectorSupport.NotPossible,
-      [RuntimeId.DesktopCompanion]: ConnectorSupport.Planned,
+      [SharingPopoverRuntimeTab.Browser]: ConnectorSupport.NotPossible,
+      [SharingPopoverRuntimeTab.DesktopCompanion]: ConnectorSupport.Planned,
     },
   },
 ];
@@ -206,12 +194,19 @@ const SupportMatrix = ({ onOpenLocation }: SupportMatrixProps) => {
           <td className="w-2/5" />
 
           {RUNTIMES.map((runtime) => (
-            <th key={runtime.id} scope="col" className="px-2 pb-2 font-normal">
+            <th
+              key={runtime.tab}
+              scope="col"
+              className="px-2 pb-2 font-normal"
+            >
               <TabLink
-                location={runtime.location}
+                location={{
+                  tab: SharingPopoverTab.Runtimes,
+                  runtimeTab: runtime.tab,
+                }}
                 onOpenLocation={onOpenLocation}
               >
-                {runtime.name}
+                {SHARING_POPOVER_RUNTIME_TAB_LABELS[runtime.tab]}
               </TabLink>
 
               <span className="block text-xs text-neutral-500">
@@ -236,9 +231,9 @@ const SupportMatrix = ({ onOpenLocation }: SupportMatrixProps) => {
             </th>
 
             {RUNTIMES.map((runtime) => (
-              <td key={runtime.id} className="px-2 py-2">
+              <td key={runtime.tab} className="px-2 py-2">
                 <span className="flex h-5 items-center">
-                  <SupportLabel support={connector.support[runtime.id]} />
+                  <SupportLabel support={connector.support[runtime.tab]} />
                 </span>
               </td>
             ))}
