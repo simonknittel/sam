@@ -30,16 +30,6 @@ interface FolderNote {
   readonly location: SharingPopoverLocation | null;
 }
 
-/**
- * The own entries come through the relay, thus the browser needs no folder.
- * The note does not ask for the folder of the browser.
- */
-const DESKTOP_COMPANION_NOTE: FolderNote = {
-  type: "info",
-  text: "Dein Desktop Companion lädt deine eigenen Einträge hoch. Dieser Browser braucht deshalb keinen Log-Ordner.",
-  location: null,
-};
-
 /** Null when the browser runtime reads the folder, or did not tell its state yet */
 const getFolderNote = ({
   folder,
@@ -96,7 +86,8 @@ const getFolderNote = ({
  * Tells why the own entries are missing. The Log Analyzer has no own UI for
  * the folder: it opens the sharing popover (see "Sharing popover" of
  * `docs/remote-control-program/README.md`). While a desktop companion of the
- * user uploads `log_entries`, the note asks for no folder.
+ * user uploads `log_entries`, the own entries come through the relay: then it
+ * shows nothing.
  */
 export const LogFolderNote = () => {
   const runtime = useBrowserRuntime();
@@ -107,19 +98,16 @@ export const LogFolderNote = () => {
     folderNote !== null,
   );
 
-  if (!folderNote) return null;
+  if (!folderNote || isUploadedByDesktopCompanion) return null;
 
-  const note = isUploadedByDesktopCompanion
-    ? DESKTOP_COMPANION_NOTE
-    : folderNote;
-  const { location } = note;
+  const { location } = folderNote;
 
   return (
     <Note
-      type={note.type}
+      type={folderNote.type}
       message={
         <div className="flex flex-1 flex-wrap items-center justify-between gap-2">
-          <p>{note.text}</p>
+          <p>{folderNote.text}</p>
 
           {location && opener && (
             <Button2
