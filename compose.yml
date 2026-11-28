@@ -296,7 +296,7 @@ services:
   # It runs before the migrations. Thus it makes the schema and the extension
   # timescaledb itself (the migrations then find them).
   grafana-bootstrap:
-    image: postgres:18.7-alpine3.23@sha256:f3ee138d5fce80ffaeb315b8bea7610f0c4f2304fb2aceb4ec8e457b92fc41a0
+    image: postgres:19.0-alpine3.23@sha256:40ad7e457013448b5522c6c5d30dccb8248959c41adc0e56c1785be4293bbd67
     restart: no
     depends_on:
       psql:
