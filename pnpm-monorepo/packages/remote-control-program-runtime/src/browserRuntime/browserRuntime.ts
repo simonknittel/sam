@@ -75,6 +75,17 @@ const LOG_ENTRIES_SOURCE: FeedEntriesSource = {
   connector_version: LOG_FILE_CONNECTOR.version,
 };
 
+const ANNOUNCED_LOG_FILE_CONNECTOR: AnnounceContent["connectors"][number] = {
+  id: ConnectorId.LogFile,
+  version: LOG_FILE_CONNECTOR.version,
+  capabilities: [
+    {
+      id: CapabilityId.LogEntries,
+      version: LOG_ENTRIES_CAPABILITY.version,
+    },
+  ],
+};
+
 export interface BrowserRuntimeOptions {
   /** The owner. Each citizen has own values in the storage. */
   readonly citizenId: string;
@@ -217,7 +228,11 @@ export class BrowserRuntime {
    */
   readonly #previousIsRunning: boolean | null;
   readonly #unsubscribeChannel: () => void;
-  #state: BrowserRuntimeState;
+  /**
+   * Set before the constructor makes the channel client: its first
+   * announcement reads the state
+   */
+  #state: BrowserRuntimeState = INITIAL_BROWSER_RUNTIME_STATE;
   /** A new layer at each start, thus each start waits for a new `welcome` */
   #layer: LocalAccessLayer;
   #isDisposed = false;
@@ -714,7 +729,7 @@ export class BrowserRuntime {
         result.newestIsoDate === null ? null : new Date(result.newestIsoDate);
       const previousNewestLogLineAt = this.#state.newestLogLineAt;
 
-      this.#setState({
+      this.#setReadState({
         newestLogLineAt:
           previousNewestLogLineAt !== null &&
           (newestLogLineAt === null ||
@@ -750,7 +765,7 @@ export class BrowserRuntime {
         "[Remote Control Program] Error reading the log folder:",
         error,
       );
-      this.#setState({
+      this.#setReadState({
         isReading: false,
         error: BrowserRuntimeErrorCode.ReadFailed,
       });
@@ -758,6 +773,17 @@ export class BrowserRuntime {
     } finally {
       cancelSlowReadTimer();
     }
+  }
+
+  /**
+   * The announcement has the connector only while it can read the folder
+   * (see `#createAnnouncement()`)
+   */
+  #setReadState(changes: Partial<BrowserRuntimeState>) {
+    const wasFolderReadable = this.#state.error === null;
+    this.#setState(changes);
+    if (wasFolderReadable !== (this.#state.error === null))
+      this.#channel.updateAnnouncement(this.#createAnnouncement());
   }
 
   /**
@@ -815,21 +841,16 @@ export class BrowserRuntime {
     }
   }
 
+  /**
+   * The channel connects only while the runtime runs. The connector is in the
+   * announcement only while it can read the folder (`announceContentSchema`):
+   * not after a failed read, and not without an environment folder. Before
+   * the first read of a run, the runtime has the permission for the folder.
+   */
   #createAnnouncement(): AnnounceContent {
     return {
-      // The channel connects only while the connector reads the folder
-      connectors: [
-        {
-          id: ConnectorId.LogFile,
-          version: LOG_FILE_CONNECTOR.version,
-          capabilities: [
-            {
-              id: CapabilityId.LogEntries,
-              version: LOG_ENTRIES_CAPABILITY.version,
-            },
-          ],
-        },
-      ],
+      connectors:
+        this.#state.error === null ? [ANNOUNCED_LOG_FILE_CONNECTOR] : [],
       local_access_layer: this.#layer.getAnnouncementSummary(),
     };
   }

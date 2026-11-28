@@ -1,5 +1,6 @@
 import {
   CapabilityId,
+  ConnectorId,
   DownMessageType,
   LogAnalyzerEntryType,
   RelayCloseReason,
@@ -59,6 +60,8 @@ const createLogFolder = (name: string) => {
   let isInLastFileAtStop = false;
   /** False: the owner selected a folder without the log files of the game */
   let hasEnvironmentFolder = true;
+  /** False: the browser took the access to the folder back */
+  let isReadable = true;
 
   return {
     setReadMilliseconds: (milliseconds: number) => {
@@ -69,6 +72,9 @@ const createLogFolder = (name: string) => {
     },
     setHasEnvironmentFolder: (value: boolean) => {
       hasEnvironmentFolder = value;
+    },
+    setIsReadable: (value: boolean) => {
+      isReadable = value;
     },
     write: (time: number, { isInUnreadableFile = false } = {}) => {
       const lineNumber = matches.length + 1;
@@ -96,6 +102,9 @@ const createLogFolder = (name: string) => {
 
       return {
         read: async (windows) => {
+          if (!isReadable)
+            throw new DOMException("No access", "NotAllowedError");
+
           const isStopped =
             readMilliseconds > 0 &&
             (await new Promise<boolean>((resolve) => {
@@ -557,6 +566,35 @@ test("tells that a read takes long, but not for the short reads", async () => {
   expect(runtime.getState().isReading).toBe(true);
   runtime.stop();
   expect(runtime.getState().isReading).toBe(false);
+});
+
+test("the announcement has the log file connector only while the runtime can read the folder", async () => {
+  vi.spyOn(console, "error").mockImplementation(() => undefined);
+  const browser = createBrowser();
+  const tab = browser.openTab();
+  const socket = await tab.start();
+
+  /** After the next read. The relay accepts the announcement. */
+  const readAnnouncedConnectorIds = async () => {
+    await vi.advanceTimersByTimeAsync(10 * SECOND);
+    const announcement = socket.getSent(UpMessageType.Announce).at(-1);
+    if (!announcement) throw new Error("No announce");
+    socket.acknowledge(announcement);
+    return announcement.content.connectors.map(({ id }) => id);
+  };
+
+  expect(await readAnnouncedConnectorIds()).toEqual([ConnectorId.LogFile]);
+
+  browser.folder.setHasEnvironmentFolder(false);
+  expect(await readAnnouncedConnectorIds()).toEqual([]);
+  browser.folder.setHasEnvironmentFolder(true);
+  expect(await readAnnouncedConnectorIds()).toEqual([ConnectorId.LogFile]);
+
+  browser.folder.setIsReadable(false);
+  expect(await readAnnouncedConnectorIds()).toEqual([]);
+  expect(tab.runtime.getState().error).toBe(BrowserRuntimeErrorCode.ReadFailed);
+  browser.folder.setIsReadable(true);
+  expect(await readAnnouncedConnectorIds()).toEqual([ConnectorId.LogFile]);
 });
 
 test("tells that the log folder has no environment folder until the owner selects a different folder", async () => {
