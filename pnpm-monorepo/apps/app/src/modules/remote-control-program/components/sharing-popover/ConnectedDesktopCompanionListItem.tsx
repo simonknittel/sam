@@ -1,6 +1,7 @@
 import { formatDate } from "@/modules/common/utils/formatDate";
 import type { OwnRuntime } from "@sam-monorepo/application";
 import type { AnnounceContent } from "@sam-monorepo/domain";
+import { getSharedCapabilityIds } from "../../utils/sharedCapabilities";
 import { CONNECTOR_LABELS } from "./catalogTexts";
 
 interface Props {
@@ -31,17 +32,13 @@ export const ConnectedDesktopCompanionListItem = ({ runtime }: Props) => {
 const getActiveConnectorsText = (announcement: AnnounceContent | null) => {
   if (!announcement) return "Wird geladen …";
 
-  const activeCapabilityIds = new Set(
-    announcement.local_access_layer.capability_rules
-      .filter((rule) => rule.is_on)
-      .map((rule) => rule.capability_id),
-  );
+  const sharedCapabilityIds = getSharedCapabilityIds(announcement);
 
   return (
     announcement.connectors
       .filter((connector) =>
         connector.capabilities.some((capability) =>
-          activeCapabilityIds.has(capability.id),
+          sharedCapabilityIds.has(capability.id),
         ),
       )
       .map((connector) => CONNECTOR_LABELS[connector.id])
