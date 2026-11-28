@@ -26,7 +26,10 @@ import * as z from "zod";
  */
 export const LOG_FILE_HEADER_LINE_COUNT = 30;
 
-/** The folder names of the launcher have less than 16 characters */
+/**
+ * The folder names of the launcher have less than 16 characters. The limit
+ * leaves space for longer names.
+ */
 export const MAXIMUM_GAME_CHANNEL_LENGTH = 32;
 
 /**
@@ -38,7 +41,7 @@ export const GAME_CHANNEL_PATTERN = /^[A-Z0-9][A-Z0-9._-]*$/;
 
 /**
  * The version of a Windows executable has four numbers of 16 bits each, thus
- * a maximum of 23 characters
+ * a maximum of 23 characters. The limit leaves space for a different format.
  */
 export const MAXIMUM_GAME_VERSION_LENGTH = 32;
 
@@ -107,8 +110,8 @@ interface ReadLogFileHeaderOptions {
 /**
  * Reads the values of the header lines of the text. For each value, the
  * first header line that matches its pattern and gives a valid value counts.
- * A line ends with `\n`, and without a `\r` at its end. A value that stays
- * null after the header has no valid value.
+ * A line ends at `\n`, and the rule ignores a `\r` at the end of a line. A
+ * value that stays null after the header has no valid value.
  *
  * Each line of the text must be complete. Give the text of a file that the
  * game still writes only up to its last line end. A read in parts gives each
