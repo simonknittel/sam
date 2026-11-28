@@ -59,9 +59,12 @@ export const LogFileConnectorGuide = () => {
             dem Hochladen entfernt.
           </p>
           <p>
-            Automatisch hochgeladen werden nur neue Einträge, solange die
-            Runtime läuft. Was du ohne laufende Runtime erlebst, bleibt auf
-            deinem Computer. Ältere Einträge kannst du unter{" "}
+            Automatisch hochgeladen werden nur neue Einträge ab dem Start der
+            Runtime, solange sie läuft. Ohne Verbindung zu SAM warten sie, bis
+            die Verbindung wieder besteht. Schließt du den Tab mit der laufenden
+            Runtime, startet ein anderer offener Tab mit SAM sie neu. Was du
+            ohne laufende Runtime erlebst, bleibt auf deinem Computer. Ältere
+            Einträge kannst du unter{" "}
             <UiLabel>Ältere Game Logs hochladen</UiLabel> nachträglich
             hochladen.
           </p>
