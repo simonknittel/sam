@@ -42,9 +42,10 @@ export const MAXIMUM_GAME_ENVIRONMENT_LENGTH = 32;
 /**
  * The launcher makes the folders of the environments with uppercase letters.
  * Thus a different folder before `Bin64` (for example a folder with the name
- * of the user) usually gives no value.
+ * of the user) usually gives no value. The first character is a letter, thus
+ * an IPv4 address is not a value (decision 22).
  */
-export const GAME_ENVIRONMENT_PATTERN = /^[A-Z0-9][A-Z0-9._-]*$/;
+export const GAME_ENVIRONMENT_PATTERN = /^[A-Z][A-Z0-9._-]*$/;
 
 /**
  * The build numbers have 8 digits. The limit leaves space for more digits,

@@ -366,7 +366,7 @@
                           {
                             "type": "string",
                             "maxLength": 32,
-                            "pattern": "^[A-Z0-9][A-Z0-9._-]*$"
+                            "pattern": "^[A-Z][A-Z0-9._-]*$"
                           },
                           {
                             "type": "null"

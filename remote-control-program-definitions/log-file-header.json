@@ -5,7 +5,7 @@
       "field": "game_environment",
       "source": "^<[^>]*> Executable: (?:[^\\\\/]*[\\\\/])*(?<value>[^\\\\/]*)[\\\\/]Bin64[\\\\/]StarCitizen\\.exe$",
       "flags": "",
-      "value_source": "^[A-Z0-9][A-Z0-9._-]*$",
+      "value_source": "^[A-Z][A-Z0-9._-]*$",
       "maximum_value_length": 32
     },
     {

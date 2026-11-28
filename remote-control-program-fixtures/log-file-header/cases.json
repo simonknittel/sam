@@ -56,10 +56,19 @@
       "description": "An environment with a digit, a dot and an underscore",
       "lines": [
         "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
-        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\4.0_PREVIEW\\Bin64\\StarCitizen.exe",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\PREVIEW_4.0\\Bin64\\StarCitizen.exe",
         "<2026-11-25T19:42:06.738Z> FileVersion: 4.0.0.9416120"
       ],
-      "game_environment": "4.0_PREVIEW",
+      "game_environment": "PREVIEW_4.0",
+      "game_build": null
+    },
+    {
+      "description": "A folder before Bin64 that starts with a digit gives no environment: thus an IPv4 address never leaves the machine",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> Executable: D:\\Games\\192.0.2.10\\Bin64\\StarCitizen.exe"
+      ],
+      "game_environment": null,
       "game_build": null
     },
     {
