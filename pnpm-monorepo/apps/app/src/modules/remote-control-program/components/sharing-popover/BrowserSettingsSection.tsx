@@ -16,30 +16,17 @@ import {
   SharingPopoverSubsection,
 } from "./SharingPopoverSection";
 import {
-  BROWSER_RUNTIME_CONNECTORS,
   SHARING_POPOVER_RUNTIME_TAB_LABELS,
   SharingPopoverRuntimeTab,
 } from "./SharingPopoverTab";
 import { SharingPopoverTabList } from "./SharingPopoverTabList";
-
-const isConnectorId = (tab: string): tab is ConnectorId =>
-  Object.values<string>(ConnectorId).includes(tab);
-
-interface Props {
-  /** See `RuntimesSection` */
-  readonly connectorTab: ConnectorId;
-  readonly onConnectorTabChange: (connectorTab: ConnectorId) => void;
-}
 
 /**
  * The browser runtime of this browser and one sub-tab for each of its
  * connectors. The section does not depend on the data of the server: the
  * popover shows it also while that data loads or when the read failed.
  */
-export const BrowserSettingsSection = ({
-  connectorTab,
-  onConnectorTabChange,
-}: Props) => {
+export const BrowserSettingsSection = () => {
   const runtime = useBrowserRuntime();
 
   if (!runtime) return null;
@@ -57,18 +44,11 @@ export const BrowserSettingsSection = ({
           <BrowserRuntimeControl runtime={runtime} />
 
           <SharingPopoverSubsection heading="Connectors">
-            <TabsProvider
-              activeTab={connectorTab}
-              onActiveTabChange={(tab) => {
-                if (isConnectorId(tab)) onConnectorTabChange(tab);
-              }}
-            >
+            <TabsProvider initialActiveTab={ConnectorId.LogFile}>
               <SharingPopoverTabList>
-                {BROWSER_RUNTIME_CONNECTORS.map((connector) => (
-                  <Tab key={connector} id={connector}>
-                    {CONNECTOR_LABELS[connector]}
-                  </Tab>
-                ))}
+                <Tab id={ConnectorId.LogFile}>
+                  {CONNECTOR_LABELS[ConnectorId.LogFile]}
+                </Tab>
               </SharingPopoverTabList>
 
               <TabPanel id={ConnectorId.LogFile}>

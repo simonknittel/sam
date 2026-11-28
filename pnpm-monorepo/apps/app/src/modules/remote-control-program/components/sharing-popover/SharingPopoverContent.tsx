@@ -8,7 +8,6 @@ import {
   TabsProvider,
   useTabsContext,
 } from "@/modules/common/components/tabs/TabsContext";
-import type { ConnectorId } from "@sam-monorepo/domain";
 import { useRef, useState, type RefObject } from "react";
 import { flushSync } from "react-dom";
 import { LogFolderState } from "../../runtime/types";
@@ -17,7 +16,6 @@ import { SESSION_EXPIRED_TEXT } from "../../utils/remoteControlProgramTexts";
 import { RuntimesSection } from "./RuntimesSection";
 import { SharedWithOthersSection } from "./SharedWithOthersSection";
 import {
-  BROWSER_RUNTIME_CONNECTORS,
   BROWSER_RUNTIME_LOCATION,
   SHARING_POPOVER_TAB_LABELS,
   SharingPopoverRuntimeTab,
@@ -71,16 +69,6 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
       ? initialLocation.runtimeTab
       : SharingPopoverRuntimeTab.Browser,
   );
-  const [connectorTab, setConnectorTab] = useState<ConnectorId>(
-    (initialLocation.tab === SharingPopoverTab.Runtimes
-      ? initialLocation.connector
-      : undefined) ?? BROWSER_RUNTIME_CONNECTORS[0],
-  );
-
-  const showRuntimeLocation = (location: SharingPopoverRuntimeLocation) => {
-    setRuntimeTab(location.runtimeTab);
-    if (location.connector) setConnectorTab(location.connector);
-  };
 
   const serverState = (
     <ServerState
@@ -118,7 +106,9 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
         <StartPanel
           tabListRef={tabListRef}
           runtimeTabListRef={runtimeTabListRef}
-          onShowRuntimeLocation={showRuntimeLocation}
+          onShowRuntimeLocation={(location) =>
+            setRuntimeTab(location.runtimeTab)
+          }
         />
       </TabPanel>
 
@@ -139,8 +129,6 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
         <RuntimesSection
           runtimeTab={runtimeTab}
           onRuntimeTabChange={setRuntimeTab}
-          connectorTab={connectorTab}
-          onConnectorTabChange={setConnectorTab}
           tabListRef={runtimeTabListRef}
           serverState={serverState}
           desktopCompanions={data?.desktopCompanions}
@@ -154,7 +142,7 @@ export const SharingPopoverContent = ({ locationOfControlUi }: Props) => {
 interface StartPanelProps {
   readonly tabListRef: RefObject<HTMLDivElement | null>;
   readonly runtimeTabListRef: RefObject<HTMLDivElement | null>;
-  /** Shows the sub-tab of the location and the sub-tab of its connector */
+  /** Shows the sub-tab of the location */
   readonly onShowRuntimeLocation: (
     location: SharingPopoverRuntimeLocation,
   ) => void;

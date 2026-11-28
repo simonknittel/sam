@@ -7,7 +7,6 @@ import type {
   DesktopCompanionSignIn,
   OwnRuntime,
 } from "@sam-monorepo/application";
-import type { ConnectorId } from "@sam-monorepo/domain";
 import type { ReactNode, RefObject } from "react";
 import { BrowserSettingsSection } from "./BrowserSettingsSection";
 import { DesktopCompanionSection } from "./DesktopCompanionSection";
@@ -29,9 +28,6 @@ interface Props {
   /** The parent keeps it, thus a link of the start opens a sub-tab */
   readonly runtimeTab: SharingPopoverRuntimeTab;
   readonly onRuntimeTabChange: (runtimeTab: SharingPopoverRuntimeTab) => void;
-  /** The sub-tab of a connector in the sub-tab of the browser. The parent keeps it, thus a link of the start selects it. */
-  readonly connectorTab: ConnectorId;
-  readonly onConnectorTabChange: (connectorTab: ConnectorId) => void;
   readonly tabListRef: RefObject<HTMLDivElement | null>;
   /** See `DesktopCompanionSection` */
   readonly serverState: ReactNode;
@@ -47,8 +43,6 @@ interface Props {
 export const RuntimesSection = ({
   runtimeTab,
   onRuntimeTabChange,
-  connectorTab,
-  onConnectorTabChange,
   tabListRef,
   serverState,
   desktopCompanions,
@@ -73,10 +67,7 @@ export const RuntimesSection = ({
         </SharingPopoverTabList>
 
         <TabPanel id={SharingPopoverRuntimeTab.Browser}>
-          <BrowserSettingsSection
-            connectorTab={connectorTab}
-            onConnectorTabChange={onConnectorTabChange}
-          />
+          <BrowserSettingsSection />
         </TabPanel>
 
         <TabPanel id={SharingPopoverRuntimeTab.DesktopCompanion}>

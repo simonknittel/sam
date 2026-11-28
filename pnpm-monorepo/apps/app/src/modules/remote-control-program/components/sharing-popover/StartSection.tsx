@@ -7,7 +7,6 @@ import { SharingPopoverSection } from "./SharingPopoverSection";
 import {
   BROWSER_RUNTIME_LOCATION,
   getSharingPopoverLocationLabel,
-  LOG_FOLDER_LOCATION,
   SHARING_POPOVER_TAB_LABELS,
   SharingPopoverRuntimeTab,
   SharingPopoverTab,
@@ -123,7 +122,7 @@ export const StartSection = ({ onOpenLocation }: Props) => {
 
         <ol className="flex list-decimal flex-col gap-1 pl-5 text-sm text-neutral-400">
           <li>
-            Wähle unter {renderTabLink(LOG_FOLDER_LOCATION)} den Ordner deiner
+            Wähle unter {renderTabLink(BROWSER_RUNTIME_LOCATION)} den Ordner deiner
             Star-Citizen-Installation aus.
           </li>
           <li>Wähle aus, welche Daten hochgeladen werden sollen.</li>

@@ -5,7 +5,6 @@ import Note from "@/modules/common/components/Note";
 import { useSharingPopoverOpener } from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverProvider";
 import {
   BROWSER_RUNTIME_LOCATION,
-  LOG_FOLDER_LOCATION,
   type SharingPopoverLocation,
 } from "@/modules/remote-control-program/components/sharing-popover/SharingPopoverTab";
 import { useIsUploadedByDesktopCompanion } from "@/modules/remote-control-program/consumer/useIsUploadedByDesktopCompanion";
@@ -61,14 +60,14 @@ const getFolderNote = ({
       return {
         type: "info",
         text: "Wähle im Remote Control Program den Ordner „StarCitizen“ oder ein Environment wie „LIVE“ aus, damit der Log Analyzer auch deine eigenen Einträge anzeigt.",
-        location: LOG_FOLDER_LOCATION,
+        location: BROWSER_RUNTIME_LOCATION,
       };
 
     case LogFolderState.PermissionNeeded:
       return {
         type: "warning",
         text: `Der Browser braucht erneut deine Erlaubnis, um ${folder.name ? `den Ordner „${folder.name}“` : "deinen Log-Ordner"} zu lesen. Du kannst sie im Remote Control Program erteilen.`,
-        location: LOG_FOLDER_LOCATION,
+        location: BROWSER_RUNTIME_LOCATION,
       };
 
     case LogFolderState.Granted:
@@ -76,7 +75,6 @@ const getFolderNote = ({
         return {
           type: "info",
           text: "Die Runtime ist gestoppt, deshalb werden deine Logs gerade nicht gelesen. Du kannst sie im Remote Control Program starten.",
-          // The start button is above the sub-tabs of the connectors
           location: BROWSER_RUNTIME_LOCATION,
         };
 
@@ -84,7 +82,7 @@ const getFolderNote = ({
         ? {
             type: "warning",
             text: NO_ENVIRONMENT_FOLDER_TEXT,
-            location: LOG_FOLDER_LOCATION,
+            location: BROWSER_RUNTIME_LOCATION,
           }
         : null;
 
