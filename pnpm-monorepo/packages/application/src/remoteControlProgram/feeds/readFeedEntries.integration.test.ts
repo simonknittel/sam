@@ -164,8 +164,8 @@ test("gives the own entries, the live entries of the valid grants and the histor
     hash: expect.stringMatching(/^[0-9a-f]{64}$/),
     createdAt: TEST_NOW,
     // An entry without the values of the header, for example of the capability version 1
-    gameChannel: null,
-    gameVersion: null,
+    gameEnvironment: null,
+    gameBuild: null,
   });
 
   // The time window of the Log Analyzer

@@ -42,8 +42,8 @@ const createOwner = () =>
 
 /** The values of the header of a log file of LIVE */
 const LIVE_HEADER = {
-  game_channel: "LIVE",
-  game_version: "4.10.201.48085",
+  game_environment: "LIVE",
+  game_build: "13220821",
 } as const;
 
 const createJoinPuEntry = (
@@ -71,8 +71,8 @@ const createGameCrashEntry = (
     "Exception STATUS_CRYENGINE_OUT_OF_SYSMEM(0x2BADFF61) addr=0x00007FFE2CE13CFA digest=114a1cfe538433f07c4a87c536ae0528",
   event_at: time.toISOString(),
   line_number: lineNumber,
-  game_channel: null,
-  game_version: null,
+  game_environment: null,
+  game_build: null,
 });
 
 const createInput = (
@@ -104,8 +104,8 @@ const findStoredEntries = () =>
       runtimeId: true,
       connectorVersion: true,
       capabilityVersion: true,
-      gameChannel: true,
-      gameVersion: true,
+      gameEnvironment: true,
+      gameBuild: true,
     },
   });
 
@@ -146,8 +146,8 @@ test("stores the new entries with their context and the values of their header, 
       eventAt: ONE_HOUR_AGO,
       lineNumber: 12,
       hash: await createLogEntryHash(joinPu.type, joinPu.raw_line),
-      gameChannel: "LIVE",
-      gameVersion: "4.10.201.48085",
+      gameEnvironment: "LIVE",
+      gameBuild: "13220821",
     },
     {
       ...entryContext,
@@ -157,8 +157,8 @@ test("stores the new entries with their context and the values of their header, 
       eventAt: TEST_NOW,
       lineNumber: 40,
       hash: await createLogEntryHash(gameCrash.type, gameCrash.raw_line),
-      gameChannel: null,
-      gameVersion: null,
+      gameEnvironment: null,
+      gameBuild: null,
     },
   ]);
   expect(output).toMatchObject({
@@ -181,8 +181,8 @@ test("stores the new entries with their context and the values of their header, 
       lineNumber: entry.lineNumber,
       hash: entry.hash,
       createdAt: entry.createdAt,
-      gameChannel: entry.gameChannel,
-      gameVersion: entry.gameVersion,
+      gameEnvironment: entry.gameEnvironment,
+      gameBuild: entry.gameBuild,
     })),
   );
 
