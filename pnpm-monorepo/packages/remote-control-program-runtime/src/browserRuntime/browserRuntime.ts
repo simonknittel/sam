@@ -458,7 +458,7 @@ export class BrowserRuntime {
     )
       throw new BrowserRuntimeError(BrowserRuntimeErrorCode.TooManyEntries);
 
-    let { entries } = this.#layer.prepareOlderEntriesRequest(
+    let entries = this.#layer.selectOlderEntries(
       this.#entryStore.values(),
       range,
     );
@@ -487,12 +487,7 @@ export class BrowserRuntime {
     };
     this.#olderEntriesRequest = request;
 
-    return {
-      id: request.id,
-      range,
-      countsByType: request.countsByType,
-      entryCount: entries.length,
-    };
+    return { id: request.id, countsByType: request.countsByType };
   }
 
   /**

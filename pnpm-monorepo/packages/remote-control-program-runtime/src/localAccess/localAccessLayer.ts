@@ -28,18 +28,6 @@ export interface OlderEntriesTimeRange {
   readonly end: Date | null;
 }
 
-/** The prepared request for older entries, which the owner confirms */
-export interface OlderEntriesRequest<Entry extends LocalAccessEntry> {
-  readonly range: OlderEntriesTimeRange;
-  /**
-   * The entries of the range whose types are on and which do not go up
-   * automatically
-   */
-  readonly entries: readonly Entry[];
-  /** The number of entries for each type, by the oldest version of the type */
-  readonly countsByType: ReadonlyMap<LogAnalyzerEntryType, number>;
-}
-
 /** The settings of this browser, for the sharing popover */
 export interface LocalAccessSettings {
   /** Each version of a type has the value of the rule of its oldest version */
@@ -106,8 +94,8 @@ const isInRange = (time: number, range: OlderEntriesTimeRange) =>
  * The time since which the runtime reads live is only in memory: the start of
  * the reading sets it, and the end of a switch sets it again. Thus the
  * entries of a time without a reading or with a switch never go up
- * automatically, also not after the next start. Older entries go up only through a request that the owner
- * confirms (`prepareOlderEntriesRequest` and `confirmOlderEntriesRequest`).
+ * automatically, also not after the next start. Older entries go up only
+ * through a request that the owner confirms (`selectOlderEntries`).
  *
  * Each tab can make a layer on the same storage. The rules in the storage are
  * the source of truth: each method reads them again. Only the tab with the
@@ -289,34 +277,24 @@ export const createLocalAccessLayer = ({
     },
 
     /**
-     * The request for the older entries of a time range: the entries whose
-     * types are on and which do not go up automatically. The caller can
-     * leave out the entries that the relay already has.
+     * The older entries of a time range for a request of the owner: the
+     * entries whose types are on and which do not go up automatically. The
+     * caller can leave out the entries that the relay already has.
      */
-    prepareOlderEntriesRequest: <Entry extends LocalAccessEntry>(
+    selectOlderEntries: <Entry extends LocalAccessEntry>(
       entries: Iterable<Entry>,
       range: OlderEntriesTimeRange,
-    ): OlderEntriesRequest<Entry> => {
+    ): Entry[] => {
       const rules = readRules();
 
-      const requestedEntries: Entry[] = [];
-      const countsByType = new Map<LogAnalyzerEntryType, number>();
-
-      for (const entry of entries) {
-        const ruleType = getOldestLogAnalyzerEntryVersion(entry.type);
-
-        if (
-          !rules.turnedOnAtByType.has(ruleType) ||
-          !isInRange(getEntryTime(entry), range) ||
-          goesUpAutomatically(rules, entry)
-        )
-          continue;
-
-        requestedEntries.push(entry);
-        countsByType.set(ruleType, (countsByType.get(ruleType) ?? 0) + 1);
-      }
-
-      return { range, entries: requestedEntries, countsByType };
+      return Array.from(entries).filter(
+        (entry) =>
+          rules.turnedOnAtByType.has(
+            getOldestLogAnalyzerEntryVersion(entry.type),
+          ) &&
+          isInRange(getEntryTime(entry), range) &&
+          !goesUpAutomatically(rules, entry),
+      );
     },
   };
 };

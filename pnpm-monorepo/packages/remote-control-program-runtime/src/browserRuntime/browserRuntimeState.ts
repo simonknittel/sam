@@ -3,7 +3,6 @@ import {
   INITIAL_CHANNEL_STATE,
   type ChannelState,
 } from "../channel/channelTypes.js";
-import type { OlderEntriesTimeRange } from "../localAccess/localAccessLayer.js";
 
 /**
  * The problems of the browser runtime: in `BrowserRuntimeState.error`, and
@@ -97,8 +96,6 @@ export type BrowserRuntimeStateListener = (state: BrowserRuntimeState) => void;
 /** A request for older entries, which the owner confirms */
 export interface PreparedOlderEntriesRequest {
   readonly id: string;
-  readonly range: OlderEntriesTimeRange;
   /** The number of entries for each type, by the oldest version of the type */
   readonly countsByType: ReadonlyMap<LogAnalyzerEntryType, number>;
-  readonly entryCount: number;
 }

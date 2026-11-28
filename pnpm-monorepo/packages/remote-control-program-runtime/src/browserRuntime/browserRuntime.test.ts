@@ -32,6 +32,10 @@ const SECOND = 1_000;
 const MINUTE = 60 * SECOND;
 const DAY = 24 * 60 * MINUTE;
 
+/** The counts of a request for older entries of the lines of `createLogFolder()` */
+const countsOfLines = (count: number) =>
+  new Map([[LogAnalyzerEntryType.JoinPu, count]]);
+
 /** The runtime only gives the handle to the reader */
 const FOLDER = {} as FileSystemDirectoryHandle;
 const OTHER_FOLDER = {} as FileSystemDirectoryHandle;
@@ -457,10 +461,9 @@ test("a request for older entries leaves out the entries that go up automaticall
     start: new Date(START_TIME - 3 * DAY),
     end: null,
   });
-  expect(request).toMatchObject({
-    entryCount: 1,
-    countsByType: new Map([[LogAnalyzerEntryType.JoinPu, 1]]),
-  });
+  expect(request.countsByType).toEqual(
+    new Map([[LogAnalyzerEntryType.JoinPu, 1]]),
+  );
   expect(browser.getKeyRequests().at(-1)).toEqual({
     capability_id: CapabilityId.LogEntries,
     start: sharedEntry.isoDate,
@@ -520,7 +523,7 @@ test("a read that ends after a stop keeps its entries on the machine, and a requ
   expect(tab.getSentRawLines()).toEqual([]);
   await expect(
     tab.runtime.prepareOlderEntriesRequest({ start: null, end: null }),
-  ).resolves.toMatchObject({ entryCount: 1 });
+  ).resolves.toMatchObject({ countsByType: countsOfLines(1) });
 });
 
 test("the citizens of one browser profile do not share the run record or the rules", async () => {
@@ -661,8 +664,8 @@ test("a newer count replaces an older one and reads its own range", async () => 
   await vi.advanceTimersByTimeAsync(30 * SECOND);
 
   await expectReplaced;
-  const { id, entryCount } = await count;
-  expect(entryCount).toBe(2);
+  const { id, countsByType } = await count;
+  expect(countsByType).toEqual(countsOfLines(2));
   expect(runtime.confirmOlderEntriesRequest(id)).toBe(2);
 });
 
@@ -678,7 +681,9 @@ test("a count reads its range completely when a control UI stops its read", asyn
   });
   await vi.advanceTimersByTimeAsync(30 * SECOND);
 
-  await expect(count).resolves.toMatchObject({ entryCount: 2 });
+  await expect(count).resolves.toMatchObject({
+    countsByType: countsOfLines(2),
+  });
 });
 
 test("a count leaves out the entries of a log file that cannot be read, and tells their number in the console", async () => {
@@ -696,7 +701,7 @@ test("a count leaves out the entries of a log file that cannot be read, and tell
       start: new Date(START_TIME - 90 * DAY),
       end: null,
     }),
-  ).resolves.toMatchObject({ entryCount: 1 });
+  ).resolves.toMatchObject({ countsByType: countsOfLines(1) });
   expect(warn).toHaveBeenCalledOnce();
   expect(warn).toHaveBeenCalledWith(expect.stringMatching(/: 1$/));
 });
@@ -719,5 +724,5 @@ test("refuses a count whose oldest entries left the memory", async () => {
       start: new Date(START_TIME - DAY),
       end: null,
     }),
-  ).resolves.toMatchObject({ entryCount: 0 });
+  ).resolves.toMatchObject({ countsByType: new Map() });
 });

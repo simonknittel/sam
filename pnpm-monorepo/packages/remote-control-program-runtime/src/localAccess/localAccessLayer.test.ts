@@ -176,7 +176,7 @@ describe("the rule for the upload", () => {
 });
 
 describe("the request for older entries", () => {
-  it("counts the older entries of the range whose types are on, and uploads them after the confirmation", () => {
+  it("selects the older entries of the range whose types are on, and uploads them after the confirmation", () => {
     const browser = createBrowser();
     const firstOlderLine = createEntry(
       LogAnalyzerEntryType.JoinPu,
@@ -211,7 +211,7 @@ describe("the request for older entries", () => {
       browser.getTime(),
     );
 
-    const request = layer.prepareOlderEntriesRequest(
+    const olderEntries = layer.selectOlderEntries(
       [
         firstOlderLine,
         secondOlderLine,
@@ -223,21 +223,20 @@ describe("the request for older entries", () => {
       { start: new Date(firstOlderLine.isoDate), end: null },
     );
 
-    expect(request.countsByType).toEqual(
-      new Map([
-        [LogAnalyzerEntryType.JoinPu, 2],
-        [LogAnalyzerEntryType.EarnedNotification, 1],
-      ]),
-    );
+    expect(olderEntries).toEqual([
+      firstOlderLine,
+      secondOlderLine,
+      olderLineOfOtherType,
+    ]);
 
     layer.setLogEntryTypes([LogAnalyzerEntryType.EarnedNotification], false);
-    expect(layer.selectPermittedUploads(request.entries)).toEqual([
+    expect(layer.selectPermittedUploads(olderEntries)).toEqual([
       firstOlderLine,
       secondOlderLine,
     ]);
 
     layer.setRelayState(RelayUploadState.Stopped);
-    expect(layer.selectPermittedUploads(request.entries)).toEqual([]);
+    expect(layer.selectPermittedUploads(olderEntries)).toEqual([]);
   });
 });
 
