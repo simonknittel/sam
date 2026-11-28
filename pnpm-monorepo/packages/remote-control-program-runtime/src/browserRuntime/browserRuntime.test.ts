@@ -48,6 +48,8 @@ const createKey = (name: string, lineNumber: number) =>
  */
 const createLogFolder = (name: string) => {
   const matches: RawMatch[] = [];
+  /** The keys of the lines of one log file that the reader cannot read */
+  const unreadableHashes = new Set<string>();
   let readMilliseconds = 0;
   /**
    * True: a stop comes while the reader reads its last file. The reader
@@ -68,7 +70,7 @@ const createLogFolder = (name: string) => {
     setHasEnvironmentFolder: (value: boolean) => {
       hasEnvironmentFolder = value;
     },
-    write: (time: number) => {
+    write: (time: number, { isInUnreadableFile = false } = {}) => {
       const lineNumber = matches.length + 1;
       const isoDate = new Date(time).toISOString();
       const match: RawMatch = {
@@ -82,6 +84,7 @@ const createLogFolder = (name: string) => {
         gameBuild: "13220821",
       };
       matches.push(match);
+      if (isInUnreadableFile) unreadableHashes.add(match.hash);
       return match;
     },
     /** The relay calculates the key from the line */
@@ -107,6 +110,7 @@ const createLogFolder = (name: string) => {
             : matches.filter(
                 ({ hash, isoDate }) =>
                   !readHashes.has(hash) &&
+                  !unreadableHashes.has(hash) &&
                   windows.some((window) =>
                     isInVisibleTimeRange(window, new Date(isoDate)),
                   ),
@@ -119,7 +123,7 @@ const createLogFolder = (name: string) => {
             isStopped,
             oldestSessionStart: null,
             hasEnvironmentFolder,
-            failedFileCount: 0,
+            failedFileCount: unreadableHashes.size > 0 ? 1 : 0,
           };
         },
         stopRead: () => stopRead(),
@@ -266,6 +270,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 test("after a change of the active tab, the next runtime uploads only the entries from its own start", async () => {
@@ -620,6 +625,26 @@ test("a count reads its range completely when a control UI stops its read", asyn
   await vi.advanceTimersByTimeAsync(30 * SECOND);
 
   await expect(count).resolves.toMatchObject({ entryCount: 2 });
+});
+
+test("a count leaves out the entries of a log file that cannot be read, and tells their number in the console", async () => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  const browser = createBrowser();
+  browser.turnOnLines();
+  browser.folder.write(START_TIME - 60 * DAY, { isInUnreadableFile: true });
+  browser.folder.write(START_TIME - 40 * DAY);
+  const tab = browser.openTab();
+  await tab.start();
+  await vi.advanceTimersByTimeAsync(30 * SECOND);
+
+  await expect(
+    tab.runtime.prepareOlderEntriesRequest({
+      start: new Date(START_TIME - 90 * DAY),
+      end: null,
+    }),
+  ).resolves.toMatchObject({ entryCount: 1 });
+  expect(warn).toHaveBeenCalledOnce();
+  expect(warn).toHaveBeenCalledWith(expect.stringMatching(/: 1$/));
 });
 
 test("refuses a count whose oldest entries left the memory", async () => {

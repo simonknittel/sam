@@ -117,6 +117,22 @@ enum ReadOutcome {
   Failed = "failed",
 }
 
+interface FinishedRead {
+  readonly outcome: ReadOutcome;
+  /** See `LogFolderRead.failedFileCount`. Zero without a result of the reader. */
+  readonly failedFileCount: number;
+}
+
+const FAILED_READ: FinishedRead = {
+  outcome: ReadOutcome.Failed,
+  failedFileCount: 0,
+};
+
+const STOPPED_READ: FinishedRead = {
+  outcome: ReadOutcome.Stopped,
+  failedFileCount: 0,
+};
+
 interface OlderEntriesRequest {
   readonly id: string;
   readonly range: OlderEntriesTimeRange;
@@ -220,7 +236,7 @@ export class BrowserRuntime {
   #requestedWindow: EntryWindow | null = null;
   /** The windows of the next read only, for a request for older entries */
   #oneTimeWindows: EntryWindow[] = [];
-  #readInFlight: Promise<ReadOutcome> | null = null;
+  #readInFlight: Promise<FinishedRead> | null = null;
   #isReadRequested = false;
   #cancelReadTimer: (() => void) | null = null;
   #cancelRunRecordTimer: (() => void) | null = null;
@@ -431,13 +447,18 @@ export class BrowserRuntime {
     };
 
     // A new window of a control UI stops a read, thus the count would miss entries
-    let outcome: ReadOutcome;
+    let read: FinishedRead;
     do {
-      outcome = await this.#readNow([range]);
+      read = await this.#readNow([range]);
       requireCurrentRequest();
-    } while (outcome === ReadOutcome.Stopped);
-    if (outcome === ReadOutcome.Failed)
+    } while (read.outcome === ReadOutcome.Stopped);
+    if (read.outcome === ReadOutcome.Failed)
       throw new BrowserRuntimeError(BrowserRuntimeErrorCode.ReadFailed);
+    // Like in the desktop companion. The warning has no paths: they can contain the name of the user.
+    if (read.failedFileCount > 0)
+      console.warn(
+        `[Remote Control Program] The count of older entries is without the entries of the log files that could not be read: ${read.failedFileCount}`,
+      );
 
     const { prunedUntil } = this.#entryStore;
     if (
@@ -666,9 +687,9 @@ export class BrowserRuntime {
     return this.#read();
   }
 
-  async #readOnce(generation: number): Promise<ReadOutcome> {
+  async #readOnce(generation: number): Promise<FinishedRead> {
     const reader = this.#reader;
-    if (!reader || !this.#state.isRunning) return ReadOutcome.Failed;
+    if (!reader || !this.#state.isRunning) return FAILED_READ;
 
     const windows = this.#getReadWindows();
     this.#oneTimeWindows = [];
@@ -681,7 +702,7 @@ export class BrowserRuntime {
     try {
       const result = await reader.read(windows);
       // The entries of a different folder, or the runtime ended
-      if (reader !== this.#reader) return ReadOutcome.Stopped;
+      if (reader !== this.#reader) return STOPPED_READ;
 
       const { entries: addedEntries } = this.#entryStore.apply({
         mode: OwnEntriesChangeMode.Append,
@@ -707,18 +728,23 @@ export class BrowserRuntime {
           : BrowserRuntimeErrorCode.NoEnvironmentFolder,
       });
 
+      const { failedFileCount } = result;
       /**
        * A read that ends after a stop also adds its entries to the store: the
        * reader does not give them again, and a request for older entries
        * offers them. They do not go up automatically, because the run that
        * read them stopped (decision 27 of the concept).
        */
-      if (generation !== this.#runGeneration) return ReadOutcome.Stopped;
+      if (generation !== this.#runGeneration)
+        return { outcome: ReadOutcome.Stopped, failedFileCount };
 
       this.#handleReadEntries(addedEntries);
-      return result.isStopped ? ReadOutcome.Stopped : ReadOutcome.Completed;
+      return {
+        outcome: result.isStopped ? ReadOutcome.Stopped : ReadOutcome.Completed,
+        failedFileCount,
+      };
     } catch (error) {
-      if (reader !== this.#reader) return ReadOutcome.Stopped;
+      if (reader !== this.#reader) return STOPPED_READ;
 
       console.error(
         "[Remote Control Program] Error reading the log folder:",
@@ -728,9 +754,7 @@ export class BrowserRuntime {
         isReading: false,
         error: BrowserRuntimeErrorCode.ReadFailed,
       });
-      return generation === this.#runGeneration
-        ? ReadOutcome.Failed
-        : ReadOutcome.Stopped;
+      return generation === this.#runGeneration ? FAILED_READ : STOPPED_READ;
     } finally {
       cancelSlowReadTimer();
     }
