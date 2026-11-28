@@ -181,6 +181,8 @@ test("stores the new entries with their context and the values of their header, 
       lineNumber: entry.lineNumber,
       hash: entry.hash,
       createdAt: entry.createdAt,
+      gameChannel: entry.gameChannel,
+      gameVersion: entry.gameVersion,
     })),
   );
 
