@@ -1,6 +1,9 @@
 import type { Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
-import { LogAnalyzerEntryType } from "@sam-monorepo/domain";
+import {
+  LOG_ANALYZER_HISTORY_MINIMUM_AGE_HOURS,
+  LogAnalyzerEntryType,
+} from "@sam-monorepo/domain";
 import {
   createCitizen,
   createLogAnalyzerEntry,
@@ -269,8 +272,8 @@ test("the history of a citizen without a grant shows in the table, but not in th
   });
   const owner = await createCitizen(prisma, { handle: "log-live-fremder" });
 
-  /** Recent enough for a session of the live status, and older than 2 hours */
-  const historyAt = hoursAgo(2.5);
+  /** History, thus too old for a session of the live status */
+  const historyAt = hoursAgo(LOG_ANALYZER_HISTORY_MINIMUM_AGE_HOURS + 0.5);
   await createLogAnalyzerEntry(prisma, {
     type: LogAnalyzerEntryType.JoinPu,
     rawLine: joinPuLine(historyAt),

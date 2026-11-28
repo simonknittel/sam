@@ -403,7 +403,7 @@ export const PERMISSION_CATALOG = [
     title: "Log Analyzer",
     permissionString: "logAnalyzer;read",
     description:
-      "Das eigene Log, die Freigaben anderer und alle hochgeladenen Einträge lesen, die älter als 2 Stunden sind. Braucht zusätzlich „Remote Control Program nutzen“.",
+      "Das eigene Log, die Freigaben anderer und alle hochgeladenen Einträge lesen, die älter als 8 Stunden sind. Braucht zusätzlich „Remote Control Program nutzen“.",
   },
 
   {

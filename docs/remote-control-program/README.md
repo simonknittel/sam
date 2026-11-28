@@ -474,7 +474,7 @@ The Log Analyzer is the control UI of the feed `log_entries`. It needs `logAnaly
 - The relay use case "append feed entries" checks each line against its pattern again. The patterns are `LOG_ANALYZER_ENTRY_PATTERNS` (`packages/domain/src/logAnalyzer/`). The connector and the relay share them, and the rules in [AGENTS.md](../../AGENTS.md) apply to them.
 - The hash for duplicates must not depend on the version of a pattern: it uses the oldest type of a pattern chain (`supersedes`) and the raw line. Thus two runtimes with different pattern versions do not store the same line twice.
 - The model `LogAnalyzerEntry` stores the feed.
-- Entries that are older than 2 hours are history: the Log Analyzer shows them to each citizen who can open it, without a grant (decision 31). It shows the newer entries of other citizens only with a valid grant. The Live-Status shows only the own entries and the entries of the valid grants.
+- Entries that are older than 8 hours are history: the Log Analyzer shows them to each citizen who can open it, without a grant (decision 31). It shows the newer entries of other citizens only with a valid grant. The Live-Status shows only the own entries and the entries of the valid grants.
 - The Log Analyzer derives the Live-Status from `log_entries` (principle 15).
 - The overlay (Document Picture-in-Picture) is a view of the Log Analyzer.
 
@@ -615,7 +615,7 @@ These ideas have no use case or no reliable source yet. They are not part of the
 28. **Telemetry of the relay service.** OpenTelemetry metrics and traces. The logs go to the output of the container. The alerts are set up in Grafana, outside of this repository.
 29. **Environments of the relay service.** Production and the local stack (Docker Compose and the Playwright stack). The relay service must run fully with the rest of the local stack. The preview deployments have no relay service.
 30. **The grants apply only to the live data.** The end of a grant, its grantee and its revocation limit only the live data and the actions. The consumers control the access to the stored data with their own permissions and their own minimum age. Reason: historical statistics do not work when the stored data disappears with the end of a grant.
-31. **The history of the Log Analyzer.** The minimum age is 2 hours, from the time of the observation. The permission is `logAnalyzer;read` for now. A separate permission can come later (see [Ideas](#ideas)).
+31. **The history of the Log Analyzer.** The minimum age is 8 hours, from the time of the observation. The permission is `logAnalyzer;read` for now. A separate permission can come later (see [Ideas](#ideas)).
 32. **A separate repository for the desktop companion.** One repository for each ecosystem: Rust has its own tools, its own continuous integration and its own releases. The repository `sam-desktop-companion` is private until step 5 of the [migration](./migration.md#order-of-the-steps), and then public. SAM stays the source of the shared definitions and of the shared test data (principle 11):
     - A script of SAM exports the shared definitions into `remote-control-program-definitions/`. A test makes sure that the export is current.
     - A scheduled workflow of the repository of the desktop companion copies the export and the shared test data from the latest release tag of SAM. When they changed, it opens a pull request.
