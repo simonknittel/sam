@@ -135,8 +135,8 @@ model RemoteControlProgramRuntime {
   updatedAt       DateTime                        @updatedAt @db.Timestamptz(3)
 
   /// The owner comes first, thus the same index also serves the runtimes of
-  /// an owner (the status in the sharing popover, the limit of the runtimes
-  /// for each owner)
+  /// an owner (the sharing popover, the control UIs, the limit of the
+  /// runtimes for each owner)
   @@unique([ownerId, runtimeId])
 }
 

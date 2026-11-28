@@ -139,8 +139,10 @@ export interface ConnectorDefinition {
  * The URL scheme of the desktop companion (decision 37). The program
  * registers it for the user of the operating system. A link to
  * `DESKTOP_COMPANION_OPEN_URL` starts the program, or opens the window of
- * the copy that runs. The program accepts only this URL: a different path or
- * a parameter does nothing, because each website can open such a link.
+ * the copy that runs. The program accepts only this URL and its path
+ * `/settings` (for a click on a notification of the program): a different
+ * path or a parameter does nothing, because each website can open such a
+ * link.
  */
 export const DESKTOP_COMPANION_URL_SCHEME = "sam-desktop-companion";
 

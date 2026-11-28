@@ -325,8 +325,8 @@ const readChanges = async (
  * reads a snapshot of their time window.
  *
  * @throws ForbiddenError without a citizen, without `remoteControlProgram;use`
- * or `logAnalyzer;read`, for an admin who assumes the user, or when a switch
- * turned off the Remote Control Program or the capability (the message of
+ * or `logAnalyzer;read`, for an admin who assumes the user, or when the
+ * switch turned off the Remote Control Program (the message of
  * `RemoteControlProgramErrorMessage`)
  */
 export const readFeedEntries = (

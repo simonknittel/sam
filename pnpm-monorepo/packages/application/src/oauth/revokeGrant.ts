@@ -11,9 +11,10 @@ interface RevokeGrantInput {
 }
 
 /**
- * The access tokens of the grant stop at the next request, because the MCP
- * endpoint loads the grant. Only the call that revokes the grant writes the
- * audit event.
+ * The access tokens of the grant stop at the next request, because each
+ * request with an access token loads the grant (`resolvePrincipal()`). The
+ * relay service also checks the grant of a desktop companion at each token
+ * renewal. Only the call that revokes the grant writes the audit event.
  *
  * @returns Whether this call revoked the grant
  */
