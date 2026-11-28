@@ -395,7 +395,7 @@ A consumer can request an action of an owner only when the conditions 1 and 2 ar
 - A rule for a state or a feed is "off" or "on". A rule for a feed can have a filter. Example: the log entry types that the owner shares. The filter exists only in the local access layer. A grant always covers a full capability (see [Decisions](#decisions)).
 - A feed entry leaves the machine automatically only when a running runtime reads it live, while the rule is on and the runtime is not stopped. The entries from a time without a running runtime stay on the machine. Older entries leave only on an explicit request of the owner with a confirmation (decision 27). The details:
   - The runtime keeps the time of its start in memory. It uploads an entry automatically only when the time of the entry is not before this start and not before the time at which the owner turned on the type of the entry.
-  - The end of a switch that turned off the Remote Control Program and a change of the log folder set this time to the current time.
+  - The end of a switch that turned off the Remote Control Program and a change of the selected folder (the Star Citizen folder, or an environment folder in the browser runtime) set this time to the current time.
   - While the runtime runs, the entries that wait for the connection to the relay stay in memory, and go up after the reconnect. A stop, a quit, a crash or a closed tab loses them. The runtime stores nothing about the automatic upload, thus there is no catch-up after a start.
 - A rule for an action is "off", "ask each time" or "automatic". The rule also tells which requesters it accepts: only the owner, or also other citizens with a grant.
 - The owner starts and stops a runtime only where it runs: the browser runtime in the sharing popover of this browser. The runtime of the desktop companion runs while the program runs after the onboarding: the owner stops it with a quit of the program. SAM does not start, stop or configure a runtime (decision 23).
@@ -431,7 +431,7 @@ The grantee kinds:
 ## Sharing popover
 
 - An item in the top bar (`apps/app/src/modules/shell/components/TopBar/`) and, on a mobile device, in the flyout of the action bar, where it opens a bottom sheet. In both places, it is left of the support button. It follows the notifications popover.
-- It has a tab for each of these sections. Without a log folder, the popover opens with the start. Else it opens with the sub-tab of the browser. When a control UI opens the popover, it shows the tab that the control UI names, for example the sub-tab of the game logs in the sub-tab of the browser for the log folder. The tab of the runtimes is apart from the other tabs, because it contains the settings of the runtimes.
+- It has a tab for each of these sections. Without a log folder, the popover opens with the start. Else it opens with the sub-tab of the browser. When a control UI opens the popover, it shows the tab that the control UI names, for example the sub-tab of the game logs in the sub-tab of the browser for the log folder.
   1. **Start:** what the Remote Control Program is, and what the runtimes, the connectors, the consumer apps (the available and the planned ones), the grants and the stored data are, from the view of the owner. A matrix shows which runtime supports which connector. Links open the other tabs.
   2. **Grants:** the grants with their remaining time, a form for a new grant, and the open access requests.
   3. **Runtimes:** one sub-tab for each runtime. The popover shows no other browser of the owner.
