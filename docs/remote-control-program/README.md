@@ -159,8 +159,10 @@ Each part of the Remote Control Program obeys these rules.
 The owner can use more than one runtime at the same time. Each runtime has an id. When a runtime connects, it announces to the relay:
 
 - its id and its kind,
-- its connectors, and the capabilities and versions that they can supply,
+- its connectors that can read their interface now, and the capabilities and versions that they can supply,
 - a summary of its local access layer.
+
+A log file connector whose folder cannot be read or has no environment folder is not in the announcement. When the connector can read the folder again, the runtime announces it again.
 
 The relay keeps the announcement while the runtime is online (see [Presence](#presence)). The sharing popover and the control UIs use it to tell why the own data is missing (see [Control UIs](#control-uis)).
 
@@ -348,7 +350,7 @@ The runtimes and the relay service use one protocol over the WebSocket connectio
 ### Time
 
 - Each value has two times: the time of the observation and the time of the arrival (from the relay). The relay replaces a time of the observation in the future with the time of the arrival. It does not limit how old an observation is, because the owner can upload older entries on an explicit request (decision 27).
-- A log entry has the time of its raw line when the pattern has one. Only an entry whose pattern has no time of its own (`takesTimeOfPrecedingLine`) takes the time of the observation from the runtime.
+- A log entry has the time of its raw line when the pattern has one. An entry whose pattern has no time of its own (`takesTimeOfPrecedingLine`) takes the time of the last line with a timestamp before it in the same log file. Without such a line, the connector makes no entry.
 - The gRPC frames contain no time. Thus the gRPC connector uses the time when it receives a frame.
 - The grant windows, the stale time and the history use the time of the relay.
 - An action request has a relative time to live (for example 10 seconds), not an absolute expiry time. Thus a wrong clock on the machine does not change the expiry.
@@ -471,6 +473,7 @@ The Log Analyzer is the control UI of the feed `log_entries`. It needs `logAnaly
 - The relay use case "append feed entries" checks each line against its pattern again. The patterns are `LOG_ANALYZER_ENTRY_PATTERNS` (`packages/domain/src/logAnalyzer/`). The connector and the relay share them, and the rules in [AGENTS.md](../../AGENTS.md) apply to them.
 - The hash for duplicates must not depend on the version of a pattern: it uses the oldest type of a pattern chain (`supersedes`) and the raw line. Thus two runtimes with different pattern versions do not store the same line twice.
 - The shared test data contains lines with `\r\n` and with `\n`, and partly written lines, because `Game.log` has mixed line ends, and `.` matches `\r` in Rust, but not in JavaScript.
+- The regex engine of the desktop companion has a backtrack limit. A line whose try stops at this limit gives no entry there, and the desktop companion counts these lines in its diagnostics log.
 - The model `LogAnalyzerEntry` stores the feed.
 - Entries that are older than 2 hours are history: the Log Analyzer shows them to each citizen who can open it, without a grant (decision 31). It shows the newer entries of other citizens only with a valid grant. The Live-Status shows only the own entries and the entries of the valid grants.
 - The Log Analyzer derives the Live-Status from `log_entries` (principle 15).
