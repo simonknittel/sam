@@ -189,6 +189,18 @@ export class UploadQueue {
     batch.byteLength = getBatchByteLength(batch.source, entries);
   }
 
+  /** Removes the waiting and the sent batches, and returns them */
+  clear() {
+    const removedBatches = [
+      ...this.#sentBatches.values(),
+      ...this.#waitingBatches,
+    ];
+    this.#waitingBatches = [];
+    this.#sentBatches.clear();
+    this.#entryCount = 0;
+    return removedBatches;
+  }
+
   removeWaiting(shouldRemove: (batch: QueuedBatch) => boolean) {
     const removedBatches = this.#waitingBatches.filter(shouldRemove);
     if (removedBatches.length === 0) return removedBatches;

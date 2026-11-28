@@ -187,14 +187,22 @@ export class ChannelClient {
   }
 
   /**
-   * Closes the connection. The queue keeps the entries for a later
-   * `connect()`.
+   * Closes the connection and removes the queue: the entries that wait for
+   * their upload or their `ack` do not go up after a later `connect()`
+   * (decision 27 of the concept). A lost connection keeps the queue for the
+   * reconnect.
    */
   disconnect() {
     this.#cancelReconnect?.();
     this.#cancelReconnect = null;
     if (this.#connection !== null) this.#closeConnection(this.#connection);
-    this.#setState({ status: ChannelStatus.Idle, closeReason: null });
+    for (const batch of this.#queue.clear())
+      this.#reportDroppedBatch(batch, ChannelDropReason.Disconnected);
+    this.#setState({
+      status: ChannelStatus.Idle,
+      closeReason: null,
+      queuedEntryCount: this.#queue.entryCount,
+    });
     this.#rejectUnavailableKeyRequests();
   }
 

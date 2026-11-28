@@ -553,7 +553,10 @@ export class BrowserRuntime {
     }
   }
 
-  /** The entries that wait in the outbox are lost */
+  /**
+   * The entries that wait in the outbox and in the queue of the channel
+   * client are lost
+   */
   #stopReading() {
     this.#runGeneration += 1;
     this.#cancelReadTimer?.();

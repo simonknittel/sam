@@ -345,6 +345,27 @@ test("the entries that wait for the connection go up after the reconnect, but a 
   ]);
 });
 
+test("the entries without an `ack` at a stop do not go up after the next start", async () => {
+  const browser = createBrowser();
+  browser.turnOnLines();
+  const tab = browser.openTab();
+  const firstSocket = await tab.start();
+
+  const entryWithoutAck = browser.folder.write(Date.now());
+  await tab.readNow();
+  expect(firstSocket.getSentRawLines()).toEqual([entryWithoutAck.rawLine]);
+  expect(tab.runtime.getState().channel.queuedEntryCount).toBe(1);
+
+  tab.runtime.stop();
+  expect(tab.runtime.getState().channel.queuedEntryCount).toBe(0);
+  await vi.advanceTimersByTimeAsync(5 * SECOND);
+
+  const secondSocket = await tab.start();
+  const entryAfterStart = browser.folder.write(Date.now());
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+  expect(secondSocket.getSentRawLines()).toEqual([entryAfterStart.rawLine]);
+});
+
 test("after the end of a switch, only the entries from then on go up", async () => {
   const browser = createBrowser();
   browser.turnOnLines();

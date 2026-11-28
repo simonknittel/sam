@@ -88,6 +88,8 @@ export enum ChannelDropReason {
   LocalAccessLayer = "local_access_layer",
   /** The relay refused the entries, and the protocol says: do not send again */
   RefusedByRelay = "refused_by_relay",
+  /** The runtime stopped the client (`disconnect()`) */
+  Disconnected = "disconnected",
 }
 
 export interface ChannelAcceptedEntries {
