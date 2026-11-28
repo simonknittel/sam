@@ -465,7 +465,7 @@ The Log Analyzer is the control UI of the feed `log_entries`. It needs `logAnaly
 
 - The log file connector reads `Game.log` and the old log files. In the browser runtime, it uses the File System Access API: the handle of the log folder is in IndexedDB, a Web Worker parses the files, and a reader reads only the new bytes of a file.
 - The local access layer tells which log entry types leave the machine. Older entries leave only on an explicit request (decision 27).
-- The connector reads the game channel and the game version from the header of each log file, and gives both to each entry of the same file (decision 17).
+- The connector reads the game channel and the game version from the header of each log file, and gives both to each entry of the same file (decision 17). The Log Analyzer shows both values of each entry as they are (principle 15). Of the context of an entry, only these two values go to the consumers, through the reads of the app and the delivery of the relay.
 - When the connector reads a line, it replaces each IP address in the raw line with a fixed marker (decision 22). Thus the own entries on the machine (for example in the Log Analyzer) also show the marker, and an entry has the same key on the machine and in SAM.
 - The relay use case "append feed entries" checks each line against its pattern again. The patterns are `LOG_ANALYZER_ENTRY_PATTERNS` (`packages/domain/src/logAnalyzer/`). The connector and the relay share them, and the rules in [AGENTS.md](../../AGENTS.md) apply to them.
 - The hash for duplicates must not depend on the version of a pattern: it uses the oldest type of a pattern chain (`supersedes`) and the raw line. Thus two runtimes with different pattern versions do not store the same line twice.
