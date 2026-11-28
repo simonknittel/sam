@@ -5,10 +5,10 @@ import {
   LogAnalyzerEntryType,
 } from "@sam-monorepo/domain";
 import {
-  LEGACY_SHARE_TYPES_STORAGE_KEY,
   type LocalAccessRules,
   type LocalAccessStorage,
   readLocalAccessRules,
+  removeLegacyValues,
   writeLocalAccessRules,
 } from "./localAccessStorage.js";
 
@@ -102,14 +102,15 @@ const isInRange = (time: number, range: OlderEntriesTimeRange) =>
  * running runtime (the holder of the Web Lock) calls the methods of the
  * reading (`startReading`, `stopReading`, `setRelayState`).
  *
- * The layer removes the share settings of the old Log Analyzer (M1).
+ * The layer removes the share settings of the old Log Analyzer (M1) and the
+ * live periods of an earlier version of the runtime.
  */
 export const createLocalAccessLayer = ({
   storage,
   citizenId,
   now = () => new Date(),
 }: LocalAccessLayerOptions) => {
-  storage.removeItem(LEGACY_SHARE_TYPES_STORAGE_KEY);
+  removeLegacyValues(storage, citizenId);
 
   /**
    * In milliseconds since the epoch. Null while the runtime of this tab does

@@ -36,16 +36,24 @@ const LOCAL_ACCESS_LAYER_STORAGE_KEY =
 
 /**
  * Deprecated: the live periods of an earlier version of the runtime, which
- * the rule for the automatic upload does not use any more. The next write of
- * the rules removes them.
+ * the rule for the automatic upload does not use any more
  */
 const LEGACY_LIVE_PERIODS_STORAGE_KEY = "remote_control_program_live_periods";
 
 /**
- * The share settings of the old Log Analyzer. The layer removes them and does
- * not take them over (M1 of `docs/remote-control-program/migration.md`).
+ * The share settings of the old Log Analyzer. The layer does not take them
+ * over (M1 of `docs/remote-control-program/migration.md`).
  */
-export const LEGACY_SHARE_TYPES_STORAGE_KEY = "log_analyzer_share_types";
+const LEGACY_SHARE_TYPES_STORAGE_KEY = "log_analyzer_share_types";
+
+/** Removes the values of earlier versions, which the layer does not use */
+export const removeLegacyValues = (
+  storage: LocalAccessStorage,
+  citizenId: string,
+) => {
+  storage.removeItem(LEGACY_SHARE_TYPES_STORAGE_KEY);
+  storage.removeItem(toCitizenKey(LEGACY_LIVE_PERIODS_STORAGE_KEY, citizenId));
+};
 
 /** For the `storage` event of the other tabs */
 export const getLocalAccessLayerStorageKey = (citizenId: string) =>
@@ -114,8 +122,8 @@ export const readStoredValue = <Value>(
  * `storage` event in the other tabs.
  *
  * When the write fails (for example in a full storage), the value goes away:
- * no value is the safe default of each key (all types off, no run record). Thus a failed write never keeps a stale value that permits
- * an upload.
+ * no value is the safe default of each key (all types off, no run record).
+ * Thus a failed write never keeps a stale value that permits an upload.
  */
 export const writeStoredValue = (
   storage: LocalAccessStorage,
@@ -181,5 +189,4 @@ export const writeLocalAccessRules = (
       }),
     ),
   } satisfies z.input<typeof storedLocalAccessLayerSchema>);
-  storage.removeItem(toCitizenKey(LEGACY_LIVE_PERIODS_STORAGE_KEY, citizenId));
 };

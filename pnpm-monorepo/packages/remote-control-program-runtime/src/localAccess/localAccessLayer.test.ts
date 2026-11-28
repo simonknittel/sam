@@ -254,7 +254,7 @@ describe("the storage", () => {
     );
   });
 
-  it("loads the rules next to the live periods of an earlier version, and removes the periods at the next write", () => {
+  it("loads the rules next to the live periods of an earlier version, and removes the periods", () => {
     const livePeriodsKey = `remote_control_program_live_periods:${CITIZEN_ID}`;
     const browser = createBrowser({
       [`remote_control_program_local_access_layer:${CITIZEN_ID}`]:
@@ -281,16 +281,10 @@ describe("the storage", () => {
     );
 
     const layer = startRuntime(browser);
+    expect(browser.storage.values.has(livePeriodsKey)).toBe(false);
     expect(layer.getSettings().logEntryTypes[LogAnalyzerEntryType.JoinPu]).toBe(
       true,
     );
     expect(layer.selectAutomaticUploads([lineOfLivePeriod])).toEqual([]);
-
-    layer.setLogEntryTypes([LogAnalyzerEntryType.OwnDeath], true);
-    expect(browser.storage.values.has(livePeriodsKey)).toBe(false);
-    expect(layer.getSettings().logEntryTypes).toMatchObject({
-      [LogAnalyzerEntryType.JoinPu]: true,
-      [LogAnalyzerEntryType.OwnDeath]: true,
-    });
   });
 });
