@@ -395,7 +395,7 @@ A consumer can request an action of an owner only when the conditions 1 and 2 ar
   - When the runtime learns that the Unleash flag turned off the Remote Control Program, it removes all stored live periods. A change of the log folder also removes them. After the next start, only the entries that the runtime reads live from then on go up.
   - The values and their reasons are in [livePeriods.ts](../../pnpm-monorepo/packages/remote-control-program-runtime/src/localAccess/livePeriods.ts). The continuation after a change of the tab is in [Browser runtime](#browser-runtime).
 - A rule for an action is "off", "ask each time" or "automatic". The rule also tells which requesters it accepts: only the owner, or also other citizens with a grant.
-- The owner starts and stops a runtime only where it runs: the browser runtime in the sharing popover of this browser, and the desktop companion in its own UI. SAM does not start, stop or configure a runtime (decision 23).
+- The owner starts and stops a runtime only where it runs: the browser runtime in the sharing popover of this browser. The runtime of the desktop companion runs while the program runs after the onboarding: the owner stops it with a quit of the program. SAM does not start, stop or configure a runtime (decision 23).
 - The runtime keeps its rules on the machine: in the browser storage, or in a file of the desktop companion. The relay never writes them.
 - "Ask each time" shows the request to the owner. The browser runtime shows it in the sharing popover. The desktop companion shows it in a small window of the program. When the owner gives no answer before the expiry time, the result is `expired`.
 
