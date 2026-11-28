@@ -93,7 +93,11 @@ export type CapabilityDefinition = FeedCapabilityDefinition;
 /** The matched lines of `Game.log` (see "Log Analyzer" of the concept) */
 export const LOG_ENTRIES_CAPABILITY = {
   id: CapabilityId.LogEntries,
-  version: 1,
+  /**
+   * Version 2 adds the game channel and the game version of the log file to
+   * each entry (decision 17). The relay accepts only version 2.
+   */
+  version: 2,
   kind: CapabilityKind.Feed,
   timing: CapabilityTiming.Realtime,
   /**
@@ -147,7 +151,8 @@ export const CONNECTOR_CATALOG: Readonly<
 > = {
   [ConnectorId.LogFile]: {
     id: ConnectorId.LogFile,
-    version: 1,
+    /** Version 2 reads the header of each log file (see `logFileHeader.ts`) */
+    version: 2,
     capabilityIds: [CapabilityId.LogEntries],
   },
 };

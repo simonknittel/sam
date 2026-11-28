@@ -10,6 +10,7 @@ import {
   RELAY_LIMITS,
   RuntimeKind,
 } from "./catalog.js";
+import { gameChannelSchema, gameVersionSchema } from "./logFileHeader.js";
 
 /**
  * The protocol between a runtime and the relay service over one WebSocket
@@ -375,6 +376,17 @@ const logEntrySchema = z.object({
   event_at: z.iso.datetime(),
   /** The number of the line in its log file. The first line has the number 1. */
   line_number: z.int32().min(1),
+  /**
+   * The game channel from the header of the log file of the line, for
+   * example `LIVE` or `PTU` (see `readLogFileHeader`). Null: the header has
+   * no valid value.
+   */
+  game_channel: gameChannelSchema.nullable(),
+  /**
+   * The game version from the header of the log file of the line, for
+   * example `4.10.201.48085`. Null: the header has no valid value.
+   */
+  game_version: gameVersionSchema.nullable(),
 });
 
 const logEntriesBatchSchema = z.object({
@@ -389,8 +401,9 @@ const logEntriesBatchSchema = z.object({
 });
 
 /**
- * One batch of one feed capability. A new capability is a new option. A new
- * version of a capability is an inner discriminated union on
+ * One batch of one feed capability. A new capability is a new option. The
+ * relay accepts only the current version of each capability. To accept two
+ * versions of a capability, make an inner discriminated union on
  * `capability_version`.
  */
 export const feedEntriesContentSchema = z.discriminatedUnion("capability_id", [

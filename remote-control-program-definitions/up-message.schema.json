@@ -271,7 +271,7 @@
                 },
                 "capability_version": {
                   "type": "number",
-                  "const": 1
+                  "const": 2
                 },
                 "connector_id": {
                   "type": "string",
@@ -360,13 +360,39 @@
                         "type": "integer",
                         "minimum": 1,
                         "maximum": 2147483647
+                      },
+                      "game_channel": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 32,
+                            "pattern": "^[A-Z0-9][A-Z0-9._-]*$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "game_version": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 32,
+                            "pattern": "^[0-9]+(?:\\.[0-9]+)*$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       }
                     },
                     "required": [
                       "type",
                       "raw_line",
                       "event_at",
-                      "line_number"
+                      "line_number",
+                      "game_channel",
+                      "game_version"
                     ]
                   }
                 }

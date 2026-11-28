@@ -2,7 +2,7 @@
   "capabilities": [
     {
       "id": "log_entries",
-      "version": 1,
+      "version": 2,
       "kind": "feed",
       "timing": "realtime",
       "minimum_upload_interval_milliseconds": 1000,
@@ -14,7 +14,7 @@
   "connectors": [
     {
       "id": "log_file",
-      "version": 1,
+      "version": 2,
       "capability_ids": [
         "log_entries"
       ]

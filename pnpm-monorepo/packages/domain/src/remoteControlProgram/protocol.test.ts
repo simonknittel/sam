@@ -2,31 +2,42 @@ import { expect, test } from "vitest";
 import { LogAnalyzerEntryType } from "../logAnalyzer/logAnalyzerEntries.js";
 import {
   CapabilityId,
+  CONNECTOR_CATALOG,
   ConnectorId,
   LOG_ENTRIES_CAPABILITY,
   RELAY_LIMITS,
 } from "./catalog.js";
 import {
-  DownMessageType,
-  RelayMessageParseProblem,
-  UpMessageType,
+  MAXIMUM_GAME_CHANNEL_LENGTH,
+  MAXIMUM_GAME_VERSION_LENGTH,
+} from "./logFileHeader.js";
+import {
   createDownMessage,
   createUpMessage,
+  DownMessageType,
   parseDownMessage,
   parseUpMessage,
+  RelayMessageParseProblem,
+  UpMessageType,
 } from "./protocol.js";
+
+/** The longest values of the header */
+const GAME_CHANNEL = "A".repeat(MAXIMUM_GAME_CHANNEL_LENGTH);
+const GAME_VERSION = "1".repeat(MAXIMUM_GAME_VERSION_LENGTH);
 
 const createLogEntriesBatch = (entryCount: number, rawLine: string) =>
   createUpMessage(UpMessageType.FeedEntries, {
     capability_id: CapabilityId.LogEntries,
     capability_version: LOG_ENTRIES_CAPABILITY.version,
     connector_id: ConnectorId.LogFile,
-    connector_version: 1,
+    connector_version: CONNECTOR_CATALOG[ConnectorId.LogFile].version,
     entries: Array.from({ length: entryCount }, (_, index) => ({
       type: LogAnalyzerEntryType.JoinPu,
       raw_line: rawLine,
       event_at: "2026-11-23T20:00:00.000Z",
       line_number: index + 1,
+      game_channel: GAME_CHANNEL,
+      game_version: GAME_VERSION,
     })),
   });
 
@@ -57,7 +68,7 @@ test("refuses an unknown message type", () => {
   });
 });
 
-test("a full batch of the longest log lines fits into one message", () => {
+test("a full batch of the longest log lines and header values fits into one message", () => {
   /** "€" has 3 bytes in UTF-8 */
   const batch = createLogEntriesBatch(
     LOG_ENTRIES_CAPABILITY.maximumEntriesPerBatch,
