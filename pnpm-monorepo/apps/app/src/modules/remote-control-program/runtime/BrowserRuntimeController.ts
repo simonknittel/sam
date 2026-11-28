@@ -69,7 +69,6 @@ export interface BrowserRuntimeControllerOptions {
 
 /** The runtime of this tab while it holds the Web Lock */
 interface Leadership {
-  readonly runtimeId: string;
   readonly runtime: BrowserRuntime;
   /** The same object while the folder stays the same (see `start()`) */
   folderHandle: FileSystemDirectoryHandle | null;
@@ -96,7 +95,8 @@ interface TabConnection {
  * API. The tab that holds the lock (the leader) runs the `BrowserRuntime`.
  * The other tabs (the followers) get its state and the own entries through a
  * BroadcastChannel, and send their commands to it. When the leader closes, a
- * follower gets the lock and continues the runtime.
+ * follower gets the lock and starts a new runtime with the state of the run
+ * record (see `BrowserRuntime.shouldRun()`).
  */
 export class BrowserRuntimeController {
   readonly #options: BrowserRuntimeControllerOptions;
@@ -251,7 +251,7 @@ export class BrowserRuntimeController {
     this.#joinElection(connection);
   }
 
-  /** The runtime continues in a different tab (see `handOver()`) */
+  /** A different tab can start a new runtime (see `handOver()`) */
   disconnect() {
     const connection = this.#connection;
     if (connection !== null) this.#close(connection, false);
@@ -435,7 +435,6 @@ export class BrowserRuntimeController {
 
     let previousError = runtime.getState().error;
     const leadership: Leadership = {
-      runtimeId,
       runtime,
       folderHandle: null,
       folder: { state: LogFolderState.Checking, name: null },
