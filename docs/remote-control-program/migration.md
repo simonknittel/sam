@@ -3,7 +3,7 @@
 > [!NOTE]
 > This document describes the way from the state of SAM in 2026-11 to the architecture in [Remote Control Program](./README.md). Each step gets its own implementation plan. The order of the steps can change. When all steps are done, remove this document. The architecture document stays.
 
-In this document, "decision 13 of the architecture" refers to the [decisions of the architecture](./README.md#decisions). "M1" to "M11" are the [decisions of the migration](#decisions-of-the-migration).
+In this document, "decision 13 of the architecture" refers to the [decisions of the architecture](./README.md#decisions).
 
 ## Order of the steps
 
@@ -15,21 +15,21 @@ In this document, "decision 13 of the architecture" refers to the [decisions of 
    - The Rust program with GPUI (decision 33 of the architecture) for Windows and Linux: the native OAuth client, the onboarding (the sign-in and the Star Citizen folder), the channel client, the log file connector (`log_entries`) for all environment folders, the local access layer with the upload of older entries, the tray icon and the start with the operating system.
    - The game environment (for example LIVE or PTU) and the build number of each log entry, from the header of its log file, in both runtimes, and their column in the Log Analyzer (decision 17 of the architecture).
    - In the sharing popover, the tab "Runtimes" with one sub-tab for each runtime (see [Sharing popover](./README.md#sharing-popover)). The sub-tab of the desktop companion tells that the program comes soon, and shows the connected desktop companions and the sign-ins of the owner.
-   - No distribution of the program (M9), and no entry in the changelog.
+   - No distribution of the program, and no entry in the changelog.
 4. **gRPC connector, states and lineup status:**
    - First, an estimate of the sizes: the connections, the messages and the rows of the history for each day.
    - The relay for states, the current state and the history in TimescaleDB: the first hypertable, and the changes of the mirror scripts for hypertables (see [Mirror the database](../mirror-database.md)).
    - The gRPC connector in the desktop companion and the first gRPC capabilities (for example `player_vitals`; `ship_status` and the death states need a test of the `vehicle` and `events` frames first).
    - The check of `USER.cfg` when the owner turns on the gRPC connector, and the change of the file after the consent of the owner (see [Desktop companion](./README.md#desktop-companion)).
    - The game environment and the build number of the states: the desktop companion finds the build of the running game itself (decision 17 of the architecture).
-   - The lineup status as the first control UI of the states (see [Lineup status](./README.md#lineup-status), M10), the grantee kind "Event participants", and the access requests with their notification (M6).
-   - Still no distribution of the program (M9). Open question for the plan of this step: does the lineup status show before step 5, when no citizen can download the desktop companion? Recommendation: show the status of the positions, but show the suggestion to share the own status only from step 5.
+   - The lineup status as the first control UI of the states (see [Lineup status](./README.md#lineup-status)), the grantee kind "Event participants", and the access requests with their notification. The first states need a control UI that shows them. The lineup status is the first control UI that knows whose data it wants, thus the access requests come with it: until then, only the owner makes grants.
+   - Still no distribution of the program: only the owner of SAM uses it, with builds from the private repository (decision 32 of the architecture). Open question for the plan of this step: does the lineup status show before step 5, when no citizen can download the desktop companion? Recommendation: show the status of the positions, but show the suggestion to share the own status only from step 5.
 5. **Public distribution of the desktop companion:**
    - The releases of the desktop companion: the versions, the GitHub releases, the signature of the updates with a key that only the release process holds, and the update function of the program with the consent of the owner (see [Desktop companion](./README.md#desktop-companion)).
    - The repository of the desktop companion becomes public, with a license.
    - Reproducible builds also for Linux and the AppImage, and the hash and the manifest of each release (decision 38 of the architecture).
    - A smaller program file: a separate Cargo profile only for the published builds, with its options measured on Windows. The continuous integration keeps the fast default profile.
-   - Windows: the portable `.exe` without a code signing certificate (decision 25 of the architecture), and a guide for the warning of Windows at the first start. Linux: the AppImage as an experimental release, which the UI of SAM does not show or name (M11).
+   - Windows: the portable `.exe` without a code signing certificate (decision 25 of the architecture), and a guide for the warning of Windows at the first start. Linux: the AppImage as an experimental release, which the UI of SAM does not show or name (decision 3 of the architecture).
    - In SAM: the download in the sub-tab of the desktop companion, the matrix of the start tab, the guides and an entry in the changelog.
 6. **Actions:** the down channel, the action lifecycle, "ask each time", the action log, and the first action through the gRPC interface.
 7. **AI agents:** the MCP read tools first, the action tool later.
@@ -39,20 +39,4 @@ In this document, "decision 13 of the architecture" refers to the [decisions of 
 - **OAuth server:** today, it issues tokens only for the MCP server. The audience is the URL of the MCP server, `mcp` is the only scope, and the consent and the token endpoint require `mcp;use`. Step 3 adds the Remote Control Program as a resource with its own audience and scope, a consent with `remoteControlProgram;use`, and the Client ID Metadata Document of the desktop companion (see [Desktop companion](./README.md#desktop-companion) and decision 35 of the architecture). The Unleash flag `DisableMcpServer` then stops only the MCP resource, and `DisableRemoteControlProgram` stops the resource of the Remote Control Program.
 - **The app KI-Agenten:** it lists the OAuth grants of the user. From step 3, it lists only the grants of the MCP server. The sub-tab of the desktop companion in the sharing popover lists the grants of the desktop companion.
 - **Ban:** today, a ban closes the connections of Soketi and of the wiki editor. Step 2 adds the connections of the relay service.
-- **Permissions:** the existing permissions do not change (M4).
-
-## Decisions of the migration
-
-M1 to M4 are decisions of 2026-11-21. M5 to M7 are decisions of 2026-11-22. M8 is a decision of 2026-11-25. M9 to M11 are decisions of 2026-11-26, M11 changed on 2026-11-27.
-
-- **M1: The sharing starts from zero.** The deployment of step 2 resets all share settings of the Log Analyzer. The browser runtime ignores and removes the old browser storage `log_analyzer_share_types`. No grant comes from the old sharing. After the deployment, no citizen sees the live entries of an owner until the owner makes a grant. The entries from before are history: each citizen who can open the Log Analyzer sees them (decision 31 of the architecture). The changelog of SAM announces the change.
-- **M2: The new Log Analyzer replaces the old one in one deployment.** No version runs next to the old one, and no Unleash flag switches between them. The move of the databases is a separate step before it (step 1).
-- **M3: A migration removes the IP addresses from the stored log entries.** The rows of `LogAnalyzerEntry` from before decision 22 of the architecture contain IP addresses. The migration of step 2 replaces them once with the marker of decision 22, and calculates the new hash (see [Log Analyzer](./README.md#log-analyzer)). When two rows of the same owner then have the same hash, the migration keeps the oldest row. This is the only change of existing rows. It is a SQL migration, and a test compares its result with the TypeScript rule on the shared test data. A known limit, found on 2026-11-26: PostgreSQL applies the rule to characters, and JavaScript to UTF-16 code units. For a character outside the Basic Multilingual Plane (for example an emoji) between two IP addresses, the migration gives a different line and hash than the runtimes. The relay then stores such a line once more when an owner uploads it again. The test leaves these cases out.
-- **M4: No migration of the permissions.** The existing permissions do not change, and no migration gives `remoteControlProgram;use` to roles. The admins assign it.
-- **M5: No states in step 2.** In step 2, no connector supplies a state: the browser runtime has only the log file connector, and `log_entries` is a feed. Thus the relay for states, the history in TimescaleDB and the estimate of the history rows are a part of step 4, together with the first state of the gRPC connector.
-- **M6: The access requests are a part of step 4.** In the Log Analyzer, a viewer sees only the owners that made a grant. The lineup status is the first control UI that knows whose data it wants. Until then, only the owner makes grants.
-- **M7: The Log Analyzer needs both permissions.** `logAnalyzer;read` and `remoteControlProgram;use`, also for the own log on the machine. Without them, the page is gated.
-- **M8: No withdrawal of stored data.** No step of the migration gives the owner a function to withdraw or delete stored data (decisions 12 and 30 of the architecture).
-- **M9: No distribution of the desktop companion before step 5.** From step 3, SAM and the relay service accept the desktop companion: the login, the connection, the upload and the display of the data. But only the owner of SAM uses the program, with builds from the private repository (decision 32 of the architecture). The releases, the update function and the download come in step 5.
-- **M10: The lineup status comes with the gRPC connector.** The first states need a control UI that shows them. Thus step 4 contains the lineup status, the grantee kind "Event participants" and the access requests. Before, the lineup status was a separate step after the gRPC connector.
-- **M11: The Linux version is experimental and not promoted.** Nobody in the project can test the desktop companion on Linux. The continuous integration builds and tests the Linux version, and step 5 releases the AppImage with a note that the project does not test it. The UI of SAM names and offers only the Windows program: a citizen who asks for the Linux version gets the link of the download from the owner. Decision 3 of the architecture does not change. (Changed on 2026-11-27.)
+- **Permissions:** the existing permissions do not change. No migration gives `remoteControlProgram;use` to roles: the admins assign it.

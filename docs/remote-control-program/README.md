@@ -13,7 +13,7 @@ Documents in this folder:
 | - | - |
 | This document | The architecture: the terms, the principles, the parts and the decisions. |
 | [The gRPC interface of the game client](./grpc-interface.md) | All that we know about the gRPC server of the game client: the setup, the transport, the calls, the messages, the actions and the test results. |
-| [Migration](./migration.md) | The steps from the current state of SAM to this architecture, and the decisions that apply only to the migration. |
+| [Migration](./migration.md) | The steps from the current state of SAM to this architecture. |
 
 ## Goals
 
@@ -439,7 +439,7 @@ The grantee kinds:
   2. **Grants:** the grants with their remaining time, a form for a new grant, and the open access requests.
   3. **Runtimes:** one sub-tab for each runtime. The popover shows no other browser of the owner.
      - **Browser:** the settings of the browser runtime in this browser (its state, the start and the stop, the autostart), and, below the heading "Connectors", one sub-tab for each connector with its rules of the local access layer (for the game logs: a part with the instructions, the log folder, a part with the types, and a part for the upload of the older entries of a date range). The sub-tab shows the content of its connector directly, thus a problem (for example the browser needs the permission for the log folder again, or the runtime has an error) is visible without a click. A note when the browser runtime needs a click (for example to give the file access again).
-     - **Desktop Companion:** the connected desktop companions of the owner (from the presence: the time of the connection, the version and the active connectors; a connector is active when at least one of its capabilities leaves the machine), the sign-ins of the desktop companion of the owner, each with a sign-out, a link that opens the program when the owner has a sign-in (decision 37), and from step 5 of the [migration](./migration.md#order-of-the-steps) the download of the Windows program (the Linux program is not named in the UI, see M11). SAM has no settings of the desktop companion: the owner changes them in the desktop companion (decision 23).
+     - **Desktop Companion:** the connected desktop companions of the owner (from the presence: the time of the connection, the version and the active connectors; a connector is active when at least one of its capabilities leaves the machine), the sign-ins of the desktop companion of the owner, each with a sign-out, a link that opens the program when the owner has a sign-in (decision 37), and from step 5 of the [migration](./migration.md#order-of-the-steps) the download of the Windows program (the Linux program is not named in the UI, decision 3). SAM has no settings of the desktop companion: the owner changes them in the desktop companion (decision 23).
   4. **Action log:** the action requests to the runtimes of the owner, with their results (see [Action log](#action-log)). This includes the requests that the relay refused.
 - The item of the popover, and the item "Apps" of the action bar, have a mark when the browser runtime needs a click. Thus the owner sees it also while the popover is closed.
 - A control UI never has its own UI for access. When it needs an access, it opens the sharing popover with a prepared request. Examples:
@@ -561,11 +561,9 @@ These ideas have no use case or no reliable source yet. They are not part of the
 
 ## Decisions
 
-The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
-
 1. **Name.** The working title is "Remote Control Program". The code can use it, for example `remoteControlProgram` and `remote_control_program`.
 2. **Rust for the desktop companion.** It uses little memory and processor time while the game runs. It has a mature native gRPC client. It builds one executable file for each operating system, without a separate runtime. Result: the log file connector and the catalog need one definition for TypeScript and Rust (principle 11, decision 5).
-3. **Windows and Linux for the desktop companion.** Result: the releases, the updates and the tray icon must work on both operating systems.
+3. **Windows and Linux for the desktop companion.** The Linux program is experimental, because nobody in the project can test it. The continuous integration builds and tests it, and its release has a note that the project does not test it. The UI of SAM names and offers only the Windows program: a citizen who asks for the Linux program gets the link of the download from the owner. Result: the releases, the updates and the tray icon must work on both operating systems.
 4. **Admin mode does not bypass the grants.** The data is personal, and admin mode is a concept of SAM, not of the owner (the same reason as in [Embedded App Authentication](../embedded-app-authentication.md#permissions)). Admin mode replaces only the permissions of SAM (decision 24), like in the rest of SAM. Thus an admin in admin mode can use the Remote Control Program, can read the history (decision 31), and has the access of a grant to "Everyone". A grant to a role or a citizen needs the role or the citizen. An admin who assumes a user gets no access.
 5. **Shared definitions for Rust:**
    - Zod stays the source of the catalog and of the protocol. The build exports JSON Schema (`z.toJSONSchema()` of Zod 4) and the values (for example the versions, the close codes and the limits). The Rust types are hand-written, and the shared protocol examples test them. The Rust program reads the values from the export at build time.

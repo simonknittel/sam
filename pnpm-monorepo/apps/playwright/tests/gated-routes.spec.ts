@@ -169,7 +169,7 @@ const expectLogAnalyzerAccess = async (
 /**
  * The Log Analyzer is a control UI of the Remote Control Program. Thus it
  * needs `remoteControlProgram;use` next to `logAnalyzer;read`, also for the
- * own log (M7 of the migration). The program needs a citizen, and admin mode
+ * own log (decision 24 of the program). The program needs a citizen, and admin mode
  * does not replace the permission.
  */
 test("the Log Analyzer and the sharing popover need remoteControlProgram;use", async ({

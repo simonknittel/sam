@@ -102,8 +102,8 @@ const isInRange = (time: number, range: OlderEntriesTimeRange) =>
  * running runtime (the holder of the Web Lock) calls the methods of the
  * reading (`startReading`, `stopReading`, `setRelayState`).
  *
- * The layer removes the share settings of the old Log Analyzer (M1) and the
- * live periods of an earlier version of the runtime.
+ * The layer removes the share settings of the old Log Analyzer (the sharing
+ * starts from zero) and the live periods of an earlier version of the runtime.
  */
 export const createLocalAccessLayer = ({
   storage,

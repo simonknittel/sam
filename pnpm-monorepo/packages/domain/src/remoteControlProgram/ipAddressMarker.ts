@@ -2,8 +2,8 @@
  * The rule that removes the IP addresses from a raw log line before the line
  * leaves the machine (decision 22 of `docs/remote-control-program/README.md`).
  * The log file connector applies it before the upload, the relay refuses a
- * line in which `containsIpAddress` finds an address, and the M3 migration
- * applies it once to the stored lines.
+ * line in which `containsIpAddress` finds an address, and the migration
+ * `log_analyzer_entry_ip_marker` applied it once to the stored lines.
  *
  * The rule is immutable data, like the patterns of the Log Analyzer: the hash
  * of an entry contains the line with the marker (see `logEntryHash.ts`). Do
@@ -15,10 +15,10 @@
  * values, and its cases show the decisions below.
  *
  * One definition for three engines: JavaScript, PostgreSQL (`regexp_replace`
- * of the M3 migration) and Rust (the `regex` crate, which has no lookahead and
- * no lookbehind). Thus the expressions have no lookaround and no `\d`, `\w` or
- * `\b` (their meaning is different in the engines), only ASCII classes. The
- * engines apply the rule like this:
+ * of the migration `log_analyzer_entry_ip_marker`) and Rust (the `regex`
+ * crate, which has no lookahead and no lookbehind). Thus the expressions have
+ * no lookaround and no `\d`, `\w` or `\b` (their meaning is different in the
+ * engines), only ASCII classes. The engines apply the rule like this:
  *
  * 1. Replace all matches of the IPv6 expression, two times.
  * 2. Replace all matches of the IPv4 expression, two times.

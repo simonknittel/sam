@@ -16,7 +16,7 @@ export default async function Page() {
 
   /**
    * The Log Analyzer is a control UI of the Remote Control Program, also for
-   * the own log (M7 of `docs/remote-control-program/migration.md`). The
+   * the own log (decision 24 of `docs/remote-control-program/README.md`). The
    * check also refuses an admin who assumes the user.
    */
   if (!canUseRemoteControlProgram(await getRequestActor())) forbidden();

@@ -1,6 +1,6 @@
 # Shared test data of the Remote Control Program
 
-The implementations of the log file connector (TypeScript and Rust), the protocol, the relay and the M3 migration (SQL) use this data. The repository of the desktop companion gets a copy (decision 32 of the concept). They must give the same results (principle 11 and decision 22 of the [concept](../docs/remote-control-program/README.md)). The format is neutral: plain log files and JSON with snake_case keys.
+The implementations of the log file connector (TypeScript and Rust), the protocol, the relay and the migration `log_analyzer_entry_ip_marker` (SQL) use this data. The repository of the desktop companion gets a copy (decision 32 of the concept). They must give the same results (principle 11 and decision 22 of the [concept](../docs/remote-control-program/README.md)). The format is neutral: plain log files and JSON with snake_case keys.
 
 The expected values are immutable data, like the patterns of the Log Analyzer. Do not change an expected value to make a test pass. A different result needs a new version of the rule (see `pnpm-monorepo/packages/domain/src/remoteControlProgram/ipAddressMarker.ts`). You can add files and cases. Check a new expected value with a second implementation or by hand.
 

@@ -42,7 +42,7 @@ const LEGACY_LIVE_PERIODS_STORAGE_KEY = "remote_control_program_live_periods";
 
 /**
  * The share settings of the old Log Analyzer. The layer does not take them
- * over (M1 of `docs/remote-control-program/migration.md`).
+ * over: the sharing of the Remote Control Program starts from zero.
  */
 const LEGACY_SHARE_TYPES_STORAGE_KEY = "log_analyzer_share_types";
 

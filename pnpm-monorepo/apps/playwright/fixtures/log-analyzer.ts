@@ -10,7 +10,7 @@ import { expect } from "./test";
 
 /**
  * The Log Analyzer is a control UI of the Remote Control Program, thus it
- * also needs the permission of the program (M7 of the migration)
+ * also needs the permission of the program (decision 24 of the program)
  */
 export const LOG_ANALYZER_PERMISSIONS = [
   "logAnalyzer;read",

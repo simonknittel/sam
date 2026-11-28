@@ -1,8 +1,9 @@
 /// One matched log line a citizen shared with the other citizens. Rows are
 /// immutable and are never deleted, thus there are no update or delete
 /// columns: an opt-out only stops new uploads.
-/// The only exception is the one-time migration `log_analyzer_entry_ip_marker`
-/// (M3 of `docs/remote-control-program/migration.md`).
+/// The only exception is the one-time migration `log_analyzer_entry_ip_marker`,
+/// which replaced the IP addresses (decision 22 of
+/// `docs/remote-control-program/README.md`).
 ///
 /// The capture groups and the rendered message are not stored. Every viewer
 /// runs the type's regex on `rawLine` again, so a change of the presentation

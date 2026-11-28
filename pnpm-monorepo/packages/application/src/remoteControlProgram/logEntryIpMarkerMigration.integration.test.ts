@@ -15,11 +15,11 @@ import { afterAll, beforeAll, expect, test } from "vitest";
 import { truncateAllTables } from "../../test/database.js";
 
 /**
- * The M3 migration (see `docs/remote-control-program/migration.md`) on rows
- * of the old format: raw lines with IP addresses and the old hash. The
- * integration tests apply all migrations to an empty database, thus this test
- * runs the SQL of the migration file again on its own rows. The expected
- * values come from the TypeScript rule and the shared test data.
+ * The migration `log_analyzer_entry_ip_marker` on rows of the old format: raw
+ * lines with IP addresses and the old hash. The integration tests apply all
+ * migrations to an empty database, thus this test runs the SQL of the
+ * migration file again on its own rows. The expected values come from the
+ * TypeScript rule and the shared test data.
  */
 
 const MIGRATION_FILE = new URL(
@@ -55,8 +55,7 @@ const { files } = await readFixture<ExpectedMatches>(
  * The migration ran in step 2 and does not change. PostgreSQL applies the IP
  * rule to characters, JavaScript to UTF-16 code units. Thus a character
  * outside the Basic Multilingual Plane between two addresses gives a
- * different line in SQL (see M3 in `docs/remote-control-program/migration.md`),
- * and the test leaves these cases out.
+ * different line in SQL, and the test leaves these cases out.
  */
 const CHARACTER_OUTSIDE_BASIC_MULTILINGUAL_PLANE = /[\u{10000}-\u{10FFFF}]/u;
 
