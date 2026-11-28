@@ -150,7 +150,7 @@ Test of 2026-11-21: `emote_wave` without a hold time gave `OK` with an empty mes
 
 The interface gives no game version: the messages have no field for it, the responses have no metadata, and there is no reflection.
 
-The first lines of `Game.log` give the version, the build and the folder of the game channel:
+The first lines of `Game.log` give the build number, the folder of the game environment and a file version:
 
 ```text
 BackupNameAttachment=" Build(13248297) 21 Nov 26 (09 42 13)"  -- used by backup system
@@ -159,11 +159,11 @@ FileVersion: 5.0.202.10025
 ProductVersion: 5.0.202.10025
 ```
 
-Other lines give the environment (`[Trace] Environment:   PTU`, `PUB` on LIVE) and the shard (`New Shard Id: ptu_use1b_13248297_010`).
+The RSI Launcher calls LIVE, PTU and the others "Game Environment", and shows a version such as `5.0.0-ptu.13284307`. It gets this version from a web service of RSI: only its last part, the build number, is in the files of the game. `FileVersion` is not the version of the launcher. Other lines give a different environment value (`[Trace] Environment:   PTU`, but `PUB` on LIVE) and the shard (`New Shard Id: ptu_use1b_13248297_010`).
 
 Each installation also has the file `build_manifest.id` (for example `StarCitizen/PTU/build_manifest.id`) with the fields `Branch`, `Version` and `RequestedP4ChangeNum`. `Version` has the value of `FileVersion`. Test of 2026-11-21: LIVE had `4.10.201.48085`, and PTU had `5.0.202.10025` with the build `13248297`. Both installations can use the same port, and the test could not read the path of the game process.
 
-The log file connector reads the game channel and the game version from the header of each log file (see decision 17 in [Decisions](./README.md#decisions)). The gRPC connector does not use them, because it does not depend on the log file connector (principle 14). For the gRPC connector, the desktop companion finds the build of the running game itself. Step 4 of the [migration](./migration.md#order-of-the-steps) plans the details.
+The log file connector reads the game environment and the build number from the header of each log file (see decision 17 in [Decisions](./README.md#decisions)). The gRPC connector does not use them, because it does not depend on the log file connector (principle 14). For the gRPC connector, the desktop companion finds the build of the running game itself. Step 4 of the [migration](./migration.md#order-of-the-steps) plans the details.
 
 ## Requirements for the gRPC connector
 
@@ -191,7 +191,7 @@ Tests can answer these questions:
 Only CIG can answer these questions:
 
 - When does the interface come to LIVE, and with which calls?
-- Will the interface supply the game version and the environment (LIVE or PTU)?
+- Will the interface supply the build number and the game environment (LIVE or PTU)?
 - Do the terms of service permit the use of the interface by a third-party program?
 
 ## Test log
