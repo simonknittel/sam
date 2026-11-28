@@ -18,8 +18,8 @@ const entry: LogFeedEntry = {
   lineNumber: 1,
   rawLine: "line",
   groups: {},
-  gameChannel: null,
-  gameVersion: null,
+  gameEnvironment: null,
+  gameBuild: null,
 };
 
 const NO_ENTRIES = new Map<string, LogFeedEntry>();

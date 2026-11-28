@@ -93,8 +93,8 @@ export const Entry = memo(function Entry({ entry }: Props) {
       <td className="truncate">{entry.message}</td>
 
       <EntryGameBuildCell
-        gameChannel={entry.gameChannel}
-        gameVersion={entry.gameVersion}
+        gameEnvironment={entry.gameEnvironment}
+        gameBuild={entry.gameBuild}
       />
     </TRow>
   );

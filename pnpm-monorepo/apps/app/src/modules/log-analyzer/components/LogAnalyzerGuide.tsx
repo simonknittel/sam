@@ -193,10 +193,10 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
           </GuideNote>
 
           <GuideNote>
-            Mit jedem Eintrag gehen auch der Kanal und die Version des Spiels
-            aus seiner Log-Datei an SAM, zum Beispiel LIVE 4.10.201.48085. Die
-            Tabelle zeigt sie in der Spalte <UiLabel>Spielversion</UiLabel>. Bei
-            älteren Einträgen ist die Spalte leer.
+            Mit jedem Eintrag gehen auch das Environment und die Build-Nummer
+            des Spiels aus seiner Log-Datei an SAM, zum Beispiel LIVE 13220821.
+            Die Tabelle zeigt sie in der Spalte <UiLabel>Environment</UiLabel>.
+            Bei älteren Einträgen ist die Spalte leer.
           </GuideNote>
 
           <GuideNote>

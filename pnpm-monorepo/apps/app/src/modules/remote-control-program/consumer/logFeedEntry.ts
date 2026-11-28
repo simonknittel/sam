@@ -44,15 +44,15 @@ export interface LogFeedEntry {
   /** The capture groups of the pattern of `type` */
   readonly groups: Readonly<Record<string, string>>;
   /**
-   * The game channel from the header of the log file of the entry, for
+   * The game environment from the header of the log file of the entry, for
    * example `LIVE`. Null when it is unknown, for example for an older entry.
    */
-  readonly gameChannel: string | null;
+  readonly gameEnvironment: string | null;
   /**
-   * The game version from the header of the log file of the entry, for
-   * example `4.10.201.48085`. Null when it is unknown.
+   * The build number from the header of the log file of the entry, for
+   * example `13220821`. Null when it is unknown.
    */
-  readonly gameVersion: string | null;
+  readonly gameBuild: string | null;
 }
 
 /**
@@ -68,8 +68,8 @@ export interface RelayLogEntry {
   readonly lineNumber: number | null;
   /** The key of the entry for its owner (`createLogEntryHash()`) */
   readonly hash: string;
-  readonly gameChannel: string | null;
-  readonly gameVersion: string | null;
+  readonly gameEnvironment: string | null;
+  readonly gameBuild: string | null;
 }
 
 const KEY_SEPARATOR = ":";
@@ -109,8 +109,8 @@ export const toRelayLogFeedEntry = (
     lineNumber: entry.lineNumber,
     rawLine: entry.rawLine,
     groups,
-    gameChannel: entry.gameChannel,
-    gameVersion: entry.gameVersion,
+    gameEnvironment: entry.gameEnvironment,
+    gameBuild: entry.gameBuild,
   };
 };
 
@@ -140,8 +140,8 @@ export const toLocalLogFeedEntry = (
     lineNumber: match.lineNumber,
     rawLine: match.rawLine,
     groups: match.groups,
-    gameChannel: match.gameChannel,
-    gameVersion: match.gameVersion,
+    gameEnvironment: match.gameEnvironment,
+    gameBuild: match.gameBuild,
   };
   localEntryCache.set(match, entry);
   return entry;
