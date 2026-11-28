@@ -680,7 +680,8 @@ export class BrowserRuntime {
 
     try {
       const result = await reader.read(windows);
-      if (generation !== this.#runGeneration) return ReadOutcome.Stopped;
+      // The entries of a different folder, or the runtime ended
+      if (reader !== this.#reader) return ReadOutcome.Stopped;
 
       const { entries: addedEntries } = this.#entryStore.apply({
         mode: OwnEntriesChangeMode.Append,
@@ -706,10 +707,18 @@ export class BrowserRuntime {
           : BrowserRuntimeErrorCode.NoEnvironmentFolder,
       });
 
+      /**
+       * A read that ends after a stop also adds its entries to the store: the
+       * reader does not give them again, and a request for older entries
+       * offers them. They do not go up automatically, because the run that
+       * read them stopped (decision 27 of the concept).
+       */
+      if (generation !== this.#runGeneration) return ReadOutcome.Stopped;
+
       this.#handleReadEntries(addedEntries);
       return result.isStopped ? ReadOutcome.Stopped : ReadOutcome.Completed;
     } catch (error) {
-      if (generation !== this.#runGeneration) return ReadOutcome.Stopped;
+      if (reader !== this.#reader) return ReadOutcome.Stopped;
 
       console.error(
         "[Remote Control Program] Error reading the log folder:",
@@ -719,7 +728,9 @@ export class BrowserRuntime {
         isReading: false,
         error: BrowserRuntimeErrorCode.ReadFailed,
       });
-      return ReadOutcome.Failed;
+      return generation === this.#runGeneration
+        ? ReadOutcome.Failed
+        : ReadOutcome.Stopped;
     } finally {
       cancelSlowReadTimer();
     }

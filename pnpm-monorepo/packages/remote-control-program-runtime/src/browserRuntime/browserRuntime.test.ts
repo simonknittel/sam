@@ -49,12 +49,21 @@ const createKey = (name: string, lineNumber: number) =>
 const createLogFolder = (name: string) => {
   const matches: RawMatch[] = [];
   let readMilliseconds = 0;
+  /**
+   * True: a stop comes while the reader reads its last file. The reader
+   * checks the stop only between two files, thus the read ends with all its
+   * matches.
+   */
+  let isInLastFileAtStop = false;
   /** False: the owner selected a folder without the log files of the game */
   let hasEnvironmentFolder = true;
 
   return {
     setReadMilliseconds: (milliseconds: number) => {
       readMilliseconds = milliseconds;
+    },
+    setIsInLastFileAtStop: (value: boolean) => {
+      isInLastFileAtStop = value;
     },
     setHasEnvironmentFolder: (value: boolean) => {
       hasEnvironmentFolder = value;
@@ -88,7 +97,9 @@ const createLogFolder = (name: string) => {
             readMilliseconds > 0 &&
             (await new Promise<boolean>((resolve) => {
               setTimeout(() => resolve(false), readMilliseconds);
-              stopRead = () => resolve(true);
+              stopRead = () => {
+                if (!isInLastFileAtStop) resolve(true);
+              };
             }));
 
           const newMatches = isStopped
@@ -146,13 +157,14 @@ const createBrowser = () => {
   /** The runtime of the tab that holds the Web Lock of the citizen */
   const openTab = (citizenId = CITIZEN_ID) => {
     const sockets: FakeWebSocket[] = [];
+    const entryStore = new OwnEntryStore();
 
     const runtime = new BrowserRuntime({
       citizenId,
       runtimeId: RUNTIME_ID,
       runtimeVersion: "1",
       storage,
-      entryStore: new OwnEntryStore(),
+      entryStore,
       requestConnectionToken: async () => ({
         token: "token",
         relayUrl: new URL("wss://relay.example.test/"),
@@ -214,6 +226,7 @@ const createBrowser = () => {
 
     return {
       runtime,
+      entryStore,
       start,
       getLastSocket,
       handshake,
@@ -453,6 +466,31 @@ test("after a change of the log folder, only the lines from the change go up", a
   await vi.advanceTimersByTimeAsync(10 * SECOND);
 
   expect(tab.getSentRawLines()).toEqual([lineAfterChange.rawLine]);
+});
+
+test("a read that ends after a stop keeps its entries on the machine, and a request for older entries offers them", async () => {
+  const browser = createBrowser();
+  browser.turnOnLines();
+  const tab = browser.openTab();
+  await tab.start();
+  await vi.advanceTimersByTimeAsync(SECOND);
+
+  browser.folder.setReadMilliseconds(3 * SECOND);
+  browser.folder.setIsInLastFileAtStop(true);
+  const entry = browser.folder.write(Date.now());
+  // The scheduled read is in flight
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+  tab.runtime.stop();
+  await vi.advanceTimersByTimeAsync(5 * SECOND);
+  expect(tab.entryStore.get(entry.hash)).toEqual(entry);
+
+  browser.folder.setReadMilliseconds(0);
+  await tab.start();
+  await vi.advanceTimersByTimeAsync(10 * SECOND);
+  expect(tab.getSentRawLines()).toEqual([]);
+  await expect(
+    tab.runtime.prepareOlderEntriesRequest({ start: null, end: null }),
+  ).resolves.toMatchObject({ entryCount: 1 });
 });
 
 test("the citizens of one browser profile do not share the run record or the rules", async () => {
