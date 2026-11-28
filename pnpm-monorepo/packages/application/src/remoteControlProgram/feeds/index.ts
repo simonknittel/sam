@@ -14,7 +14,6 @@ export {
 export type { FeedLogEntry } from "./feedLogEntry.js";
 export {
   findOwnFeedEntryKeys,
-  findOwnFeedEntryKeysInputSchema,
   type FindOwnFeedEntryKeysInput,
   type OwnFeedEntryKeys,
 } from "./findOwnFeedEntryKeys.js";

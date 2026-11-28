@@ -422,10 +422,10 @@ export const isFeedSourceAnnounced = (
  */
 const feedEntryKeysRequestContentSchema = z.object({
   capability_id: z.literal(CapabilityId.LogEntries),
-  /** The start of the time window. Without it: no limit. */
-  start: z.iso.datetime().optional(),
-  /** Exclusive. Without it: no limit. */
-  end: z.iso.datetime().optional(),
+  /** The start of the time window */
+  start: z.iso.datetime(),
+  /** The end of the time window. Exclusive. */
+  end: z.iso.datetime(),
   /** The `next_page_cursor` of the previous page. Absent for the first page. */
   page_cursor: feedEntryKeySchema.optional(),
 });

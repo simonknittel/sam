@@ -455,7 +455,9 @@
             }
           },
           "required": [
-            "capability_id"
+            "capability_id",
+            "start",
+            "end"
           ]
         }
       },

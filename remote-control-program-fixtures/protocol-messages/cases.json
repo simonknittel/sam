@@ -572,7 +572,7 @@
       }
     },
     {
-      "description": "feed_entry_keys_request for the next page, without a time window",
+      "description": "feed_entry_keys_request for the next page of a time window",
       "direction": "up",
       "valid": true,
       "message": {
@@ -581,7 +581,23 @@
         "protocol_version": 2,
         "content": {
           "capability_id": "log_entries",
+          "start": "2026-11-23T00:00:00.000Z",
+          "end": "2026-11-24T00:00:00.000Z",
           "page_cursor": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    {
+      "description": "feed_entry_keys_request without the end of the time window: the start and the end are necessary",
+      "direction": "up",
+      "valid": false,
+      "message": {
+        "type": "feed_entry_keys_request",
+        "id": "6d3b9f1e-4c2a-4e8b-9a7d-3f5e1c2b8a90",
+        "protocol_version": 2,
+        "content": {
+          "capability_id": "log_entries",
+          "start": "2026-11-23T00:00:00.000Z"
         }
       }
     },
@@ -595,6 +611,8 @@
         "protocol_version": 2,
         "content": {
           "capability_id": "log_entries",
+          "start": "2026-11-23T00:00:00.000Z",
+          "end": "2026-11-24T00:00:00.000Z",
           "page_cursor": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         }
       }

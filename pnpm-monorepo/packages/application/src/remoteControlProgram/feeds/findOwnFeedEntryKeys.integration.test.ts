@@ -1,4 +1,3 @@
-import {} from "@sam-monorepo/domain";
 import { beforeEach, expect, test } from "vitest";
 import {
   createTestApplicationContext,
@@ -27,18 +26,23 @@ test("gives the keys of the own entries in the time window", async () => {
   const owner = await createCitizenActor("owner", PERMISSIONS);
   const otherOwner = await createCitizenActor("other", PERMISSIONS);
   const citizen = owner.citizen!;
-  const weekStart = new Date(TEST_NOW.getTime() - 7 * DAY_MILLISECONDS);
+  const window = {
+    start: new Date(TEST_NOW.getTime() - 7 * DAY_MILLISECONDS),
+    end: new Date(TEST_NOW.getTime() + 1),
+  };
   const ownKeys = [
-    await createEntry(citizen.id, weekStart),
+    await createEntry(citizen.id, window.start),
     await createEntry(citizen.id, TEST_NOW),
   ];
-  await createEntry(citizen.id, new Date(weekStart.getTime() - 1));
+  await createEntry(citizen.id, new Date(window.start.getTime() - 1));
+  await createEntry(citizen.id, window.end);
   await createEntry(otherOwner.citizen!.id, TEST_NOW);
   const { context } = createTestApplicationContext();
 
-  await expect(
-    findOwnFeedEntryKeys(context, owner, { start: weekStart }),
-  ).resolves.toEqual({ keys: ownKeys.toSorted(), nextPageCursor: null });
+  await expect(findOwnFeedEntryKeys(context, owner, window)).resolves.toEqual({
+    keys: ownKeys.toSorted(),
+    nextPageCursor: null,
+  });
 
   await expect(
     findOwnFeedEntryKeys(
@@ -46,7 +50,7 @@ test("gives the keys of the own entries in the time window", async () => {
         isRemoteControlProgramTurnedOff: async () => true,
       }).context,
       owner,
-      { start: weekStart },
+      window,
     ),
   ).rejects.toThrow(
     new ForbiddenError(RemoteControlProgramErrorMessage.ProgramTurnedOff),

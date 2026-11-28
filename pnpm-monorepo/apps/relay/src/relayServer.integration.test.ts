@@ -123,8 +123,17 @@ const upload = (client: TestClient, batch = BATCH) =>
 const sendHeartbeat = (client: TestClient) =>
   client.request(createUpMessage(UpMessageType.Heartbeat, {}));
 
+/** A time window of the key requests without entries */
+const EMPTY_KEY_WINDOW = {
+  start: new Date(Date.UTC(2026, 9, 1)).toISOString(),
+  end: new Date(Date.UTC(2026, 9, 2)).toISOString(),
+};
+
 const createKeysRequest = (
-  content: Omit<FeedEntryKeysRequestContent, "capability_id"> = {},
+  content: Omit<
+    FeedEntryKeysRequestContent,
+    "capability_id"
+  > = EMPTY_KEY_WINDOW,
 ) =>
   createUpMessage(UpMessageType.FeedEntryKeysRequest, {
     capability_id: CapabilityId.LogEntries,

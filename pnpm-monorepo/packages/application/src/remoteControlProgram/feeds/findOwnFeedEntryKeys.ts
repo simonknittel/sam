@@ -1,8 +1,4 @@
-import {
-  LOG_ANALYZER_ENTRY_HASH_PATTERN,
-  RELAY_LIMITS,
-} from "@sam-monorepo/domain";
-import * as z from "zod";
+import { RELAY_LIMITS } from "@sam-monorepo/domain";
 import type { Actor } from "../../actor.js";
 import type { ApplicationContext } from "../../context.js";
 import { ForbiddenError } from "../../errors.js";
@@ -10,18 +6,18 @@ import { withSpan } from "../../withSpan.js";
 import { RemoteControlProgramErrorMessage } from "../access/remoteControlProgramErrors.js";
 import { requireRemoteControlProgramUse } from "../access/remoteControlProgramPermissions.js";
 
-export const findOwnFeedEntryKeysInputSchema = z.object({
-  /** The start of the time window of the observation. Without it: no limit. */
-  start: z.date().optional(),
-  /** Exclusive. Without it: no limit. */
-  end: z.date().optional(),
+/**
+ * The content of a `feed_entry_keys_request`: the relay service checked it
+ * with the schema of the protocol
+ */
+export interface FindOwnFeedEntryKeysInput {
+  /** The start of the time window of the observation */
+  readonly start: Date;
+  /** Exclusive */
+  readonly end: Date;
   /** The `nextPageCursor` of the previous page. Absent for the first page. */
-  page_cursor: z.string().regex(LOG_ANALYZER_ENTRY_HASH_PATTERN).optional(),
-});
-
-export type FindOwnFeedEntryKeysInput = z.output<
-  typeof findOwnFeedEntryKeysInputSchema
->;
+  readonly pageCursor?: string;
+}
 
 export interface OwnFeedEntryKeys {
   /** The hashes of the entries (`createLogEntryHash`), in ascending order */
@@ -34,16 +30,15 @@ export interface OwnFeedEntryKeys {
  * The keys of the entries of `log_entries` of the actor (the owner) whose
  * time of the observation is in the time window. A runtime leaves out the
  * entries that the relay already has from the count of a request for older
- * entries. The runtimes read the keys
- * through the relay service (`feed_entry_keys_request`, decision 34). Only
- * the keys leave the server, not the raw lines. The cursor is the last key:
- * the unique index of the owner and the hash orders the rows. A runtime with
- * more entries in the time window reads more pages, thus the answer stays
- * complete.
+ * entries. The runtimes read the keys through the relay service
+ * (`feed_entry_keys_request`, decision 34). Only the keys leave the server,
+ * not the raw lines. The cursor is the last key: the unique index of the
+ * owner and the hash orders the rows. A runtime with more entries in the
+ * time window reads more pages, thus the answer stays complete.
  *
  * @throws ForbiddenError without `remoteControlProgram;use` or a citizen, for
- * an admin who assumes the user, or when a switch turned off the Remote
- * Control Program or the capability
+ * an admin who assumes the user, or when the switch turned off the Remote
+ * Control Program
  */
 export const findOwnFeedEntryKeys = (
   context: ApplicationContext,
@@ -62,7 +57,7 @@ export const findOwnFeedEntryKeys = (
       where: {
         createdById: citizen.id,
         eventAt: { gte: input.start, lt: input.end },
-        hash: input.page_cursor ? { gt: input.page_cursor } : undefined,
+        hash: input.pageCursor ? { gt: input.pageCursor } : undefined,
       },
       orderBy: { hash: "asc" },
       take: RELAY_LIMITS.maximumFeedEntryKeysPerPage + 1,

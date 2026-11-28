@@ -869,9 +869,9 @@ export class RelayConnection {
     let page: OwnFeedEntryKeys;
     try {
       page = await findOwnFeedEntryKeys(this.#hub.context, runtime.actor, {
-        start: start === undefined ? undefined : new Date(start),
-        end: end === undefined ? undefined : new Date(end),
-        page_cursor,
+        start: new Date(start),
+        end: new Date(end),
+        pageCursor: page_cursor,
       });
     } catch (error) {
       this.#handleUseCaseError(error, message);
