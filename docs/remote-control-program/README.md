@@ -148,6 +148,9 @@ Each part of the Remote Control Program obeys these rules.
   - The client id of the desktop companion is a Client ID Metadata Document on a URL of SAM (see [Resources](../mcp-server.md#resources)).
   - The refresh token is in the credential store of the operating system (decision 36).
 - It contains the log file connector next to the gRPC connector. The log file connector supplies `log_entries`, and uploads them only when the local access layer permits it.
+- The owner selects the Star Citizen folder once, in the onboarding after the sign-in. Each folder inside it is also correct: the program finds the folder with the channel folders (for example `LIVE` and `PTU`). The log file connector reads the log files of all channel folders.
+- When the owner turns on the gRPC connector, the program checks the `USER.cfg` of each channel folder for the lines of the server (see [Enable the server](./grpc-interface.md#enable-the-server)). When lines are missing, it asks the owner. After the consent, it makes a backup copy of the file, writes the lines and tells the owner to start the game again. A browser cannot do this: Chromium does not give access to `.cfg` files on Windows.
+- It looks for a new release at each start and periodically while it runs. It installs an update only after the owner confirms it, never automatically. It then replaces its own file and starts again (decision 20). The source of the updates is the GitHub releases of its repository.
 - Its UI controls the local access layer. It asks the questions of "ask each time". It shows no data of the game: the control UIs in SAM show the data.
 
 ### Announcement

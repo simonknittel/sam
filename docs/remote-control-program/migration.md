@@ -20,17 +20,20 @@ On 2026-11-26, the old step 3 ("States, desktop companion and gRPC connector") b
 3. **Desktop companion with the log file connector:**
    - The repository of the desktop companion (decision 32 of the architecture), the export of the shared definitions in SAM, and the sync of the definitions into the repository of the desktop companion.
    - The changes of the OAuth server (see [Changes of existing parts](#changes-of-existing-parts)), the connection token for the desktop companion, the runtime kind of the desktop companion, and the version 2 of the protocol with the read of the own entry keys. The relay service accepts only version 2, and the app and the relay service deploy at the same time (decision 34 of the architecture).
-   - The Rust program with GPUI (decision 33 of the architecture) for Windows and Linux: the native OAuth client, the channel client, the log file connector (`log_entries`), the local access layer with the live periods and the upload of older entries, the tray icon and the start with the operating system.
+   - The Rust program with GPUI (decision 33 of the architecture) for Windows and Linux: the native OAuth client, the onboarding (the sign-in and the Star Citizen folder), the channel client, the log file connector (`log_entries`) for all channel folders, the local access layer with the live periods and the upload of older entries, the tray icon and the start with the operating system.
+   - The game channel and the game version of each log entry, from the header of its log file, in both runtimes (decision 17 of the architecture).
    - In the sharing popover, the tab "Runtimes" with one sub-tab for each runtime, and no tab "Status" (see [Sharing popover](./README.md#sharing-popover)). The sub-tab of the desktop companion tells that the program comes soon, and shows the connected desktop companions and the sign-ins of the owner.
    - No distribution of the program (M9), and no entry in the changelog.
 4. **gRPC connector, states and lineup status:**
    - First, an estimate of the sizes: the connections, the messages and the rows of the history for each day.
    - The relay for states, the current state and the history in TimescaleDB: the first hypertable, and the changes of the mirror scripts for hypertables (see [Mirror the database](../mirror-database.md)).
    - The gRPC connector in the desktop companion and the first gRPC capabilities (for example `player_vitals`; `ship_status` and the death states need a test of the `vehicle` and `events` frames first).
+   - The check of `USER.cfg` when the owner turns on the gRPC connector, and the change of the file after the consent of the owner (see [Desktop companion](./README.md#desktop-companion)).
+   - The game channel and the game version of the states: the desktop companion finds the build of the running game itself (decision 17 of the architecture).
    - The lineup status as the first control UI of the states (see [Lineup status](./README.md#lineup-status), M10), the grantee kind "Event participants", and the access requests with their notification (M6).
    - Still no distribution of the program (M9). Open question for the plan of this step: does the lineup status show before step 5, when no citizen can download the desktop companion? Recommendation: show the status of the positions, but show the suggestion to share the own status only from step 5.
 5. **Public distribution of the desktop companion:**
-   - The releases of the desktop companion: the versions, the GitHub releases, the signature of the updates with a key that only the release process holds, and the update function of the program (see [Desktop companion](./README.md#desktop-companion)).
+   - The releases of the desktop companion: the versions, the GitHub releases, the signature of the updates with a key that only the release process holds, and the update function of the program with the consent of the owner (see [Desktop companion](./README.md#desktop-companion)).
    - The repository of the desktop companion becomes public, with a license.
    - Reproducible builds also for Linux and the AppImage, and the hash and the manifest of each release (decision 38 of the architecture).
    - Windows: the portable `.exe` without a code signing certificate (decision 25 of the architecture), and a guide for the warning of Windows at the first start. Linux: the AppImage as an experimental release, which the UI of SAM does not show or name (M11).
