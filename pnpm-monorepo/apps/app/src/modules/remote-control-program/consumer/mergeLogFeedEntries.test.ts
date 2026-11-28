@@ -45,6 +45,8 @@ const relayEntry = (
     eventAt: atSecond(second),
     lineNumber: 1,
     hash: hash(hashCharacter),
+    gameChannel: "PTU",
+    gameVersion: "4.10.202.48190",
   });
   if (!entry) throw new Error("The sample line does not match its type");
   return entry;
@@ -90,6 +92,12 @@ describe("mergeLogFeedEntries", () => {
       `own:${hash("b")}`,
     ]);
     expect(entries[0]).toBe(ownLocalEntry);
+    expect(
+      entries.map(({ gameChannel, gameVersion }) => [gameChannel, gameVersion]),
+    ).toEqual([
+      ["LIVE", "4.10.201.48085"],
+      ["PTU", "4.10.202.48190"],
+    ]);
   });
 
   test("keeps the entries of two owners with the same hash", () => {

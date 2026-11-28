@@ -268,6 +268,8 @@ const toDeliveredRelayLogEntries = (
         eventAt: new Date(entry.event_at),
         lineNumber: entry.line_number,
         hash: entry.hash,
+        gameChannel: entry.game_channel,
+        gameVersion: entry.game_version,
       }));
 
     default:
