@@ -1,0 +1,19 @@
+{
+  "line_count": 30,
+  "fields": [
+    {
+      "field": "game_channel",
+      "source": "^<[^>]*> Executable: (?:[^\\\\/]*[\\\\/])*(?<value>[^\\\\/]*)[\\\\/]Bin64[\\\\/]StarCitizen\\.exe$",
+      "flags": "",
+      "value_source": "^[A-Z0-9][A-Z0-9._-]*$",
+      "maximum_value_length": 32
+    },
+    {
+      "field": "game_version",
+      "source": "^<[^>]*> FileVersion: (?<value>[0-9.]*)$",
+      "flags": "",
+      "value_source": "^[0-9]+(?:\\.[0-9]+)*$",
+      "maximum_value_length": 32
+    }
+  ]
+}

@@ -15,6 +15,7 @@ import {
   replaceIpAddresses,
 } from "./ipAddressMarker.js";
 import { createLogEntryHash } from "./logEntryHash.js";
+import { readLogFileHeader } from "./logFileHeader.js";
 import { downMessageSchema, upMessageSchema } from "./protocol.js";
 
 /**
@@ -66,6 +67,25 @@ interface HashCase {
   readonly hash: string;
 }
 
+interface LogFileHeaderCase {
+  readonly description: string;
+  readonly lines: readonly string[];
+  readonly game_channel: string | null;
+  readonly game_version: string | null;
+}
+
+/** `log-file-header.json` of the export of the shared definitions */
+interface LogFileHeaderRule {
+  readonly line_count: number;
+  readonly fields: readonly {
+    readonly field: string;
+    readonly source: string;
+    readonly flags: string;
+    readonly value_source: string;
+    readonly maximum_value_length: number;
+  }[];
+}
+
 const ipRule = await readJson<IpRule>("ip-address-marker/rule.json");
 const { cases: ipCases } = await readJson<{
   readonly cases: readonly IpCase[];
@@ -73,6 +93,12 @@ const { cases: ipCases } = await readJson<{
 const { cases: hashCases } = await readJson<{
   readonly cases: readonly HashCase[];
 }>("log-entry-hash/cases.json");
+const { cases: logFileHeaderCases } = await readJson<{
+  readonly cases: readonly LogFileHeaderCase[];
+}>("log-file-header/cases.json");
+const logFileHeaderRule = await readJson<LogFileHeaderRule>(
+  "../remote-control-program-definitions/log-file-header.json",
+);
 
 enum MessageDirection {
   Up = "up",
@@ -138,6 +164,47 @@ describe("the IP rule", () => {
       expect(applyIpRuleOfSharedTestData(input)).toBe(output);
       expect(containsIpAddress(input)).toBe(input_contains_ip_address);
       expect(containsIpAddress(output)).toBe(output_contains_ip_address);
+    },
+  );
+});
+
+/**
+ * Applies `log-file-header.json` of the export like a different engine, as
+ * the `README.md` of the export tells. Thus the export alone gives the
+ * expected results.
+ */
+const applyLogFileHeaderRuleOfExport = (lines: readonly string[]) =>
+  Object.fromEntries(
+    logFileHeaderRule.fields.map(
+      ({ field, source, flags, value_source, maximum_value_length }) => {
+        const value = lines
+          .slice(0, logFileHeaderRule.line_count)
+          .map((line) => line.replace(/\r$/, ""))
+          .map((line) => new RegExp(source, flags).exec(line)?.groups?.value)
+          .find(
+            (candidate) =>
+              candidate !== undefined &&
+              candidate.length <= maximum_value_length &&
+              new RegExp(value_source).test(candidate),
+          );
+
+        return [field, value ?? null];
+      },
+    ),
+  );
+
+describe("readLogFileHeader", () => {
+  test.each(logFileHeaderCases)(
+    "$description",
+    ({ lines, game_channel, game_version }) => {
+      expect(readLogFileHeader(lines.join("\n"))).toEqual({
+        gameChannel: game_channel,
+        gameVersion: game_version,
+      });
+      expect(applyLogFileHeaderRuleOfExport(lines)).toEqual({
+        game_channel,
+        game_version,
+      });
     },
   );
 });

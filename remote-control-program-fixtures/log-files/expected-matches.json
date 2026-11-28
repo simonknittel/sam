@@ -3,6 +3,8 @@
     {
       "path": "LIVE/Game.log",
       "session_start_from_file_name": null,
+      "game_channel": null,
+      "game_version": "4.4.159.10512345",
       "matches": [
         {
           "line_number": 5,
@@ -49,6 +51,8 @@
     {
       "path": "LIVE/logbackups/Game Build(10498765) 21 Nov 26 (17 58 43).log",
       "session_start_from_file_name": "2026-11-21T17:58:43",
+      "game_channel": "LIVE",
+      "game_version": "4.4.158.10498765",
       "matches": [
         {
           "line_number": 9,
@@ -263,6 +267,8 @@
     {
       "path": "LIVE/logbackups/Game Build(10512345) 22 Nov 26 (20 14 05).log",
       "session_start_from_file_name": "2026-11-22T20:14:05",
+      "game_channel": null,
+      "game_version": "4.4.159.10512345",
       "matches": [
         {
           "line_number": 4,
@@ -477,6 +483,8 @@
     {
       "path": "LIVE/logbackups/Game Build(10523456) 23 Nov 26 (19 02 11).log",
       "session_start_from_file_name": "2026-11-23T19:02:11",
+      "game_channel": null,
+      "game_version": "4.4.160.10523456",
       "matches": [
         {
           "line_number": 3,

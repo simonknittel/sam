@@ -29,6 +29,14 @@ import {
   IP_ADDRESS_REPLACEMENT_PASSES,
 } from "./ipAddressMarker.js";
 import {
+  GAME_CHANNEL_PATTERN,
+  GAME_VERSION_PATTERN,
+  LOG_FILE_HEADER_LINE_COUNT,
+  LOG_FILE_HEADER_PATTERNS,
+  MAXIMUM_GAME_CHANNEL_LENGTH,
+  MAXIMUM_GAME_VERSION_LENGTH,
+} from "./logFileHeader.js";
+import {
   DOWN_MESSAGE_PROTOCOL_VERSIONS,
   downMessageSchema,
   MINIMUM_RELAY_PROTOCOL_VERSION,
@@ -128,6 +136,30 @@ describe("the export of the shared definitions", () => {
         }),
       }),
     ).toMatchFileSnapshot(`${DEFINITIONS}log-entry-patterns.json`);
+  });
+
+  test("of the header of the log files", async () => {
+    await expect(
+      toJson({
+        line_count: LOG_FILE_HEADER_LINE_COUNT,
+        fields: [
+          {
+            field: "game_channel",
+            source: LOG_FILE_HEADER_PATTERNS.gameChannel.source,
+            flags: LOG_FILE_HEADER_PATTERNS.gameChannel.flags,
+            value_source: GAME_CHANNEL_PATTERN.source,
+            maximum_value_length: MAXIMUM_GAME_CHANNEL_LENGTH,
+          },
+          {
+            field: "game_version",
+            source: LOG_FILE_HEADER_PATTERNS.gameVersion.source,
+            flags: LOG_FILE_HEADER_PATTERNS.gameVersion.flags,
+            value_source: GAME_VERSION_PATTERN.source,
+            maximum_value_length: MAXIMUM_GAME_VERSION_LENGTH,
+          },
+        ],
+      }),
+    ).toMatchFileSnapshot(`${DEFINITIONS}log-file-header.json`);
   });
 
   test("of the login of the desktop companion", async () => {

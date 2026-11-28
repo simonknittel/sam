@@ -1,0 +1,202 @@
+{
+  "cases": [
+    {
+      "description": "The header of LIVE 4.10.201 with CRLF line ends",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> BackupNameAttachment=\" Build(13220821) 25 Nov 26 (20 41 58)\"  -- used by backup system\r",
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026\r",
+        "<2026-11-25T19:42:06.738Z> Built on Nov 18 2026 13:20:14\r",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version\r",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\LIVE\\Bin64\\StarCitizen.exe\r",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 4.10.201.48085\r",
+        "<2026-11-25T19:42:06.738Z> ProductVersion: 4.10.201.48085\r",
+        "<2026-11-25T19:42:06.738Z> Using Microsoft (tm) C++ Standard Library implementation\r",
+        "<2026-11-25T19:42:06.738Z> [Trace] Environment:   PUB\r"
+      ],
+      "game_channel": "LIVE",
+      "game_version": "4.10.201.48085"
+    },
+    {
+      "description": "The header of PTU 5.0.202 with LF line ends",
+      "lines": [
+        "<2026-11-21T08:42:13.204Z> BackupNameAttachment=\" Build(13248297) 21 Nov 26 (09 42 13)\"  -- used by backup system",
+        "<2026-11-21T08:42:13.204Z> Log started on Sat Nov 21 08:42:13 2026",
+        "<2026-11-21T08:42:13.204Z> Built on Nov 19 2026 22:05:51",
+        "<2026-11-21T08:42:13.204Z> Running 64 bit version",
+        "<2026-11-21T08:42:13.204Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\PTU\\Bin64\\StarCitizen.exe",
+        "<2026-11-21T08:42:13.204Z> FileVersion: 5.0.202.10025",
+        "<2026-11-21T08:42:13.204Z> ProductVersion: 5.0.202.10025",
+        "<2026-11-21T08:42:13.204Z> Using Microsoft (tm) C++ Standard Library implementation",
+        "<2026-11-21T08:42:13.204Z> [Trace] Environment:   PTU"
+      ],
+      "game_channel": "PTU",
+      "game_version": "5.0.202.10025"
+    },
+    {
+      "description": "A path with / as the separator",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> Executable: /opt/games/Roberts Space Industries/StarCitizen/EPTU/Bin64/StarCitizen.exe",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 5.0.203.10077"
+      ],
+      "game_channel": "EPTU",
+      "game_version": "5.0.203.10077"
+    },
+    {
+      "description": "A path with both separators, and a channel with a hyphen",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> Executable: D:/Games/Roberts Space Industries/StarCitizen\\TECH-PREVIEW\\Bin64/StarCitizen.exe",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 5.1.0.10101"
+      ],
+      "game_channel": "TECH-PREVIEW",
+      "game_version": "5.1.0.10101"
+    },
+    {
+      "description": "A channel with a digit, a dot and an underscore",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\4.0_PREVIEW\\Bin64\\StarCitizen.exe",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 4.0.0.9416120"
+      ],
+      "game_channel": "4.0_PREVIEW",
+      "game_version": "4.0.0.9416120"
+    },
+    {
+      "description": "A folder before Bin64 with lowercase letters gives no channel: it can be the name of the user",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Users\\Testpilot\\Bin64\\StarCitizen.exe",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 4.10.201.48085"
+      ],
+      "game_channel": null,
+      "game_version": "4.10.201.48085"
+    },
+    {
+      "description": "A folder before Bin64 with a space gives no channel",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\MY LIVE\\Bin64\\StarCitizen.exe"
+      ],
+      "game_channel": null,
+      "game_version": null
+    },
+    {
+      "description": "A channel with 32 characters is valid, a channel with 33 characters is not",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\\Bin64\\StarCitizen.exe",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\\Bin64\\StarCitizen.exe"
+      ],
+      "game_channel": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+      "game_version": null
+    },
+    {
+      "description": "A different program in Bin64 gives no channel",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\LIVE\\Bin64\\StarCitizen_Launcher.exe"
+      ],
+      "game_channel": null,
+      "game_version": null
+    },
+    {
+      "description": "A header without the line of the executable gives no channel",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 4.4.159.10512345",
+        "<2026-11-25T19:42:06.738Z> Branch: sc-alpha-4.4.0"
+      ],
+      "game_channel": null,
+      "game_version": "4.4.159.10512345"
+    },
+    {
+      "description": "A version with text, with a dot at the end, or with an Arabic-Indic digit is not valid",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 4.10.201.48085-hotfix",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 4.10.201.",
+        "<2026-11-25T19:42:06.738Z> FileVersion: ٤.10.201.48085"
+      ],
+      "game_channel": null,
+      "game_version": null
+    },
+    {
+      "description": "A version with 32 characters is valid, a version with 33 characters is not",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 1.2222222222222222222222222222222",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 1.222222222222222222222222222222"
+      ],
+      "game_channel": null,
+      "game_version": "1.222222222222222222222222222222"
+    },
+    {
+      "description": "The first valid line of each value counts",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> FileVersion: unknown",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\LIVE\\Bin64\\StarCitizen.exe",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 4.10.201.48085",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\PTU\\Bin64\\StarCitizen.exe",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 5.0.202.10025"
+      ],
+      "game_channel": "LIVE",
+      "game_version": "4.10.201.48085"
+    },
+    {
+      "description": "A line without a timestamp, with a space before the timestamp, or with a space at the end is not a header line",
+      "lines": [
+        "Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\LIVE\\Bin64\\StarCitizen.exe",
+        " <2026-11-25T19:42:06.738Z> FileVersion: 4.10.201.48085",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 4.10.201.48085 "
+      ],
+      "game_channel": null,
+      "game_version": null
+    },
+    {
+      "description": "Only the first 30 lines are the header: line 30 counts, line 31 does not",
+      "lines": [
+        "<2026-11-25T19:42:06.738Z> Log started on Wed Nov 25 19:42:06 2026",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Running 64 bit version",
+        "<2026-11-25T19:42:06.738Z> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\HOTFIX\\Bin64\\StarCitizen.exe",
+        "<2026-11-25T19:42:06.738Z> FileVersion: 4.10.202.48190"
+      ],
+      "game_channel": "HOTFIX",
+      "game_version": null
+    },
+    {
+      "description": "An empty file",
+      "lines": [],
+      "game_channel": null,
+      "game_version": null
+    }
+  ]
+}

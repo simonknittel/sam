@@ -26,6 +26,14 @@ Tests that use this data:
 - `output`: the raw line after the rule.
 - `input_contains_ip_address`, `output_contains_ip_address`: the result of the check of the relay. The check is true when one of the expressions finds a match.
 
+## `log-file-header/`
+
+`cases.json` contains `cases`: the first lines of log files with the values of their header (see the header rule in the [export of the shared definitions](../remote-control-program-definitions/README.md)). Each case has:
+
+- `description`
+- `lines`: the lines of the start of a complete file, each without its `\n`. A line of a file with CRLF line ends has a `\r` at its end.
+- `game_channel`, `game_version`: the values of the header, or null.
+
 ## `protocol-messages/`
 
 `cases.json` contains `cases`: messages of the [protocol](../docs/remote-control-program/README.md#protocol) between a runtime and the relay service. Each case has:
@@ -54,6 +62,7 @@ Log files of the game in the folders of the game. The handles are invented. The 
 
 - `path`: relative to `log-files/`.
 - `session_start_from_file_name`: the local time in the name of a backup (without a time zone), or null.
+- `game_channel`, `game_version`: the values of the header of the file (see `log-file-header/`), or null. Each match of the file has these values.
 - `matches`: the matches of the log file connector (`createLogFileReader` of the browser runtime, a full read of the file), sorted by `line_number` and `type`.
 
 Each match has:
