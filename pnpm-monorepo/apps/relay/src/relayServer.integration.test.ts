@@ -6,6 +6,7 @@ import {
   AcknowledgementErrorCode,
   AcknowledgementResult,
   CapabilityId,
+  CONNECTOR_CATALOG,
   ConnectorId,
   createUpMessage,
   DownMessageType,
@@ -53,22 +54,38 @@ const DISCONNECT_USER_PATH = "/internal/disconnect-user";
 
 const ONE_HOUR_MILLISECONDS = 60 * 60 * 1000;
 
-const createJoinPuEntry = (lineNumber: number) => {
+/** The values of the header of the log file of the entry */
+interface GameBuild {
+  readonly game_channel: string | null;
+  readonly game_version: string | null;
+}
+
+const LIVE_BUILD: GameBuild = {
+  game_channel: "LIVE",
+  game_version: "4.10.201.48085",
+};
+
+const createJoinPuEntry = (lineNumber: number, gameBuild = LIVE_BUILD) => {
   const time = new Date(Date.UTC(2026, 10, 1, 12, 0, lineNumber));
   return {
     type: LogAnalyzerEntryType.JoinPu,
     raw_line: createJoinPuLine(time),
     event_at: time.toISOString(),
     line_number: lineNumber,
+    ...gameBuild,
   };
 };
 
+/** The entries of two log files: of LIVE, and of a header without values */
 const BATCH: FeedEntriesContent = {
   capability_id: CapabilityId.LogEntries,
   capability_version: LOG_ENTRIES_CAPABILITY.version,
   connector_id: ConnectorId.LogFile,
-  connector_version: 1,
-  entries: [createJoinPuEntry(1), createJoinPuEntry(2)],
+  connector_version: CONNECTOR_CATALOG[ConnectorId.LogFile].version,
+  entries: [
+    createJoinPuEntry(1),
+    createJoinPuEntry(2, { game_channel: null, game_version: null }),
+  ],
 };
 
 let relay: TestRelay | null = null;
@@ -169,8 +186,20 @@ test("a runtime with a valid token connects, announces and uploads", async () =>
     new_entry_count: 2,
   });
   await expect(findLogEntryRows(owner.citizenId)).resolves.toEqual([
-    { type: LogAnalyzerEntryType.JoinPu, lineNumber: 1, runtimeId: RUNTIME_ID },
-    { type: LogAnalyzerEntryType.JoinPu, lineNumber: 2, runtimeId: RUNTIME_ID },
+    {
+      type: LogAnalyzerEntryType.JoinPu,
+      lineNumber: 1,
+      runtimeId: RUNTIME_ID,
+      gameChannel: "LIVE",
+      gameVersion: "4.10.201.48085",
+    },
+    {
+      type: LogAnalyzerEntryType.JoinPu,
+      lineNumber: 2,
+      runtimeId: RUNTIME_ID,
+      gameChannel: null,
+      gameVersion: null,
+    },
   ]);
   expect(deliveries).toEqual([
     {

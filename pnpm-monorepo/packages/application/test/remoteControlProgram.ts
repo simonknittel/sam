@@ -1,11 +1,13 @@
 import { prisma } from "@sam-monorepo/database";
 import {
   CapabilityId,
+  CONNECTOR_CATALOG,
   ConnectorId,
   createLogEntryHash,
   GranteeKind,
   GrantOperation,
   IP_ADDRESS_MARKER,
+  LOG_ENTRIES_CAPABILITY,
   LogAnalyzerEntryType,
   type AnnounceContent,
 } from "@sam-monorepo/domain";
@@ -164,8 +166,13 @@ export const LOG_FILE_ANNOUNCEMENT: AnnounceContent = {
   connectors: [
     {
       id: ConnectorId.LogFile,
-      version: 1,
-      capabilities: [{ id: CapabilityId.LogEntries, version: 1 }],
+      version: CONNECTOR_CATALOG[ConnectorId.LogFile].version,
+      capabilities: [
+        {
+          id: CapabilityId.LogEntries,
+          version: LOG_ENTRIES_CAPABILITY.version,
+        },
+      ],
     },
   ],
   local_access_layer: {

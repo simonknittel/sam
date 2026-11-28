@@ -75,7 +75,13 @@ export const findLogEntryRows = (ownerCitizenId: string) =>
   prisma.logAnalyzerEntry.findMany({
     where: { createdById: ownerCitizenId },
     orderBy: { lineNumber: "asc" },
-    select: { type: true, lineNumber: true, runtimeId: true },
+    select: {
+      type: true,
+      lineNumber: true,
+      runtimeId: true,
+      gameChannel: true,
+      gameVersion: true,
+    },
   });
 
 export const findRuntimeLease = (ownerCitizenId: string, runtimeId: string) =>

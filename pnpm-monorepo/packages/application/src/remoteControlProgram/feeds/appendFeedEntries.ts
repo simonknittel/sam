@@ -241,6 +241,8 @@ export const appendFeedEntries = (
           runtimeId: input.runtime_id,
           connectorVersion: batch.connector_version,
           capabilityVersion: batch.capability_version,
+          gameChannel: entry.game_channel,
+          gameVersion: entry.game_version,
         })),
       ),
       skipDuplicates: true,
