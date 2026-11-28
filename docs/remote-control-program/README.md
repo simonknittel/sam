@@ -131,7 +131,7 @@ Each part of the Remote Control Program obeys these rules.
 - When the tab of the runtime closes, the next SAM tab of the same citizen takes the state of the runtime: it starts a new runtime when the runtime ran, and stays stopped when the owner stopped it. After a crash of the tab, the next SAM tab obeys the autostart. A new runtime uploads only the entries from its own start (see [Local access layer](#local-access-layer)). The entries of the time between the two runtimes stay on the machine.
 - The browser keeps the state of the browser runtime for each citizen: the settings and the handle of the log folder. A citizen who logs in after a different citizen in the same browser does not get this state. Thus a runtime never uploads the entries of a different citizen as the own entries. A logout stops the runtime of the citizen in all tabs, and the next runtime of the citizen obeys the autostart.
 - The settings of the browser runtime are in the sharing popover (see [Sharing popover](#sharing-popover)): the autostart, the log folder and the local access layer.
-- The log file connector of the browser runtime reads the same files as the connector of the desktop companion: only `Game.log` and the `.log` files in `logbackups/` of each environment folder. The owner selects the Star Citizen folder (for example `…\Roberts Space Industries\StarCitizen`) or one environment folder (for example `LIVE`). An environment folder has a `Game.log` or a `build_manifest.id`. The folder of the launcher (`Roberts Space Industries`) gives its folder `StarCitizen`. A browser cannot read the parent folders of the selected folder. Thus a different folder (for example `logbackups`) gives no log files, and the sharing popover and the Log Analyzer tell the owner to select the Star Citizen folder or an environment folder.
+- The owner selects the Star Citizen folder, the folder of the launcher or one environment folder (see [The log file connector](#the-log-file-connector)). A browser cannot read the parent folders of the selected folder. Thus a different folder (for example `logbackups`) gives no log files, and the sharing popover and the Log Analyzer tell the owner to select the Star Citizen folder or an environment folder.
 - With the autostart, the browser runtime starts on each SAM page. When the browser needs a click to give the file access again, the sharing popover tells it (see [Sharing popover](#sharing-popover)).
 - SAM supplies the code of the browser runtime. Thus its local access layer protects against other citizens and against mistakes, but not against a compromised SAM deployment.
 
@@ -144,7 +144,7 @@ Each part of the Remote Control Program obeys these rules.
 - It connects directly to SAM, not through a browser tab. Thus it works without an open tab.
 - It signs in with OAuth 2.1 as a native client of the authorization server of SAM (see [OAuth design](../mcp-server.md#oauth-design)): the authorization code grant with PKCE and a loopback redirect. The Remote Control Program is a resource of its own (see [Resources](../mcp-server.md#resources) and decision 35). With its access token, the desktop companion gets the connection tokens (see [Connection and tokens](#connection-and-tokens)). The refresh token is in the credential store of the operating system (decision 36).
 - It contains the log file connector next to the gRPC connector. The log file connector supplies `log_entries`, and uploads them only when the local access layer permits it.
-- The owner selects the Star Citizen folder once, in the onboarding after the sign-in. Each folder inside it is also correct: the program finds the folder with the environment folders (for example `LIVE` and `PTU`). The log file connector reads the log files of all environment folders.
+- The owner selects the Star Citizen folder once, in the onboarding after the sign-in. Each folder inside it is also correct: the program finds the Star Citizen folder (see [The log file connector](#the-log-file-connector)).
 - When the owner turns on the gRPC connector, the program checks the `USER.cfg` of each environment folder for the lines of the server (see [Enable the server](./grpc-interface.md#enable-the-server)). When lines are missing, it asks the owner. After the consent, it makes a backup copy of the file, writes the lines and tells the owner to start the game again. A browser cannot do this: Chromium does not give access to `.cfg` files on Windows.
 - It looks for a new release at each start and periodically while it runs. It installs an update only after the owner confirms it, never automatically. It then replaces its own file and starts again (decision 20). The source of the updates is the GitHub releases of its repository.
 - Its UI controls the local access layer. It asks the questions of "ask each time". It shows no data of the game: the control UIs in SAM show the data.
@@ -171,6 +171,17 @@ The relay keeps the announcement while the runtime is online (see [Presence](#pr
 - A connector supplies capabilities and applies actions. It does not know the channels, the relay or the consumers.
 - A connector reads its interface at its own rate, for example the log file each 10 seconds. This rate is internal. It is not the timing of a channel.
 - More connectors are ideas (see [Ideas](#ideas)).
+
+### The log file connector
+
+The browser runtime and the desktop companion have one implementation each, in TypeScript and in Rust. Both implementations obey the same rules (principle 11):
+
+- The Star Citizen folder (for example `…\Roberts Space Industries\StarCitizen`) has one environment folder for each game environment, for example `LIVE` and `PTU`. An environment folder is a direct subfolder with a `Game.log` or a `build_manifest.id`. The folder of the launcher (`Roberts Space Industries`) gives its folder `StarCitizen`.
+- The connector reads only `Game.log` and the `.log` files in `logbackups/` of each environment folder. It reads no other file of the game.
+- It reads the game environment and the build number from the header of each log file, and gives both to each entry of the same file (decision 17).
+- When it reads a line, it replaces each IP address in the raw line with a fixed marker (decision 22). Thus the own entries on the machine (for example in the Log Analyzer) also show the marker, and an entry has the same key on the machine and in SAM.
+- In the browser runtime, it uses the File System Access API: the handle of the selected folder is in IndexedDB, a Web Worker parses the files, and a reader reads only the new bytes of a file.
+- The regex engine of the desktop companion has a backtrack limit. A line whose try stops at this limit gives no entry there, and the desktop companion counts these lines in its diagnostics log.
 
 ### The gRPC connector
 
@@ -457,13 +468,11 @@ The grantee kinds:
 
 The Log Analyzer is the control UI of the feed `log_entries`. It needs `logAnalyzer;read` and `remoteControlProgram;use`, also for the own log (decision 24).
 
-- The log file connector reads `Game.log` and the old log files. In the browser runtime, it uses the File System Access API: the handle of the log folder is in IndexedDB, a Web Worker parses the files, and a reader reads only the new bytes of a file.
+- The [log file connector](#the-log-file-connector) supplies the entries.
 - The local access layer tells which log entry types leave the machine. Older entries leave only on an explicit request (decision 27).
 - The Log Analyzer shows the game environment and the build number of each entry as they are (decision 17, principle 15). Of the context of an entry, only these two values go to the consumers, through the reads of the app and the delivery of the relay.
-- When the connector reads a line, it replaces each IP address in the raw line with a fixed marker (decision 22). Thus the own entries on the machine (for example in the Log Analyzer) also show the marker, and an entry has the same key on the machine and in SAM.
 - The relay use case "append feed entries" checks each line against its pattern again. The patterns are `LOG_ANALYZER_ENTRY_PATTERNS` (`packages/domain/src/logAnalyzer/`). The connector and the relay share them, and the rules in [AGENTS.md](../../AGENTS.md) apply to them.
 - The hash for duplicates must not depend on the version of a pattern: it uses the oldest type of a pattern chain (`supersedes`) and the raw line. Thus two runtimes with different pattern versions do not store the same line twice.
-- The regex engine of the desktop companion has a backtrack limit. A line whose try stops at this limit gives no entry there, and the desktop companion counts these lines in its diagnostics log.
 - The model `LogAnalyzerEntry` stores the feed.
 - Entries that are older than 2 hours are history: the Log Analyzer shows them to each citizen who can open it, without a grant (decision 31). It shows the newer entries of other citizens only with a valid grant. The Live-Status shows only the own entries and the entries of the valid grants.
 - The Log Analyzer derives the Live-Status from `log_entries` (principle 15).
