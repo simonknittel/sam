@@ -88,7 +88,7 @@ export const Entry = memo(function Entry({ entry }: Props) {
 
       <td className="truncate">{entry.message}</td>
 
-      <td className="text-white/40">
+      <td className="text-center text-white/40">
         <EntryUploadState uploadState={entry.uploadState} />
       </td>
 

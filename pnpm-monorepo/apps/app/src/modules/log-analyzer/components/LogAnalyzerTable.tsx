@@ -39,7 +39,7 @@ export const LogAnalyzerTable = ({ className }: Props) => {
           <th>Reporter</th>
           <th>Typ</th>
           <th>Nachricht</th>
-          <th>Upload</th>
+          <th className="text-center">Upload</th>
           <th>Environment</th>
         </THead>
 
