@@ -3,7 +3,7 @@
 # The base images are Docker Hardened Images (see the requirements in
 # docs/setup-local-machine.md). The runtime image has no shell and no package
 # manager and runs as the user node.
-FROM dhi.io/node:24.22.3-alpine3.23-dev@sha256:abe5e2eb4166f422dea213c4181c1ab069f63bb5d4b4bb0878abba2039fefec6 AS build
+FROM dhi.io/node:24.22.3-alpine3.23-dev@sha256:46ca2931c263986bd0dd5bc7d4189ae4a54c9bfd2aea30763f7774a0c8149620 AS build
 RUN corepack enable
 WORKDIR /monorepo
 
