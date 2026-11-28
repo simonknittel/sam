@@ -135,7 +135,6 @@ test("refuses a token of a different audience, an expired token and a token of a
   const tokenOfDifferentAudience = await new SignJWT({
     citizen_id: owner.citizen.id,
     runtime_id: RUNTIME_ID,
-    runtime_kind: RuntimeKind.browser,
     admin_mode: false,
   })
     .setProtectedHeader({ alg: SIGNING_KEY_ALGORITHM, kid: signingKey.keyId })
