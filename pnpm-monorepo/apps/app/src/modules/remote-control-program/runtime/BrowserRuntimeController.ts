@@ -22,7 +22,6 @@ import {
   claimLegacyLogFolder,
   isBrowserRuntimeSupported,
   loadLogFolder,
-  LogFolderPick,
   pickLogFolder,
   requestLogFolderPermission,
 } from "./logFolder";
@@ -124,25 +123,10 @@ export class BrowserRuntimeController {
         writeAutostart(localStorage, citizenId, isEnabled);
         this.#update({ isAutostartEnabled: isEnabled });
       },
+      // A different folder starts the reading again in the tab of the runtime (see `BrowserRuntime.start()`)
       selectFolder: async () => {
-        const connection = this.#requireConnection();
-        const pick = await pickLogFolder(citizenId);
-
-        switch (pick) {
-          case LogFolderPick.Cancelled:
-            return false;
-
-          // The live periods are the times of the previous folder
-          case LogFolderPick.OtherFolder:
-            connection.layer.removeLivePeriods();
-            break;
-
-          case LogFolderPick.SameFolder:
-            break;
-
-          default:
-            throw new Error(`Unknown folder pick: ${pick satisfies never}`);
-        }
+        this.#requireConnection();
+        if (!(await pickLogFolder(citizenId))) return false;
 
         await this.#sendCommand({ type: TabCommandType.Start });
         return true;
@@ -274,9 +258,9 @@ export class BrowserRuntimeController {
   }
 
   /**
-   * The user logs out: the runtime of the citizen stops without a
-   * continuation, and all tabs of the citizen leave the election. A tab
-   * starts the runtime again only after a new page load.
+   * The user logs out: the runtime of the citizen stops, the next runtime
+   * obeys the autostart, and all tabs of the citizen leave the election. A
+   * tab starts the runtime again only after a new page load.
    */
   endSession() {
     const connection = this.#connection;
@@ -380,9 +364,9 @@ export class BrowserRuntimeController {
   }
 
   /**
-   * The runtime gives its live period and its run record to the next tab
-   * before the tab releases the lock. At a logout, it ends without a
-   * continuation.
+   * The runtime writes its run record for the next tab before the tab
+   * releases the lock. The next tab starts a new runtime. At a logout, the
+   * runtime removes its run record.
    */
   #leaveElection(connection: TabConnection, endsSession = false) {
     connection.lockRequest?.abort();
@@ -512,7 +496,7 @@ export class BrowserRuntimeController {
    * runtime
    *
    * @param shouldStart The runtime must run (the autostart, a start, or the
-   * continuation of a previous runtime)
+   * run record of a previous runtime)
    */
   async #applyFolder(
     connection: TabConnection,

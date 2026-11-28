@@ -37,7 +37,7 @@ export const useBrowserRuntime = (): BrowserRuntimeHandle | null => {
 
 /**
  * For the logout, before the end of the session: the runtime of the citizen
- * stops without a continuation in all tabs of this browser (see
+ * stops in all tabs of this browser (see
  * `BrowserRuntimeController.endSession()`). Thus it does not read or upload
  * for a different citizen who logs in next in the same browser.
  */

@@ -13,17 +13,17 @@ The browser runtime of the Remote Control Program runs on all SAM pages for a us
 
 ## Citizens
 
-- Each citizen has an own runtime in the browser. Each value in the browser storage, the Web Lock and the BroadcastChannel have the citizen id in their name (`toCitizenKey()` of the package). Thus a citizen who logs in after a different citizen in the same browser profile never uploads with the settings, the live periods or the log folder of the other citizen.
+- Each citizen has an own runtime in the browser. Each value in the browser storage, the Web Lock and the BroadcastChannel have the citizen id in their name (`toCitizenKey()` of the package). Thus a citizen who logs in after a different citizen in the same browser profile never uploads with the settings or the log folder of the other citizen.
 - The folder handle and the autostart of the old Log Analyzer go to the first citizen whose runtime starts in the browser. Then the old keys go away.
-- The logout (`useEndBrowserRuntimeSession()` before `signOut()`) stops the runtime without a continuation in all tabs of the citizen.
+- The logout (`useEndBrowserRuntimeSession()` before `signOut()`) stops the runtime in all tabs of the citizen. The next runtime of the citizen obeys the autostart.
 - The runtime does not use a connection token of a different citizen: after a login with a different account in a different tab, it ends with `ChannelEndReason.CitizenChanged`.
 
 ## Tabs
 
 - The tabs of a citizen in one browser request the Web Lock of the citizen (`getBrowserRuntimeChannelName()` in `tabMessages.ts`). The tab that holds it (the leader) runs the runtime.
 - The leader sends its state and the own entries to the other tabs (the followers) through the BroadcastChannel with the same name. The followers send their commands to it (see `TabMessageType`). A command fails with `NoAnswer` when a different tab becomes the leader.
-- When the leader closes (`pagehide`), it ends its live period and writes its run record, and then releases the lock. The next tab gets the lock and continues: it starts when the previous runtime ran a short time before (`TAB_CHANGE_GAP_MILLISECONDS` of the package), else when the autostart is on. It also continues the live period, thus the change of the active tab makes no gap in the upload. A stopped runtime stays stopped.
-- A stop of the owner (`stop()`), a logout, or a lost access to the folder ends the live period without a continuation. The Unleash flag that turns off the Remote Control Program and a different log folder remove all live periods. Thus the entries of the stopped time stay on the machine (decision 27 of the concept).
+- When the leader closes (`pagehide`), it writes its run record, and then releases the lock. The next tab gets the lock and starts a new runtime when the previous runtime ran a short time before (`RUN_RECORD_MAXIMUM_AGE_MILLISECONDS` of the package), else when the autostart is on. A stopped runtime stays stopped.
+- Each runtime uploads automatically only the entries from its own start, and keeps this time only in memory (see [Local access layer](../../../../../../../docs/remote-control-program/README.md#local-access-layer)). Thus the entries of the seconds between two tabs stay on the machine.
 
 ## Hooks
 
@@ -39,9 +39,9 @@ The browser runtime of the Remote Control Program runs on all SAM pages for a us
 
 The names are in the files of the table. Each name ends with `:<citizen id>`.
 
-| Value                                                  | Storage                                   | File                                   |
-| ------------------------------------------------------ | ----------------------------------------- | -------------------------------------- |
-| The handle of the log folder                           | IndexedDB (default store of `idb-keyval`) | `logFolder.ts`                         |
-| The autostart and the id of the runtime                | `localStorage`                            | `browserSettings.ts`                   |
-| The run record of the last runtime                     | `localStorage`                            | `runRecord.ts` of the package          |
-| The local access layer: the rules and the live periods | `localStorage`                            | `localAccessStorage.ts` of the package |
+| Value                                   | Storage                                   | File                                   |
+| --------------------------------------- | ----------------------------------------- | -------------------------------------- |
+| The handle of the log folder            | IndexedDB (default store of `idb-keyval`) | `logFolder.ts`                         |
+| The autostart and the id of the runtime | `localStorage`                            | `browserSettings.ts`                   |
+| The run record of the last runtime      | `localStorage`                            | `runRecord.ts` of the package          |
+| The local access layer: the rules       | `localStorage`                            | `localAccessStorage.ts` of the package |

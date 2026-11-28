@@ -42,8 +42,8 @@ export enum TabMessageType {
   /** Leader to the follower of the command */
   CommandAnswered = "command_answered",
   /**
-   * Any tab to all: the user logs out. The runtime stops without a
-   * continuation, and all tabs leave the election.
+   * Any tab to all: the user logs out. The runtime stops, and all tabs leave
+   * the election.
    */
   SessionEnded = "session_ended",
 }
