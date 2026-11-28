@@ -32,7 +32,7 @@ Tests that use this data:
 
 - `description`
 - `lines`: the lines of the start of a complete file, each without its `\n`. A line of a file with CRLF line ends has a `\r` at its end.
-- `game_channel`, `game_version`: the values of the header, or null.
+- `game_environment`, `game_build`: the values of the header, or null.
 
 ## `protocol-messages/`
 
@@ -57,12 +57,13 @@ Log files of the game in the folders of the game. The handles are invented. The 
 | `LIVE/logbackups/Game Build(10498765) 21 Nov 26 (17 58 43).log` | A session that crashed. CRLF line ends. At the end, the crash report without timestamps. |
 | `LIVE/logbackups/Game Build(10512345) 22 Nov 26 (20 14 05).log` | A session that ended. LF line ends. IPv6 addresses, also after a key (`ipv6:`, `peer_addr:`). |
 | `LIVE/logbackups/Game Build(10523456) 23 Nov 26 (19 02 11).log` | The encoding and the character classes. LF line ends. Bytes that are not valid UTF-8: each invalid byte or incomplete sequence becomes one replacement character (U+FFFD), like the `TextDecoder` of a browser. A valid character outside of ASCII. Two lines that give no match, because `\w` and `\d` of JavaScript match only ASCII characters: a shard name with `ü`, and a timestamp with an Arabic-Indic digit. A Rust engine with Unicode classes would match them. |
+| `PTU/Game.log` | A session of the environment PTU with the full header: the build number in line 1 (`BackupNameAttachment`) and the executable in line 5. CRLF line ends. |
 
 `expected-matches.json` contains `files`. Each file has:
 
 - `path`: relative to `log-files/`.
 - `session_start_from_file_name`: the local time in the name of a backup (without a time zone), or null.
-- `game_channel`, `game_version`: the values of the header of the file (see `log-file-header/`), or null. Each match of the file has these values.
+- `game_environment`, `game_build`: the values of the header of the file (see `log-file-header/`), or null. Each match of the file has these values.
 - `matches`: the matches of the log file connector (`createLogFileReader` of the browser runtime, a full read of the file), sorted by `line_number` and `type`.
 
 Each match has:

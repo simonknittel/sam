@@ -70,8 +70,8 @@ interface HashCase {
 interface LogFileHeaderCase {
   readonly description: string;
   readonly lines: readonly string[];
-  readonly game_channel: string | null;
-  readonly game_version: string | null;
+  readonly game_environment: string | null;
+  readonly game_build: string | null;
 }
 
 /** `log-file-header.json` of the export of the shared definitions */
@@ -196,14 +196,14 @@ const applyLogFileHeaderRuleOfExport = (lines: readonly string[]) =>
 describe("readLogFileHeader", () => {
   test.each(logFileHeaderCases)(
     "$description",
-    ({ lines, game_channel, game_version }) => {
+    ({ lines, game_environment, game_build }) => {
       expect(readLogFileHeader(lines.join("\n"))).toEqual({
-        gameChannel: game_channel,
-        gameVersion: game_version,
+        gameEnvironment: game_environment,
+        gameBuild: game_build,
       });
       expect(applyLogFileHeaderRuleOfExport(lines)).toEqual({
-        game_channel,
-        game_version,
+        game_environment,
+        game_build,
       });
     },
   );

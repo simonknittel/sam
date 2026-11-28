@@ -361,7 +361,7 @@
                         "minimum": 1,
                         "maximum": 2147483647
                       },
-                      "game_channel": {
+                      "game_environment": {
                         "anyOf": [
                           {
                             "type": "string",
@@ -373,12 +373,12 @@
                           }
                         ]
                       },
-                      "game_version": {
+                      "game_build": {
                         "anyOf": [
                           {
                             "type": "string",
-                            "maxLength": 32,
-                            "pattern": "^[0-9]+(?:\\.[0-9]+)*$"
+                            "maxLength": 12,
+                            "pattern": "^[0-9]+$"
                           },
                           {
                             "type": "null"
@@ -391,8 +391,8 @@
                       "raw_line",
                       "event_at",
                       "line_number",
-                      "game_channel",
-                      "game_version"
+                      "game_environment",
+                      "game_build"
                     ]
                   }
                 }

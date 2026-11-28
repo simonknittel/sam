@@ -29,12 +29,12 @@ import {
   IP_ADDRESS_REPLACEMENT_PASSES,
 } from "./ipAddressMarker.js";
 import {
-  GAME_CHANNEL_PATTERN,
-  GAME_VERSION_PATTERN,
+  GAME_BUILD_PATTERN,
+  GAME_ENVIRONMENT_PATTERN,
   LOG_FILE_HEADER_LINE_COUNT,
   LOG_FILE_HEADER_PATTERNS,
-  MAXIMUM_GAME_CHANNEL_LENGTH,
-  MAXIMUM_GAME_VERSION_LENGTH,
+  MAXIMUM_GAME_BUILD_LENGTH,
+  MAXIMUM_GAME_ENVIRONMENT_LENGTH,
 } from "./logFileHeader.js";
 import {
   DOWN_MESSAGE_PROTOCOL_VERSIONS,
@@ -144,18 +144,18 @@ describe("the export of the shared definitions", () => {
         line_count: LOG_FILE_HEADER_LINE_COUNT,
         fields: [
           {
-            field: "game_channel",
-            source: LOG_FILE_HEADER_PATTERNS.gameChannel.source,
-            flags: LOG_FILE_HEADER_PATTERNS.gameChannel.flags,
-            value_source: GAME_CHANNEL_PATTERN.source,
-            maximum_value_length: MAXIMUM_GAME_CHANNEL_LENGTH,
+            field: "game_environment",
+            source: LOG_FILE_HEADER_PATTERNS.gameEnvironment.source,
+            flags: LOG_FILE_HEADER_PATTERNS.gameEnvironment.flags,
+            value_source: GAME_ENVIRONMENT_PATTERN.source,
+            maximum_value_length: MAXIMUM_GAME_ENVIRONMENT_LENGTH,
           },
           {
-            field: "game_version",
-            source: LOG_FILE_HEADER_PATTERNS.gameVersion.source,
-            flags: LOG_FILE_HEADER_PATTERNS.gameVersion.flags,
-            value_source: GAME_VERSION_PATTERN.source,
-            maximum_value_length: MAXIMUM_GAME_VERSION_LENGTH,
+            field: "game_build",
+            source: LOG_FILE_HEADER_PATTERNS.gameBuild.source,
+            flags: LOG_FILE_HEADER_PATTERNS.gameBuild.flags,
+            value_source: GAME_BUILD_PATTERN.source,
+            maximum_value_length: MAXIMUM_GAME_BUILD_LENGTH,
           },
         ],
       }),

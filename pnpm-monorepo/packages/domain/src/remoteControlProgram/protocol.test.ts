@@ -8,8 +8,8 @@ import {
   RELAY_LIMITS,
 } from "./catalog.js";
 import {
-  MAXIMUM_GAME_CHANNEL_LENGTH,
-  MAXIMUM_GAME_VERSION_LENGTH,
+  MAXIMUM_GAME_BUILD_LENGTH,
+  MAXIMUM_GAME_ENVIRONMENT_LENGTH,
 } from "./logFileHeader.js";
 import {
   createDownMessage,
@@ -22,8 +22,8 @@ import {
 } from "./protocol.js";
 
 /** The longest values of the header */
-const GAME_CHANNEL = "A".repeat(MAXIMUM_GAME_CHANNEL_LENGTH);
-const GAME_VERSION = "1".repeat(MAXIMUM_GAME_VERSION_LENGTH);
+const GAME_ENVIRONMENT = "A".repeat(MAXIMUM_GAME_ENVIRONMENT_LENGTH);
+const GAME_BUILD = "1".repeat(MAXIMUM_GAME_BUILD_LENGTH);
 
 const createLogEntriesBatch = (entryCount: number, rawLine: string) =>
   createUpMessage(UpMessageType.FeedEntries, {
@@ -36,8 +36,8 @@ const createLogEntriesBatch = (entryCount: number, rawLine: string) =>
       raw_line: rawLine,
       event_at: "2026-11-23T20:00:00.000Z",
       line_number: index + 1,
-      game_channel: GAME_CHANNEL,
-      game_version: GAME_VERSION,
+      game_environment: GAME_ENVIRONMENT,
+      game_build: GAME_BUILD,
     })),
   });
 

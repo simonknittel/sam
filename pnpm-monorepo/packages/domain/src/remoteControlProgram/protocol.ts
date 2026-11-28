@@ -10,7 +10,7 @@ import {
   RELAY_LIMITS,
   RuntimeKind,
 } from "./catalog.js";
-import { gameChannelSchema, gameVersionSchema } from "./logFileHeader.js";
+import { gameBuildSchema, gameEnvironmentSchema } from "./logFileHeader.js";
 
 /**
  * The protocol between a runtime and the relay service over one WebSocket
@@ -377,16 +377,16 @@ const logEntrySchema = z.object({
   /** The number of the line in its log file. The first line has the number 1. */
   line_number: z.int32().min(1),
   /**
-   * The game channel from the header of the log file of the line, for
+   * The game environment from the header of the log file of the line, for
    * example `LIVE` or `PTU` (see `readLogFileHeader`). Null: the header has
    * no valid value.
    */
-  game_channel: gameChannelSchema.nullable(),
+  game_environment: gameEnvironmentSchema.nullable(),
   /**
-   * The game version from the header of the log file of the line, for
-   * example `4.10.201.48085`. Null: the header has no valid value.
+   * The build number from the header of the log file of the line, for
+   * example `13220821`. Null: the header has no valid value.
    */
-  game_version: gameVersionSchema.nullable(),
+  game_build: gameBuildSchema.nullable(),
 });
 
 const logEntriesBatchSchema = z.object({

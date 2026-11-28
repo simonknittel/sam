@@ -1,16 +1,23 @@
 import * as z from "zod";
 
 /**
- * The game channel and the game version of a log file of the game. The game
- * writes them into the first lines of each log file (the header), thus each
- * entry of a file gets the values of its own file, also an entry of a backup
- * in `logbackups/` (decision 17 of `docs/remote-control-program/README.md`).
- * Example of LIVE 4.10.201:
+ * The game environment and the build number of a log file of the game. The
+ * game writes them into the first lines of each log file (the header), thus
+ * each entry of a file gets the values of its own file, also an entry of a
+ * backup in `logbackups/` (decision 17 of
+ * `docs/remote-control-program/README.md`). Example of LIVE with the build
+ * 13220821:
  *
  * ```text
+ * <2026-11-25T19:42:06.738Z> BackupNameAttachment=" Build(13220821) 25 Nov 26 (20 41 58)"  -- used by backup system
  * <2026-11-25T19:42:06.738Z> Executable: C:\Program Files\Roberts Space Industries\StarCitizen\LIVE\Bin64\StarCitizen.exe
- * <2026-11-25T19:42:06.738Z> FileVersion: 4.10.201.48085
  * ```
+ *
+ * The RSI Launcher calls LIVE, PTU and the others "Game Environment". It
+ * shows a version such as `4.10.3-live.13220821`, which it gets from a web
+ * service of RSI. Only the last part, the build number, is in the files of
+ * the game. The line `FileVersion:` of the header has a different version,
+ * which the launcher does not show.
  *
  * The rule is a part of the shared definitions (principle 11). The export
  * for the desktop companion contains the limit, the patterns and the checks
@@ -20,9 +27,9 @@ import * as z from "zod";
 
 /**
  * Only the first lines of a log file are the header. The game writes the
- * executable and the version in the lines 5 and 6 (LIVE 4.10.201 and PTU
- * 5.0.202). The limit leaves space for more lines before them, and a line of
- * the session after the header cannot change the values.
+ * build number in line 1 and the executable in line 5. The limit leaves space
+ * for more lines before them, and a line of the session after the header
+ * cannot change the values.
  */
 export const LOG_FILE_HEADER_LINE_COUNT = 30;
 
@@ -30,52 +37,51 @@ export const LOG_FILE_HEADER_LINE_COUNT = 30;
  * The folder names of the launcher have less than 16 characters. The limit
  * leaves space for longer names.
  */
-export const MAXIMUM_GAME_CHANNEL_LENGTH = 32;
+export const MAXIMUM_GAME_ENVIRONMENT_LENGTH = 32;
 
 /**
- * The launcher makes the channel folders with uppercase letters. Thus a
- * different folder before `Bin64` (for example a folder with the name of the
- * user) usually gives no value.
+ * The launcher makes the folders of the environments with uppercase letters.
+ * Thus a different folder before `Bin64` (for example a folder with the name
+ * of the user) usually gives no value.
  */
-export const GAME_CHANNEL_PATTERN = /^[A-Z0-9][A-Z0-9._-]*$/;
+export const GAME_ENVIRONMENT_PATTERN = /^[A-Z0-9][A-Z0-9._-]*$/;
 
 /**
- * The version of a Windows executable has four numbers of 16 bits each, thus
- * a maximum of 23 characters. The limit leaves space for a different format.
+ * The build numbers have 8 digits. The limit leaves space for more digits,
+ * and refuses a different value of the line.
  */
-export const MAXIMUM_GAME_VERSION_LENGTH = 32;
+export const MAXIMUM_GAME_BUILD_LENGTH = 12;
 
-export const GAME_VERSION_PATTERN = /^[0-9]+(?:\.[0-9]+)*$/;
+export const GAME_BUILD_PATTERN = /^[0-9]+$/;
 
 /**
- * The name of the folder of the game channel, for example `LIVE`, `PTU`,
+ * The name of the folder of the game environment, for example `LIVE`, `PTU`,
  * `EPTU`, `HOTFIX` or `TECH-PREVIEW`. Only the name leaves the machine, never
  * the path of the executable: the path can contain the name of the user.
  */
-export const gameChannelSchema = z
+export const gameEnvironmentSchema = z
   .string()
-  .max(MAXIMUM_GAME_CHANNEL_LENGTH)
-  .regex(GAME_CHANNEL_PATTERN);
+  .max(MAXIMUM_GAME_ENVIRONMENT_LENGTH)
+  .regex(GAME_ENVIRONMENT_PATTERN);
 
 /**
- * The version of the executable (`FileVersion`), for example
- * `4.10.201.48085`. The field `Version` of `build_manifest.id` of the same
- * build has the same value.
+ * The build number of the game, for example `13220821`. The names of the
+ * backups in `logbackups/` contain the same number.
  */
-export const gameVersionSchema = z
+export const gameBuildSchema = z
   .string()
-  .max(MAXIMUM_GAME_VERSION_LENGTH)
-  .regex(GAME_VERSION_PATTERN);
+  .max(MAXIMUM_GAME_BUILD_LENGTH)
+  .regex(GAME_BUILD_PATTERN);
 
 /** The values of the header. Null: the header has no valid value. */
 export interface LogFileHeader {
-  readonly gameChannel: string | null;
-  readonly gameVersion: string | null;
+  readonly gameEnvironment: string | null;
+  readonly gameBuild: string | null;
 }
 
 export const EMPTY_LOG_FILE_HEADER: LogFileHeader = {
-  gameChannel: null,
-  gameVersion: null,
+  gameEnvironment: null,
+  gameBuild: null,
 };
 
 /**
@@ -86,9 +92,10 @@ export const EMPTY_LOG_FILE_HEADER: LogFileHeader = {
  */
 export const LOG_FILE_HEADER_PATTERNS = {
   /** The name of the folder before `Bin64`. The separator can be `\` or `/`. */
-  gameChannel:
+  gameEnvironment:
     /^<[^>]*> Executable: (?:[^\\/]*[\\/])*(?<value>[^\\/]*)[\\/]Bin64[\\/]StarCitizen\.exe$/,
-  gameVersion: /^<[^>]*> FileVersion: (?<value>[0-9.]*)$/,
+  /** The text after the build number (the start of the session) can change */
+  gameBuild: /^<[^>]*> BackupNameAttachment=" Build\((?<value>[0-9]*)\)/,
 } as const satisfies Record<keyof LogFileHeader, RegExp>;
 
 const findHeaderValue = (
@@ -125,7 +132,7 @@ export const readLogFileHeader = (
     header = EMPTY_LOG_FILE_HEADER,
   }: ReadLogFileHeaderOptions = {},
 ): LogFileHeader => {
-  let { gameChannel, gameVersion } = header;
+  let { gameEnvironment, gameBuild } = header;
 
   let lineStart = 0;
   for (
@@ -140,14 +147,14 @@ export const readLogFileHeader = (
       ? lineWithCarriageReturn.slice(0, -1)
       : lineWithCarriageReturn;
 
-    gameChannel ??= findHeaderValue(
-      LOG_FILE_HEADER_PATTERNS.gameChannel,
-      gameChannelSchema,
+    gameEnvironment ??= findHeaderValue(
+      LOG_FILE_HEADER_PATTERNS.gameEnvironment,
+      gameEnvironmentSchema,
       line,
     );
-    gameVersion ??= findHeaderValue(
-      LOG_FILE_HEADER_PATTERNS.gameVersion,
-      gameVersionSchema,
+    gameBuild ??= findHeaderValue(
+      LOG_FILE_HEADER_PATTERNS.gameBuild,
+      gameBuildSchema,
       line,
     );
 
@@ -155,5 +162,5 @@ export const readLogFileHeader = (
     lineStart = lineFeedIndex + 1;
   }
 
-  return { gameChannel, gameVersion };
+  return { gameEnvironment, gameBuild };
 };

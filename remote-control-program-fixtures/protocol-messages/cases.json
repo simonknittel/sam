@@ -156,8 +156,8 @@
               "raw_line": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> address[IP_REDACTED] port[64310] shard[pub_euw1b_10523456_104] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
               "event_at": "2026-11-23T18:03:33.418Z",
               "line_number": 3,
-              "game_channel": "LIVE",
-              "game_version": "4.4.160.10523456"
+              "game_environment": "LIVE",
+              "game_build": "10523456"
             }
           ]
         }
@@ -199,8 +199,8 @@
               "raw_line": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> shard[pub_euw1b_10523456_104]",
               "event_at": "2026-11-23T18:03:33.418Z",
               "line_number": 3,
-              "game_channel": "LIVE",
-              "game_version": "4.4.160.10523456"
+              "game_environment": "LIVE",
+              "game_build": "10523456"
             }
           ]
         }
@@ -225,8 +225,8 @@
               "raw_line": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> shard[pub_euw1b_10523456_104]",
               "event_at": "2026-11-23T18:03:33.418",
               "line_number": 3,
-              "game_channel": "LIVE",
-              "game_version": "4.4.160.10523456"
+              "game_environment": "LIVE",
+              "game_build": "10523456"
             }
           ]
         }
@@ -257,7 +257,7 @@
       }
     },
     {
-      "description": "feed_entries with an entry without a game channel and a game version: the header of its log file has no valid values",
+      "description": "feed_entries with an entry without a game environment and a game build: the header of its log file has no valid values",
       "direction": "up",
       "valid": true,
       "message": {
@@ -275,15 +275,15 @@
               "raw_line": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> address[IP_REDACTED] port[64310] shard[pub_euw1b_10523456_104] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
               "event_at": "2026-11-23T18:03:33.418Z",
               "line_number": 3,
-              "game_channel": null,
-              "game_version": null
+              "game_environment": null,
+              "game_build": null
             }
           ]
         }
       }
     },
     {
-      "description": "feed_entries with an entry without the field game_version: the field is necessary, also when its value is null",
+      "description": "feed_entries with an entry without the field game_build: the field is necessary, also when its value is null",
       "direction": "up",
       "valid": false,
       "message": {
@@ -301,14 +301,14 @@
               "raw_line": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> address[IP_REDACTED] port[64310] shard[pub_euw1b_10523456_104] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
               "event_at": "2026-11-23T18:03:33.418Z",
               "line_number": 3,
-              "game_channel": "LIVE"
+              "game_environment": "LIVE"
             }
           ]
         }
       }
     },
     {
-      "description": "feed_entries with a path as the game channel",
+      "description": "feed_entries with a path as the game environment",
       "direction": "up",
       "valid": false,
       "message": {
@@ -326,15 +326,15 @@
               "raw_line": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> address[IP_REDACTED] port[64310] shard[pub_euw1b_10523456_104] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
               "event_at": "2026-11-23T18:03:33.418Z",
               "line_number": 3,
-              "game_channel": "C:\\Program Files\\Roberts Space Industries\\StarCitizen\\LIVE",
-              "game_version": "4.4.160.10523456"
+              "game_environment": "C:\\Program Files\\Roberts Space Industries\\StarCitizen\\LIVE",
+              "game_build": "10523456"
             }
           ]
         }
       }
     },
     {
-      "description": "feed_entries with a game channel in lowercase letters",
+      "description": "feed_entries with a game environment in lowercase letters",
       "direction": "up",
       "valid": false,
       "message": {
@@ -352,15 +352,15 @@
               "raw_line": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> address[IP_REDACTED] port[64310] shard[pub_euw1b_10523456_104] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
               "event_at": "2026-11-23T18:03:33.418Z",
               "line_number": 3,
-              "game_channel": "live",
-              "game_version": "4.4.160.10523456"
+              "game_environment": "live",
+              "game_build": "10523456"
             }
           ]
         }
       }
     },
     {
-      "description": "feed_entries with a game version of more than 32 characters",
+      "description": "feed_entries with a game build of more than 12 digits",
       "direction": "up",
       "valid": false,
       "message": {
@@ -378,8 +378,34 @@
               "raw_line": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> address[IP_REDACTED] port[64310] shard[pub_euw1b_10523456_104] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
               "event_at": "2026-11-23T18:03:33.418Z",
               "line_number": 3,
-              "game_channel": "LIVE",
-              "game_version": "1.2222222222222222222222222222222"
+              "game_environment": "LIVE",
+              "game_build": "1234567890123"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "description": "feed_entries with a file version as the game build: the game build has only digits",
+      "direction": "up",
+      "valid": false,
+      "message": {
+        "type": "feed_entries",
+        "id": "9a4d7e2c-1b6f-4e3a-8c5d-7f2e9b0a6c13",
+        "protocol_version": 2,
+        "content": {
+          "capability_id": "log_entries",
+          "capability_version": 2,
+          "connector_id": "log_file",
+          "connector_version": 2,
+          "entries": [
+            {
+              "type": "joinPu",
+              "raw_line": "<2026-11-23T18:03:33.418Z> [Notice] <Join PU> address[IP_REDACTED] port[64310] shard[pub_euw1b_10523456_104] locationId[-281470681677823] [Team_GameServices][GIM][Matchmaking]",
+              "event_at": "2026-11-23T18:03:33.418Z",
+              "line_number": 3,
+              "game_environment": "LIVE",
+              "game_build": "4.10.201.48085"
             }
           ]
         }

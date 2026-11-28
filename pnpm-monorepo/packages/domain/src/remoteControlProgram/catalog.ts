@@ -94,8 +94,8 @@ export type CapabilityDefinition = FeedCapabilityDefinition;
 export const LOG_ENTRIES_CAPABILITY = {
   id: CapabilityId.LogEntries,
   /**
-   * Version 2 adds the game channel and the game version of the log file to
-   * each entry (decision 17). The relay accepts only version 2.
+   * Version 2 adds the game environment and the build number of the log file
+   * to each entry (decision 17). The relay accepts only version 2.
    */
   version: 2,
   kind: CapabilityKind.Feed,
