@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { createLogFileReader } from "../logFile/logFileReader.js";
 import { createLogFolderReader } from "./logFolderReader.js";
 import type { LogParser } from "./logParserClient.js";
@@ -24,10 +24,15 @@ class FakeFile {
 const createLookupError = (name: string, entry: unknown) =>
   new DOMException(name, entry ? "TypeMismatchError" : "NotFoundError");
 
+/** The error of the File System Access API for a folder without the access of the operating system */
+const createReadError = (name: string) =>
+  new DOMException(name, "NotReadableError");
+
 /** A folder of the File System Access API, with the files in memory */
 class FakeFolder {
   readonly kind = "directory";
   readonly name: string;
+  isReadable = true;
   readonly #entries = new Map<string, FakeFolder | FakeFile>();
 
   constructor(name: string) {
@@ -48,6 +53,8 @@ class FakeFolder {
   }
 
   getFileHandle(name: string) {
+    if (!this.isReadable) return Promise.reject(createReadError(name));
+
     const entry = this.#entries.get(name);
     return entry instanceof FakeFile
       ? Promise.resolve(entry)
@@ -55,6 +62,8 @@ class FakeFolder {
   }
 
   getDirectoryHandle(name: string) {
+    if (!this.isReadable) return Promise.reject(createReadError(name));
+
     const entry = this.#entries.get(name);
     return entry instanceof FakeFolder
       ? Promise.resolve(entry)
@@ -62,8 +71,10 @@ class FakeFolder {
   }
 
   values() {
+    const { isReadable, name } = this;
     const entries = Array.from(this.#entries.values());
     return (async function* () {
+      if (!isReadable) throw createReadError(name);
       yield* entries;
     })();
   }
@@ -154,10 +165,13 @@ const readFolder = async (folder: FakeFolder) => {
     folder as unknown as FileSystemDirectoryHandle,
     createParser(),
   );
-  const { matches, hasEnvironmentFolder } = await reader.read([ALL_TIME]);
+  const { matches, hasEnvironmentFolder, failedFileCount } = await reader.read([
+    ALL_TIME,
+  ]);
 
   return {
     hasEnvironmentFolder,
+    failedFileCount,
     entries: matches
       .map(({ rawLine, gameEnvironment, gameBuild }) => ({
         port: Number(/port\[(?<port>\d+)\]/.exec(rawLine)?.groups?.port),
@@ -168,12 +182,17 @@ const readFolder = async (folder: FakeFolder) => {
   };
 };
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 test("reads Game.log and the backups of all environment folders, each entry with the header of its own file", async () => {
   const folder = createLauncherFolder().getFolder("StarCitizen");
 
   // The game environment is the name of the folder in the header, not its path
   expect(await readFolder(folder)).toEqual({
     hasEnvironmentFolder: true,
+    failedFileCount: 0,
     entries: [
       { port: 1101, gameEnvironment: "LIVE", gameBuild: LIVE_BUILD },
       { port: 1102, gameEnvironment: "PTU", gameBuild: PTU_BUILD },
@@ -210,7 +229,24 @@ test.each([
 
     expect(await readFolder(folder)).toEqual({
       hasEnvironmentFolder: false,
+      failedFileCount: 0,
       entries: [],
     });
   },
 );
+
+test("an unreadable logbackups/ of one environment folder does not stop the read of the others, but an unreadable selected folder does", async () => {
+  vi.spyOn(console, "error").mockImplementation(() => undefined);
+  const launcherFolder = createLauncherFolder();
+  launcherFolder.getFolder("StarCitizen/LIVE/logbackups").isReadable = false;
+
+  const { hasEnvironmentFolder, failedFileCount, entries } =
+    await readFolder(launcherFolder);
+
+  expect(hasEnvironmentFolder).toBe(true);
+  expect(failedFileCount).toBe(1);
+  expect(entries.map(({ port }) => port)).toEqual([1101, 1102]);
+
+  launcherFolder.isReadable = false;
+  await expect(readFolder(launcherFolder)).rejects.toThrow(DOMException);
+});

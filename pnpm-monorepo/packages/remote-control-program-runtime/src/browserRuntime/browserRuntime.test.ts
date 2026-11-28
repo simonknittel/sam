@@ -108,6 +108,7 @@ const createLogFolder = (name: string) => {
             isStopped,
             oldestSessionStart: null,
             hasEnvironmentFolder,
+            failedFileCount: 0,
           };
         },
         stopRead: () => stopRead(),

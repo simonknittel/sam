@@ -71,6 +71,11 @@ export interface ReadResult {
   readonly newestIsoDate: string | null;
   /** A stop ended the read before its last file. The next read continues it. */
   readonly isStopped: boolean;
+  /**
+   * The files that the reader could not read. Their state stays, thus the
+   * next read tries the same lines again.
+   */
+  readonly failedFileCount: number;
 }
 
 export type ResultMessage =

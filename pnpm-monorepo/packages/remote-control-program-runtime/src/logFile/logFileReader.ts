@@ -396,6 +396,7 @@ export const createLogFileReader = () => {
 
     const matches: RawMatch[] = [];
     let isStopped = false;
+    let failedFileCount = 0;
 
     for (const logFile of changedFiles) {
       if (shouldStop?.()) {
@@ -408,8 +409,8 @@ export const createLogFileReader = () => {
       try {
         states.set(path, await readFile(logFile, states.get(path), matches));
       } catch (error) {
-        /** The state stays, thus the next read tries the same lines again */
         console.error("[Log Analyzer] Error reading %s:", path, error);
+        failedFileCount += 1;
       }
     }
 
@@ -417,6 +418,7 @@ export const createLogFileReader = () => {
       matches,
       newestIsoDate: findNewestIsoDate(states.values()),
       isStopped,
+      failedFileCount,
     };
   };
 };

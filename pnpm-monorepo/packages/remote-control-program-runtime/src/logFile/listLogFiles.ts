@@ -10,6 +10,11 @@ import type { LogFile } from "./types.js";
  * and `PTU`. Each environment folder has its own `Game.log` and
  * `logbackups/`. The connector reads no other file, also not the other logs
  * of the game (for example in `Bin64/` or `Data/`).
+ *
+ * Only an error of the selected folder (or of its folder `StarCitizen` in the
+ * folder of the launcher) stops the listing. A `Game.log` or a `logbackups/`
+ * that cannot be read does not hide the files of the other environment
+ * folders, like in the desktop companion.
  */
 
 const LIVE_LOG_FILE_NAME = "Game.log";
@@ -40,6 +45,11 @@ export interface LogFileListing {
   /** Zero when the selected folder has no environment folder */
   readonly environmentFolderCount: number;
   readonly logFiles: LogFile[];
+  /**
+   * The log files and the `logbackups/` folders that could not be read. The
+   * listing skips them, and the next listing tries them again.
+   */
+  readonly failedFileCount: number;
 }
 
 const isMissing = (error: unknown) =>
@@ -73,11 +83,21 @@ const isEnvironmentFolder = async (folder: FileSystemDirectoryHandle) =>
   (await findFile(folder, BUILD_MANIFEST_FILE_NAME)) !== null ||
   (await findFile(folder, LIVE_LOG_FILE_NAME)) !== null;
 
+/**
+ * Like the desktop companion: a subfolder that cannot be read is no
+ * environment folder
+ */
+const isReadableEnvironmentFolder = (folder: FileSystemDirectoryHandle) =>
+  isEnvironmentFolder(folder).catch(() => false);
+
 /** The direct subfolders that are environment folders, sorted by their name */
 const listEnvironmentFolders = async (folder: Folder) => {
   const environmentFolders: Folder[] = [];
   for await (const handle of folder.handle.values())
-    if (handle.kind === "directory" && (await isEnvironmentFolder(handle)))
+    if (
+      handle.kind === "directory" &&
+      (await isReadableEnvironmentFolder(handle))
+    )
       environmentFolders.push({
         handle,
         path: `${folder.path}/${handle.name}`,
@@ -112,58 +132,77 @@ const findEnvironmentFolders = async (
 
 /**
  * A backup with a date in its name no longer changes, thus `knownFiles` saves
- * the call of `getFile()` for it. Null when the file cannot be read.
+ * the call of `getFile()` for it
  */
 const readLogFile = async (
   handle: FileSystemFileHandle,
   path: string,
   knownFiles: ReadonlyMap<string, LogFile>,
-): Promise<LogFile | null> => {
+): Promise<LogFile> => {
   const knownFile = knownFiles.get(path);
   if (knownFile && getSessionStartFromFileName(handle.name) !== null)
     return knownFile;
 
-  try {
-    return { path, file: await handle.getFile() };
-  } catch (error) {
-    console.error("[Log Analyzer] Error getting file: %s", handle.name, error);
-    return null;
-  }
+  return { path, file: await handle.getFile() };
 };
 
-/** `Game.log` and the `.log` files in `logbackups/` of an environment folder */
+/**
+ * `Game.log` and the `.log` files in `logbackups/` of an environment folder.
+ * A part that cannot be read counts as one failed file. The files after an
+ * error of `logbackups/` are not known.
+ */
 const listEnvironmentLogFiles = async (
   environmentFolder: Folder,
   knownFiles: ReadonlyMap<string, LogFile>,
 ) => {
-  const logFiles: (LogFile | null)[] = [];
+  const logFiles: LogFile[] = [];
+  let failedFileCount = 0;
 
-  const liveLogFile = await findFile(
-    environmentFolder.handle,
-    LIVE_LOG_FILE_NAME,
-  );
-  if (liveLogFile)
-    logFiles.push(
-      await readLogFile(
-        liveLogFile,
-        `${environmentFolder.path}/${LIVE_LOG_FILE_NAME}`,
-        knownFiles,
-      ),
+  const skipFailure = async (readPart: () => Promise<void>) => {
+    try {
+      await readPart();
+    } catch (error) {
+      console.error("[Log Analyzer] Error listing a log file:", error);
+      failedFileCount += 1;
+    }
+  };
+
+  await skipFailure(async () => {
+    const liveLogFile = await findFile(
+      environmentFolder.handle,
+      LIVE_LOG_FILE_NAME,
     );
+    if (liveLogFile)
+      logFiles.push(
+        await readLogFile(
+          liveLogFile,
+          `${environmentFolder.path}/${LIVE_LOG_FILE_NAME}`,
+          knownFiles,
+        ),
+      );
+  });
 
-  const backupFolder = await findFolder(environmentFolder, BACKUP_FOLDER_NAME);
-  if (backupFolder)
+  await skipFailure(async () => {
+    const backupFolder = await findFolder(
+      environmentFolder,
+      BACKUP_FOLDER_NAME,
+    );
+    if (!backupFolder) return;
+
     for await (const handle of backupFolder.handle.values())
       if (handle.kind === "file" && handle.name.endsWith(LOG_FILE_EXTENSION))
-        logFiles.push(
-          await readLogFile(
-            handle,
-            `${backupFolder.path}/${handle.name}`,
-            knownFiles,
-          ),
-        );
+        await skipFailure(async () => {
+          logFiles.push(
+            await readLogFile(
+              handle,
+              `${backupFolder.path}/${handle.name}`,
+              knownFiles,
+            ),
+          );
+        });
+  });
 
-  return logFiles.filter((logFile) => logFile !== null);
+  return { logFiles, failedFileCount };
 };
 
 /**
@@ -177,10 +216,19 @@ export const listLogFiles = async (
   const environmentFolders = await findEnvironmentFolders(selectedFolder);
 
   const logFiles: LogFile[] = [];
-  for (const environmentFolder of environmentFolders)
-    logFiles.push(
-      ...(await listEnvironmentLogFiles(environmentFolder, knownFiles)),
+  let failedFileCount = 0;
+  for (const environmentFolder of environmentFolders) {
+    const listing = await listEnvironmentLogFiles(
+      environmentFolder,
+      knownFiles,
     );
+    logFiles.push(...listing.logFiles);
+    failedFileCount += listing.failedFileCount;
+  }
 
-  return { environmentFolderCount: environmentFolders.length, logFiles };
+  return {
+    environmentFolderCount: environmentFolders.length,
+    logFiles,
+    failedFileCount,
+  };
 };

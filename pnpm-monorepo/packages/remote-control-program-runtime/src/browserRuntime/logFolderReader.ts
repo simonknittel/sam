@@ -23,6 +23,12 @@ export interface LogFolderRead {
    * `LIVE` (see `listLogFiles()`). Then it has no log files.
    */
   readonly hasEnvironmentFolder: boolean;
+  /**
+   * The log files and the `logbackups/` folders that the listing or the
+   * reader could not read. The read skipped them, and the next read tries
+   * them again.
+   */
+  readonly failedFileCount: number;
 }
 
 /** The log file connector for one log folder */
@@ -48,10 +54,8 @@ export const createLogFolderReader = (
 
   return {
     read: async (windows) => {
-      const { environmentFolderCount, logFiles } = await listLogFiles(
-        folder,
-        knownLogFiles,
-      );
+      const { environmentFolderCount, logFiles, failedFileCount } =
+        await listLogFiles(folder, knownLogFiles);
       knownLogFiles = new Map(
         logFiles.map((logFile) => [logFile.path, logFile]),
       );
@@ -72,6 +76,7 @@ export const createLogFolderReader = (
         ...result,
         oldestSessionStart: findOldestSessionStart(logFiles),
         hasEnvironmentFolder: environmentFolderCount > 0,
+        failedFileCount: failedFileCount + result.failedFileCount,
       };
     },
     stopRead: () => parser.stopReads(),
