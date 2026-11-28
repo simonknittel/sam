@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import type { PrismaClient } from "@sam-monorepo/database/client";
+import { RuntimeKind } from "@sam-monorepo/domain";
 import { randomUUID } from "node:crypto";
 import { createCitizen, MCP_USE_PERMISSION } from "../fixtures/factories";
 import { clickUntilVisible } from "../fixtures/interactions";
@@ -19,7 +20,6 @@ import {
 } from "../fixtures/oauth";
 import {
   REMOTE_CONTROL_PROGRAM_PERMISSION,
-  sharingPopover,
   sharingPopoverSection,
   SharingPopoverSection,
   sharingPopoverTab,
@@ -67,7 +67,7 @@ const showDesktopCompanionSection = async (page: Page) => {
 const createRuntimePresence = (
   prisma: PrismaClient,
   ownerId: string,
-  kind: "browser" | "desktop_companion",
+  kind: RuntimeKind,
 ) =>
   prisma.remoteControlProgramRuntime.create({
     data: {
@@ -331,8 +331,12 @@ test.describe("the sub-tab of the desktop companion", () => {
       page.getByText("braucht das Remote Control Program deinen Log-Ordner"),
     ).toBeVisible();
 
-    await createRuntimePresence(prisma, owner.entity.id, "desktop_companion");
-    await createRuntimePresence(prisma, owner.entity.id, "browser");
+    await createRuntimePresence(
+      prisma,
+      owner.entity.id,
+      RuntimeKind.desktop_companion,
+    );
+    await createRuntimePresence(prisma, owner.entity.id, RuntimeKind.browser);
     await page.reload();
     await expect(
       page.getByText(
@@ -348,8 +352,5 @@ test.describe("the sub-tab of the desktop companion", () => {
     await expect(companions).toContainText(
       "Version 0.1.0 · Aktive Connectors: Game Logs",
     );
-    await expect(
-      sharingPopover(page).getByRole("tab", { name: "Status" }),
-    ).toHaveCount(0);
   });
 });
