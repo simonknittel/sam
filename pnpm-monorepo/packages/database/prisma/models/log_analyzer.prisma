@@ -52,6 +52,14 @@ model LogAnalyzerEntry {
   /// The version of the capability `log_entries` of the batch. NULL like
   /// `runtimeId`.
   capabilityVersion Int?
+  /// The game channel from the header of the log file of the entry, for
+  /// example "LIVE" or "PTU" (`readLogFileHeader()` of the domain). NULL when
+  /// the header has no valid value, and for the entries of the capability
+  /// version 1, which had no game channel.
+  gameChannel       String?
+  /// The game version from the header of the log file of the entry, for
+  /// example "4.10.201.48085". NULL like `gameChannel`.
+  gameVersion       String?
 
   /// The uploading citizen, also after a (soft) delete of the citizen
   createdById String?
