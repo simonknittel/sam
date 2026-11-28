@@ -37,6 +37,8 @@ const entry = (
   uploadState: LogEntryUploadState.LocalOnly,
   liveStatusSignal,
   lineNumber: null,
+  gameChannel: null,
+  gameVersion: null,
 });
 
 const newestFirst = (...entries: IEntry[]) =>

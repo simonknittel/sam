@@ -9,6 +9,7 @@ import { memo } from "react";
 import { PATTERNS, type IEntry } from "../utils/PATTERNS";
 import styles from "./Entry.module.css";
 import { useEntryClock } from "./EntryClock";
+import { EntryGameBuildCell } from "./EntryGameBuildCell";
 import { EntryUploadState } from "./EntryUploadState";
 import { QuickLookToggle } from "./QuickLookToggle";
 
@@ -90,6 +91,11 @@ export const Entry = memo(function Entry({ entry }: Props) {
       </td>
 
       <td className="truncate">{entry.message}</td>
+
+      <EntryGameBuildCell
+        gameChannel={entry.gameChannel}
+        gameVersion={entry.gameVersion}
+      />
     </TRow>
   );
 });

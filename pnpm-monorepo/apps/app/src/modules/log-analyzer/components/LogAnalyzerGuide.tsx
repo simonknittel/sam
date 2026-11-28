@@ -193,6 +193,13 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
           </GuideNote>
 
           <GuideNote>
+            Mit jedem Eintrag gehen auch der Kanal und die Version des Spiels
+            aus seiner Log-Datei an SAM, zum Beispiel LIVE 4.10.201.48085. Die
+            Tabelle zeigt sie in der Spalte <UiLabel>Spielversion</UiLabel>. Bei
+            älteren Einträgen ist die Spalte leer.
+          </GuideNote>
+
+          <GuideNote>
             Wer deine Einträge live sehen darf, legst du unter{" "}
             <UiLabel>Freigaben</UiLabel> fest: einzelne Citizens, Rollen oder
             alle, auf Wunsch nur für eine bestimmte Zeit. Freigaben kannst du
