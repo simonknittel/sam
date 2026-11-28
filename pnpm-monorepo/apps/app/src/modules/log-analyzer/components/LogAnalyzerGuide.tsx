@@ -177,7 +177,7 @@ export const LogAnalyzerGuide = ({ className }: Props) => {
       >
         <GuideNoteList>
           <GuideNote>
-            In der Tabelle zeigt{" "}
+            In der Spalte <UiLabel>Upload</UiLabel> zeigt{" "}
             <FaCloud
               role="img"
               aria-label="die Wolke"

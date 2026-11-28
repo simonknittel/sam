@@ -72,10 +72,6 @@ export const Entry = memo(function Entry({ entry }: Props) {
         />
       </td>
 
-      <td className="text-white/40">
-        <EntryUploadState uploadState={entry.uploadState} />
-      </td>
-
       <td className="flex items-center gap-2 text-white/40">
         <Icon className="shrink-0" />
         <span className="min-w-0 truncate" title={title}>
@@ -91,6 +87,10 @@ export const Entry = memo(function Entry({ entry }: Props) {
       </td>
 
       <td className="truncate">{entry.message}</td>
+
+      <td className="text-white/40">
+        <EntryUploadState uploadState={entry.uploadState} />
+      </td>
 
       <EntryGameBuildCell
         gameEnvironment={entry.gameEnvironment}
