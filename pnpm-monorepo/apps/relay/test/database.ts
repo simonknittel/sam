@@ -79,8 +79,8 @@ export const findLogEntryRows = (ownerCitizenId: string) =>
       type: true,
       lineNumber: true,
       runtimeId: true,
-      gameChannel: true,
-      gameVersion: true,
+      gameEnvironment: true,
+      gameBuild: true,
     },
   });
 

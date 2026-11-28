@@ -56,13 +56,13 @@ const ONE_HOUR_MILLISECONDS = 60 * 60 * 1000;
 
 /** The values of the header of the log file of the entry */
 interface GameBuild {
-  readonly game_channel: string | null;
-  readonly game_version: string | null;
+  readonly game_environment: string | null;
+  readonly game_build: string | null;
 }
 
 const LIVE_BUILD: GameBuild = {
-  game_channel: "LIVE",
-  game_version: "4.10.201.48085",
+  game_environment: "LIVE",
+  game_build: "13220821",
 };
 
 const createJoinPuEntry = (lineNumber: number, gameBuild = LIVE_BUILD) => {
@@ -84,7 +84,7 @@ const BATCH: FeedEntriesContent = {
   connector_version: CONNECTOR_CATALOG[ConnectorId.LogFile].version,
   entries: [
     createJoinPuEntry(1),
-    createJoinPuEntry(2, { game_channel: null, game_version: null }),
+    createJoinPuEntry(2, { game_environment: null, game_build: null }),
   ],
 };
 
@@ -190,15 +190,15 @@ test("a runtime with a valid token connects, announces and uploads", async () =>
       type: LogAnalyzerEntryType.JoinPu,
       lineNumber: 1,
       runtimeId: RUNTIME_ID,
-      gameChannel: "LIVE",
-      gameVersion: "4.10.201.48085",
+      gameEnvironment: "LIVE",
+      gameBuild: "13220821",
     },
     {
       type: LogAnalyzerEntryType.JoinPu,
       lineNumber: 2,
       runtimeId: RUNTIME_ID,
-      gameChannel: null,
-      gameVersion: null,
+      gameEnvironment: null,
+      gameBuild: null,
     },
   ]);
   expect(deliveries).toEqual([
