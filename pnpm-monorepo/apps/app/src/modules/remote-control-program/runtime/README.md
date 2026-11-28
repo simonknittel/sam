@@ -22,7 +22,7 @@ The browser runtime of the Remote Control Program runs on all SAM pages for a us
 
 - The tabs of a citizen in one browser request the Web Lock of the citizen (`getBrowserRuntimeChannelName()` in `tabMessages.ts`). The tab that holds it (the leader) runs the runtime.
 - The leader sends its state and the own entries to the other tabs (the followers) through the BroadcastChannel with the same name. The followers send their commands to it (see `TabMessageType`). A command fails with `NoAnswer` when a different tab becomes the leader.
-- When the leader closes (`pagehide`), it writes its run record, and then releases the lock. The next tab gets the lock and starts a new runtime when the previous runtime ran a short time before (`RUN_RECORD_MAXIMUM_AGE_MILLISECONDS` of the package), else when the autostart is on. A stopped runtime stays stopped.
+- When the leader closes (`pagehide`), it writes its run record, and then releases the lock. The next tab gets the lock and takes the state of the record: it starts a new runtime when the previous runtime ran, and a stopped runtime stays stopped. The runtime writes the record only at the start, at the stop, while it waits for the permission for the folder and when it closes. A crash writes no record. Thus after a crash, the next tab obeys the autostart, except within `RUN_RECORD_MAXIMUM_AGE_MILLISECONDS` of the package after the last start or stop.
 - Each runtime uploads automatically only the entries from its own start, and keeps this time only in memory (see [Local access layer](../../../../../../../docs/remote-control-program/README.md#local-access-layer)). Thus the entries of the seconds between two tabs stay on the machine.
 
 ## Hooks

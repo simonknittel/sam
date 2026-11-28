@@ -47,7 +47,6 @@ import { findRelayKeys, getTimeRange } from "./relayKeys.js";
 import {
   readRunRecord,
   removeRunRecord,
-  RUN_RECORD_INTERVAL_MILLISECONDS,
   RUN_RECORD_MAXIMUM_AGE_MILLISECONDS,
   writeRunRecord,
 } from "./runRecord.js";
@@ -254,7 +253,6 @@ export class BrowserRuntime {
   #readInFlight: Promise<FinishedRead> | null = null;
   #isReadRequested = false;
   #cancelReadTimer: (() => void) | null = null;
-  #cancelRunRecordTimer: (() => void) | null = null;
 
   /** The value that the layer got last */
   #relayState = RelayUploadState.Unknown;
@@ -299,8 +297,6 @@ export class BrowserRuntime {
         RUN_RECORD_MAXIMUM_AGE_MILLISECONDS
         ? previousRecord.isRunning
         : null;
-
-    this.#scheduleRunRecord();
   }
 
   getState() {
@@ -608,31 +604,11 @@ export class BrowserRuntime {
 
   #dispose() {
     this.#isDisposed = true;
-    this.#cancelRunRecordTimer?.();
-    this.#cancelRunRecordTimer = null;
     this.#reader?.dispose();
     this.#reader = null;
     this.#unsubscribeChannel();
     this.#channel.disconnect();
     this.#listeners.clear();
-  }
-
-  #scheduleRunRecord() {
-    this.#cancelRunRecordTimer = this.#timers.schedule(() => {
-      this.#cancelRunRecordTimer = null;
-      if (this.#isDisposed) return;
-
-      // A storage that the user blocked throws
-      try {
-        this.#writeRunRecord();
-      } catch (error) {
-        console.error(
-          "[Remote Control Program] Error writing the run record:",
-          error,
-        );
-      }
-      this.#scheduleRunRecord();
-    }, RUN_RECORD_INTERVAL_MILLISECONDS);
   }
 
   /**

@@ -23,6 +23,7 @@ import {
 } from "./browserRuntimeState.js";
 import type { LogFolderReader } from "./logFolderReader.js";
 import { MAXIMUM_OWN_ENTRIES, OwnEntryStore } from "./ownEntryStore.js";
+import { RUN_RECORD_MAXIMUM_AGE_MILLISECONDS } from "./runRecord.js";
 
 const CITIZEN_ID = "citizen";
 const RUNTIME_ID = "0b9f8a52-6d3e-4c55-9b7a-2f1c4d8e6a10";
@@ -324,6 +325,21 @@ test("after a change of the active tab, the next runtime uploads only the entrie
   secondTab.runtime.stop();
   secondTab.runtime.handOver();
   expect(browser.openTab().runtime.shouldRun(true)).toBe(false);
+});
+
+test("after a crash of the tab of the runtime, the next runtime obeys the autostart", async () => {
+  const browser = createBrowser();
+  const crashedTab = browser.openTab();
+  await crashedTab.start();
+
+  // A crash gives no handover, thus the record of the start gets old
+  await vi.advanceTimersByTimeAsync(
+    RUN_RECORD_MAXIMUM_AGE_MILLISECONDS + SECOND,
+  );
+
+  const nextTab = browser.openTab();
+  expect(nextTab.runtime.shouldRun(false)).toBe(false);
+  expect(nextTab.runtime.shouldRun(true)).toBe(true);
 });
 
 test("the entries that wait for the connection go up after the reconnect, but a stop loses them", async () => {
