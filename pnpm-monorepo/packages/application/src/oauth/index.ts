@@ -9,7 +9,6 @@ export {
   type CreateGrantWithAuthorizationCodeOutput,
 } from "./createGrantWithAuthorizationCode.js";
 export {
-  DESKTOP_COMPANION_CLIENT_NAME,
   getDesktopCompanionClientId,
   getDesktopCompanionClientMetadataDocument,
 } from "./desktopCompanionClient.js";
