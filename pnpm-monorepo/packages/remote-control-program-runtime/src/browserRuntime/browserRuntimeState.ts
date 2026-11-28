@@ -34,7 +34,7 @@ export enum BrowserRuntimeErrorCode {
    * (see `ChannelState.closeReason`) (command)
    */
   RelayNotAvailable = "relay_not_available",
-  /** The app did not tell which entries the relay already has (command) */
+  /** The relay did not tell which entries it already has (command) */
   RelayCheckFailed = "relay_check_failed",
   /**
    * A newer request for older entries replaced the request, or a different

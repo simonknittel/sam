@@ -268,6 +268,7 @@ const createBrowser = () => {
   };
 
   return {
+    storage,
     folder,
     otherFolder,
     relayKeys,
@@ -545,9 +546,10 @@ test("the citizens of one browser profile do not share the run record or the rul
   const secondTab = browser.openTab("second-citizen");
   expect(secondTab.runtime.shouldRun(false)).toBe(false);
   expect(
-    secondTab.runtime.getLocalAccessSettings().logEntryTypes[
-      LogAnalyzerEntryType.JoinPu
-    ],
+    createLocalAccessLayer({
+      storage: browser.storage,
+      citizenId: "second-citizen",
+    }).getSettings().logEntryTypes[LogAnalyzerEntryType.JoinPu],
   ).toBe(false);
 
   browser.turnOnLines("second-citizen");

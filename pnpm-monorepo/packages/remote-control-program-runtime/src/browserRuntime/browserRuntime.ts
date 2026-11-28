@@ -23,7 +23,6 @@ import {
   createLocalAccessLayer,
   RelayUploadState,
   type LocalAccessLayer,
-  type LocalAccessSettings,
   type OlderEntriesTimeRange,
 } from "../localAccess/localAccessLayer.js";
 import type { LocalAccessStorage } from "../localAccess/localAccessStorage.js";
@@ -396,10 +395,6 @@ export class BrowserRuntime {
     if (this.#state.isRunning) void this.#readNow();
   }
 
-  getLocalAccessSettings(): LocalAccessSettings {
-    return this.#layer.getSettings();
-  }
-
   setLogEntryTypes(types: readonly LogAnalyzerEntryType[], isOn: boolean) {
     this.#layer.setLogEntryTypes(types, isOn);
     this.handleLocalAccessChange();
@@ -445,7 +440,7 @@ export class BrowserRuntime {
     } while (read.outcome === ReadOutcome.Stopped);
     if (read.outcome === ReadOutcome.Failed)
       throw new BrowserRuntimeError(BrowserRuntimeErrorCode.ReadFailed);
-    // Like in the desktop companion. The warning has no paths: they can contain the name of the user.
+    // Like in the desktop companion
     if (read.failedFileCount > 0)
       console.warn(
         `[Remote Control Program] The count of older entries is without the entries of the log files that could not be read: ${read.failedFileCount}`,

@@ -25,7 +25,6 @@ export {
   ChannelStatus,
   ConnectionTokenRefusedError,
   type ChannelCloseReason,
-  type ChannelState,
   type ConnectionTokenGrant,
 } from "./channel/channelTypes.js";
 export {
