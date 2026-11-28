@@ -21,7 +21,7 @@ Rules for this document:
 | Service | `sc.game.telemetry.v1.GameTelemetryService` |
 | Calls | `TelemetryStream` (server-streaming, approximately 19 frames each second), `ListTriggerableActions` (112 actions), `TriggerGameAction` |
 | Actions | They work. `emote_wave` gave the status `OK`, and the character waved in the game. |
-| Game version | Not in the interface. The desktop companion finds the build of the running game itself (see [Game version](#game-version)). |
+| Game build | Not in the interface. The desktop companion finds the build of the running game itself (see [Game build](#game-build)). |
 | Browser | No access. A native program on the machine is necessary. |
 
 ## Enable the server
@@ -146,9 +146,9 @@ Test of 2026-11-21: `emote_wave` without a hold time gave `OK` with an empty mes
 
 `USER.cfg` did not contain `server.game.telemetry.trigger.actions.enabled`. Thus, in the test build, each local program can trigger each listed action as soon as the server is on, also `v_self_destruct`.
 
-## Game version
+## Game build
 
-The interface gives no game version: the messages have no field for it, the responses have no metadata, and there is no reflection.
+The interface gives no game build and no game environment: the messages have no field for them, the responses have no metadata, and there is no reflection.
 
 The first lines of `Game.log` give the build number, the folder of the game environment and a file version:
 
@@ -163,7 +163,7 @@ The RSI Launcher calls LIVE, PTU and the others "Game Environment", and shows a 
 
 Each installation also has the file `build_manifest.id` (for example `StarCitizen/PTU/build_manifest.id`) with the fields `Branch`, `Version` and `RequestedP4ChangeNum`. `Version` has the value of `FileVersion`. Test of 2026-11-21: LIVE had `4.10.201.48085`, and PTU had `5.0.202.10025` with the build `13248297`. Both installations can use the same port, and the test could not read the path of the game process.
 
-The log file connector reads the game environment and the build number from the header of each log file (see decision 17 in [Decisions](./README.md#decisions)). The gRPC connector does not use them, because it does not depend on the log file connector (principle 14). For the gRPC connector, the desktop companion finds the build of the running game itself. Step 4 of the [migration](./migration.md#order-of-the-steps) plans the details.
+Decision 17 of the [architecture](./README.md#decisions) tells how each connector finds the game environment and the build number.
 
 ## Requirements for the gRPC connector
 
