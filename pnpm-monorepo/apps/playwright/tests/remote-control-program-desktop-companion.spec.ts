@@ -75,15 +75,15 @@ const createRuntimePresence = (
       ownerId,
       kind,
       runtimeVersion: "0.1.0",
-      protocolVersion: 1,
+      protocolVersion: 2,
       connectedAt: new Date(),
       leaseExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
       announcement: {
         connectors: [
           {
             id: "log_file",
-            version: 1,
-            capabilities: [{ id: "log_entries", version: 1 }],
+            version: 2,
+            capabilities: [{ id: "log_entries", version: 2 }],
           },
         ],
         local_access_layer: {
