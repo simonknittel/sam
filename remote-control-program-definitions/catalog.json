@@ -35,6 +35,7 @@
     "presence_lease_milliseconds": 90000,
     "upload_burst_batches": 5,
     "maximum_feed_entry_keys_per_page": 2000,
+    "maximum_feed_entry_key_pages_per_check": 50,
     "feed_entry_key_request_interval_milliseconds": 1000,
     "feed_entry_key_request_burst_size": 50,
     "maximum_errors_per_minute": 10

@@ -157,6 +157,9 @@ export const CONNECTOR_CATALOG: Readonly<
   },
 };
 
+/** Two limits of `RELAY_LIMITS` have this value */
+const MAXIMUM_FEED_ENTRY_KEY_PAGES_PER_CHECK = 50;
+
 /** The limits of the relay service, which the runtimes also obey */
 export const RELAY_LIMITS = {
   /**
@@ -220,16 +223,22 @@ export const RELAY_LIMITS = {
    */
   maximumFeedEntryKeysPerPage: 2_000,
   /**
+   * The pages of `feed_entry_keys` of one check of a runtime, for example for
+   * the count of a request for older entries: 100,000 keys. Above it, the
+   * runtime sends the entries without a check, and the relay removes the
+   * duplicates.
+   */
+  maximumFeedEntryKeyPagesPerCheck: MAXIMUM_FEED_ENTRY_KEY_PAGES_PER_CHECK,
+  /**
    * The `feed_entry_keys_request`s of one connection: one in each interval,
    * and a burst of `feedEntryKeyRequestBurstSize` after a pause. A runtime
-   * requests the pages of one time window one after the other for the count
-   * of a request for older entries. The burst
-   * covers 100,000 keys at once. Each page is one query of the database,
+   * requests the pages of one check one after the other, thus the burst
+   * covers the pages of one check. Each page is one query of the database,
    * thus the limit bounds this work. A request above the rate gets
    * `rate_limit_exceeded` and counts as an error.
    */
   feedEntryKeyRequestIntervalMilliseconds: 1_000,
-  feedEntryKeyRequestBurstSize: 50,
+  feedEntryKeyRequestBurstSize: MAXIMUM_FEED_ENTRY_KEY_PAGES_PER_CHECK,
   /**
    * A correct runtime almost never gets an error. More errors in one minute
    * show a defect or an attack, thus the relay closes the connection.
