@@ -75,11 +75,11 @@ export const createBackupFile = (at: Date, line: string): BackupFile => {
 /**
  * The installation folder of the stub in the origin private file system of
  * the page. The owner selects it, and the runtime reads the log files of its
- * channel folder.
+ * environment folder.
  */
 const LOG_FOLDER_NAME = "StarCitizen";
 
-const CHANNEL_FOLDER_NAME = "LIVE";
+const ENVIRONMENT_FOLDER_NAME = "LIVE";
 
 const LIVE_LOG_FILE_NAME = "Game.log";
 
@@ -90,7 +90,7 @@ const BACKUP_FOLDER_NAME = "logbackups";
  * picker gives a real folder of the origin private file system, because the
  * browser runtime keeps the handle in IndexedDB and asks it for the read
  * permission. The folder has the layout of an installation: `Game.log` and
- * the backups in `logbackups/` of the channel folder `LIVE`.
+ * the backups in `logbackups/` of the environment folder `LIVE`.
  * `appendLogLines()` adds lines to `Game.log`, as the game does while it
  * runs.
  *
@@ -105,14 +105,14 @@ export const stubDirectoryPicker = (
   page.context().addInitScript(
     ({
       folderName,
-      channelFolderName,
+      environmentFolderName,
       liveFileName,
       backupFolderName,
       fileLines,
       backups,
     }: {
       folderName: string;
-      channelFolderName: string;
+      environmentFolderName: string;
       liveFileName: string;
       backupFolderName: string;
       fileLines: string[];
@@ -158,20 +158,20 @@ export const stubDirectoryPicker = (
           const folder = await root.getDirectoryHandle(folderName, {
             create: true,
           });
-          const channelFolder = await folder.getDirectoryHandle(
-            channelFolderName,
+          const environmentFolder = await folder.getDirectoryHandle(
+            environmentFolderName,
             { create: true },
           );
 
           // A second pick keeps the lines that the test added
-          const hasLiveFile = await channelFolder
+          const hasLiveFile = await environmentFolder
             .getFileHandle(liveFileName)
             .then(
               () => true,
               () => false,
             );
           if (!hasLiveFile) {
-            const backupFolder = await channelFolder.getDirectoryHandle(
+            const backupFolder = await environmentFolder.getDirectoryHandle(
               backupFolderName,
               { create: true },
             );
@@ -181,7 +181,11 @@ export const stubDirectoryPicker = (
                 backup.name,
                 toContent(backup.lines),
               );
-            await writeFile(channelFolder, liveFileName, toContent(fileLines));
+            await writeFile(
+              environmentFolder,
+              liveFileName,
+              toContent(fileLines),
+            );
           }
 
           return folder;
@@ -190,7 +194,7 @@ export const stubDirectoryPicker = (
     },
     {
       folderName: LOG_FOLDER_NAME,
-      channelFolderName: CHANNEL_FOLDER_NAME,
+      environmentFolderName: ENVIRONMENT_FOLDER_NAME,
       liveFileName: LIVE_LOG_FILE_NAME,
       backupFolderName: BACKUP_FOLDER_NAME,
       fileLines: [...lines],
@@ -208,11 +212,13 @@ export const stubDirectoryPicker = (
  */
 export const appendLogLines = (page: Page, lines: readonly string[]) =>
   page.evaluate(
-    async ({ folderName, channelFolderName, liveFileName, newLines }) => {
+    async ({ folderName, environmentFolderName, liveFileName, newLines }) => {
       const root = await navigator.storage.getDirectory();
       const folder = await root.getDirectoryHandle(folderName);
-      const channelFolder = await folder.getDirectoryHandle(channelFolderName);
-      const fileHandle = await channelFolder.getFileHandle(liveFileName);
+      const environmentFolder = await folder.getDirectoryHandle(
+        environmentFolderName,
+      );
+      const fileHandle = await environmentFolder.getFileHandle(liveFileName);
       const { size } = await fileHandle.getFile();
 
       const writable = await fileHandle.createWritable({
@@ -224,7 +230,7 @@ export const appendLogLines = (page: Page, lines: readonly string[]) =>
     },
     {
       folderName: LOG_FOLDER_NAME,
-      channelFolderName: CHANNEL_FOLDER_NAME,
+      environmentFolderName: ENVIRONMENT_FOLDER_NAME,
       liveFileName: LIVE_LOG_FILE_NAME,
       newLines: [...lines],
     },

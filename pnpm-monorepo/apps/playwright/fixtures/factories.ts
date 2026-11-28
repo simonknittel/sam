@@ -989,8 +989,8 @@ interface CreateLogAnalyzerEntryOptions {
   readonly createdById: string;
   readonly lineNumber?: number;
   /** From the header of the log file. Without it: unknown, like an old entry. */
-  readonly gameChannel?: string;
-  readonly gameVersion?: string;
+  readonly gameEnvironment?: string;
+  readonly gameBuild?: string;
 }
 
 /**
@@ -1005,8 +1005,8 @@ export const createLogAnalyzerEntry = (
     eventAt,
     createdById,
     lineNumber,
-    gameChannel,
-    gameVersion,
+    gameEnvironment,
+    gameBuild,
   }: CreateLogAnalyzerEntryOptions,
 ) =>
   prisma.logAnalyzerEntry.create({
@@ -1015,8 +1015,8 @@ export const createLogAnalyzerEntry = (
       rawLine,
       eventAt,
       lineNumber,
-      gameChannel,
-      gameVersion,
+      gameEnvironment,
+      gameBuild,
       hash: createHash("sha256").update(`${type}\n${rawLine}`).digest("hex"),
       createdById,
     },

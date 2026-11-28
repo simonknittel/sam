@@ -81,7 +81,7 @@ const readOverlayWindow = (page: Page) =>
     return { text: overlayDocument.body.textContent, closeCount };
   });
 
-test("the entries of the citizens who share with the viewer mix into the table with a citizen column, their game version and a citizen filter", async ({
+test("the entries of the citizens who share with the viewer mix into the table with a citizen column, their game environment and build and a citizen filter", async ({
   page,
   prisma,
   signIn,
@@ -124,8 +124,8 @@ test("the entries of the citizens who share with the viewer mix into the table w
     rawLine: blueprintLine(blueprintAt),
     eventAt: blueprintAt,
     createdById: secondOwner.entity.id,
-    gameChannel: "PTU",
-    gameVersion: "4.10.202.48190",
+    gameEnvironment: "PTU",
+    gameBuild: "13284307",
   });
   /** A citizen without a grant for the viewer */
   await createLogAnalyzerEntry(prisma, {
@@ -153,9 +153,9 @@ test("the entries of the citizens who share with the viewer mix into the table w
   await expect(tableRows(page).nth(1)).toContainText("Blueprint erhalten");
   await expect(tableRows(page).nth(3)).toContainText("Shard-Beitritt");
 
-  // The game version of the header of the log file, empty for an entry without it
+  // The game environment and the build number of the header of the log file, empty for an entry without them
   await expect(
-    rowOf(page, "Blueprint erhalten").getByTitle("PTU 4.10.202.48190", {
+    rowOf(page, "Blueprint erhalten").getByTitle("PTU 13284307", {
       exact: true,
     }),
   ).toBeVisible();
