@@ -1,7 +1,7 @@
 # Remote Control Program
 
 > [!NOTE]
-> This document describes the architecture of the Remote Control Program. In 2026-11, the implementation is in progress: the steps 1 and 2 of the [migration](./migration.md#order-of-the-steps) are done, and step 3 builds the desktop companion with the log file connector. [Migration](./migration.md) describes the steps from the current state of SAM to this architecture. When a plan or the code changes a decision, update this document. "Remote Control Program" is a working title, and the code can use it (see [Decisions](#decisions)).
+> This document describes the target architecture of the Remote Control Program. [Migration](./migration.md) gives the open steps. When a plan or the code changes a decision, update this document.
 
 The Remote Control Program connects the Star Citizen game client on the machine of a user with SAM. It moves the state of the game client (for example the health, the location or the log entries) to SAM. It moves actions from SAM to the game client (for example "open the doors of my ship"). The user decides what leaves the machine, who in SAM can read it, and which actions the game client applies.
 
@@ -426,7 +426,7 @@ The grantee kinds:
 - The owner needs no grant for the own data and the own actions. The local access layer still applies to the own actions.
 - The AI agents (MCP clients) of a citizen act as this citizen (see [MCP Server](../mcp-server.md)). Thus a grant to a citizen also applies to the AI agents of this citizen, for `read` and for `request`. No layer has a separate setting for AI agents.
 - A citizen without a grant can send an access request. The owner gets a notification and decides in the sharing popover.
-- In the code, the grants of the remote access layer need a different name than the existing model `OAuthGrant` (for example `ShareGrant`).
+- The model of a grant is `ShareGrant`.
 
 ## Sharing popover
 
@@ -515,18 +515,18 @@ The MCP server is stateless and has no subscriptions (see [MCP Server](../mcp-se
 
 ## Location in the repository
 
-The paths of the pnpm monorepo are relative to `pnpm-monorepo/`. The runtime package and the app module come with the browser runtime in step 2, the repository of the desktop companion and the export of the shared definitions come in step 3, and the MCP tools come in step 7 (see the [order of the steps](./migration.md#order-of-the-steps)). Update this table and [Architecture](../architecture.md) when a location changes.
+The paths of the pnpm monorepo are relative to `pnpm-monorepo/`. The MCP tools come in step 7 of the [migration](./migration.md#order-of-the-steps). Update this table and [Architecture](../architecture.md) when a location changes.
 
 | Location | Content |
 | - | - |
 | `packages/domain/src/remoteControlProgram/` | The catalog of the capabilities, the protocol of the relay service, the pure rules of the grants, the rule of the header of the log files, the rule for the IP addresses and the hash of the feed entries. The patterns of the Log Analyzer stay in `packages/domain/src/logAnalyzer/`. |
 | `remote-control-program-definitions/` next to `pnpm-monorepo/` | The export of the shared definitions for Rust (decision 5): the JSON Schema of the protocol and the catalog, the patterns of the log file, the rule of the header of the log files, the IP rule, the values of the login of the desktop companion, and the German labels of the log entry types for the UI of the desktop companion. A script of SAM makes it, and a test makes sure that it is current (decision 32). |
 | `packages/application/src/remoteControlProgram/` | The use cases of the relay. |
-| `packages/remote-control-program-runtime` | The core of the browser runtime: the TypeScript connectors (in step 2 only the log file connector, thus no shared base types of the connectors), the local access layer, the channel client, and their orchestration (`BrowserRuntime`) with the store of the own entries. No `next` and no `react`. |
+| `packages/remote-control-program-runtime` | The core of the browser runtime: the TypeScript connectors (only the log file connector, thus no shared base types of the connectors yet), the local access layer, the channel client, and their orchestration (`BrowserRuntime`) with the store of the own entries. No `next` and no `react`. |
 | `apps/app/src/modules/remote-control-program/` | The parts of the browser runtime that need the browser or the app: the election of the tab with the Web Locks API, the BroadcastChannel between the tabs, the handle of the log folder and the token source. Also the consumer client and the sharing popover. |
 | `packages/mcp/src/tools/remoteControlProgram/` | The MCP tools. |
 | `apps/relay` | The relay service: a Node.js container, like `apps/collab`. |
-| The repository `sam-desktop-companion` | The desktop companion (decision 32). It is private until step 5 of the migration. |
+| The repository `sam-desktop-companion` | The desktop companion (decision 32). |
 | `remote-control-program-fixtures/` next to `pnpm-monorepo/` | The shared test data for the TypeScript and the Rust implementations. The repository of the desktop companion gets a copy (decision 32). |
 
 ## Operations and tests
@@ -563,12 +563,12 @@ These ideas have no use case or no reliable source yet. They are not part of the
 
 ## Decisions
 
-Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are of 2026-11-22. Decisions 23, 30 and 31 are of 2026-11-25. Decisions 32 to 37 are of 2026-11-26. Decision 38 is of 2026-11-27. Decision 30 also changed decisions 8 and 12. The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
+The decisions that apply only to the migration are in [Migration](./migration.md#decisions-of-the-migration).
 
 1. **Name.** The working title is "Remote Control Program". The code can use it, for example `remoteControlProgram` and `remote_control_program`.
 2. **Rust for the desktop companion.** It uses little memory and processor time while the game runs. It has a mature native gRPC client. It builds one executable file for each operating system, without a separate runtime. Result: the log file connector and the catalog need one definition for TypeScript and Rust (principle 11, decision 5).
 3. **Windows and Linux for the desktop companion.** Result: the releases, the updates and the tray icon must work on both operating systems.
-4. **Admin mode does not bypass the grants.** The data is personal, and admin mode is a concept of SAM, not of the owner (the same reason as in [Embedded App Authentication](../embedded-app-authentication.md#permissions)). Admin mode replaces only the permissions of SAM (decision 24), like in the rest of SAM. Thus an admin in admin mode can use the Remote Control Program, can read the history (decision 31), and has the access of a grant to "Everyone". A grant to a role or a citizen needs the role or the citizen. An admin who assumes a user gets no access. (Changed on 2026-11-25.)
+4. **Admin mode does not bypass the grants.** The data is personal, and admin mode is a concept of SAM, not of the owner (the same reason as in [Embedded App Authentication](../embedded-app-authentication.md#permissions)). Admin mode replaces only the permissions of SAM (decision 24), like in the rest of SAM. Thus an admin in admin mode can use the Remote Control Program, can read the history (decision 31), and has the access of a grant to "Everyone". A grant to a role or a citizen needs the role or the citizen. An admin who assumes a user gets no access.
 5. **Shared definitions for Rust:**
    - Zod stays the source of the catalog and of the protocol. The build exports JSON Schema (`z.toJSONSchema()` of Zod 4) and the values (for example the versions, the close codes and the limits). The Rust types are hand-written, and the shared protocol examples test them. The Rust program reads the values from the export at build time.
    - The build exports the source and the flags of each pattern of the log file. The values of the patterns do not change (see [AGENTS.md](../../AGENTS.md)).
@@ -599,7 +599,7 @@ Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are 
     - The log file connector reads both from the header of each log file: the name of the folder before `Bin64\StarCitizen.exe` in the line `Executable:`, and the number in `Build(…)` of the line `BackupNameAttachment=` (line 1). The launcher shows a version such as `4.10.3-live.13220821`, which it gets from a web service of RSI. Only its last part, the build number, is in the files of the game. The line `FileVersion:` has a different version, which the launcher does not show. The connector gives both values to each entry of the same file, also to the entries of a backup in `logbackups/`. Thus the values come from the same interface as the entry, and principle 14 holds. Only the name of the folder leaves the machine, never the path: the path can contain the name of the user. The limit of the header and the patterns are shared definitions (principle 11, see [logFileHeader.ts](../../pnpm-monorepo/packages/domain/src/remoteControlProgram/logFileHeader.ts)).
     - The gRPC interface gives no build number (see [Game version](./grpc-interface.md#game-version)). For the gRPC connector, the desktop companion finds the build of the running game itself. Step 4 of the [migration](./migration.md#order-of-the-steps) plans the details.
 
-    A value that the interface does not give, or that is not valid, is empty. The entries of `log_entries` version 1 have no values. Each consumer decides how it treats an empty value. Result: a statistic can tell the game builds apart, and can exclude a test environment such as PTU. (Changed on 2026-11-28.)
+    A value that the interface does not give, or that is not valid, is empty. The entries of `log_entries` version 1 have no values. Each consumer decides how it treats an empty value. Result: a statistic can tell the game builds apart, and can exclude a test environment such as PTU.
 18. **The browser runtime runs on all SAM pages.** The tabs elect one runtime with the Web Locks API. The settings of the browser runtime (the autostart, the log folder, the local access layer) are a section of the sharing popover.
 19. **The action log is in the database.** The relay stores each action request with its result. The browser runtime keeps no log of its own. Only the desktop companion also writes a local log file.
 20. **The desktop companion is a portable program.** It needs no installation: a portable `.exe` for Windows and an AppImage for Linux work from each folder. The program does these things itself:
@@ -608,14 +608,14 @@ Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are 
     - the login (the loopback redirect of OAuth needs no registration),
     - the app identity (AppUserModelID) for the notifications of Windows (an entry of the user in the registry). The program shows a notification only without an answer, for example the first time that it runs in the background.
 
-    "Ask each time" uses a small window of the program, not a notification of the operating system: an answer in a notification of Windows needs a registered handler for the click, which an installation normally makes. Add an installer only when a need appears. (Changed on 2026-11-28.)
+    "Ask each time" uses a small window of the program, not a notification of the operating system: an answer in a notification of Windows needs a registered handler for the click, which an installation normally makes. Add an installer only when a need appears.
 21. **Consumers derive, connectors upload raw values** (principle 15). Derived values are specific to a consumer. Thus the connectors stay small, and the Rust connector needs no second implementation of a derivation. A derivation that more than one consumer needs goes into `domain` as a shared helper.
 22. **No IP addresses leave the machine.** The log file connector replaces each IP address in a raw line with a fixed marker before the upload. The marker keeps the server check of the patterns valid, because no pattern captures an IP address in a named group. The rule for the marker is a part of the shared definitions (decision 5), thus TypeScript and Rust give the same line and the same hash. The relay refuses a line that still contains an IP address.
-23. **SAM does not control the runtimes.** No "Stop all" and no emergency stop: SAM does not start, stop or configure a runtime, and stores no stop. The owner does this where the runtime runs. From SAM, the owner can revoke a grant, which ends the live access at once, and can end the session of a different device in the account: its runtime then gets no new token. The switches of the organization (see [Switches](#switches)) are not a control of a single runtime: they turn off the full Remote Control Program for everyone. The action requests (step 6 of the [migration](./migration.md)) are not a control of the runtime: its local access layer decides on each request. (Changed on 2026-11-25.)
+23. **SAM does not control the runtimes.** No "Stop all" and no emergency stop: SAM does not start, stop or configure a runtime, and stores no stop. The owner does this where the runtime runs. From SAM, the owner can revoke a grant, which ends the live access at once, and can end the session of a different device in the account: its runtime then gets no new token. The switches of the organization (see [Switches](#switches)) are not a control of a single runtime: they turn off the full Remote Control Program for everyone. The action requests (step 6 of the [migration](./migration.md)) are not a control of the runtime: its local access layer decides on each request.
 24. **Permissions.** One permission for the use of the Remote Control Program: `remoteControlProgram;use`. An owner needs it to connect a runtime, and a consumer needs it to read or to request. Each consumer can have its own permission for what it shows (for example `logAnalyzer;read` for the Log Analyzer). The Log Analyzer needs both permissions, also for the own log on the machine.
 25. **No code signing certificate for Windows.** The releases have no certificate for the code signing of Windows, thus Windows shows a warning at the first start. SAM tells the users how to start the program, and what the risks are.
 26. **No location in the lineup status for now.** The gRPC interface supplies no location, and a location from `log_entries` would need a grant for all uploaded log entries (decision 10). See [Ideas](#ideas).
-27. **Only live feed entries leave the machine automatically.** A runtime uploads a feed entry automatically only when it reads the entry live: while it runs, the rule is on and the runtime is not stopped. Older entries leave only on an explicit request of the owner with a confirmation. Shared entries cannot be deleted (decision 12), thus the owner decides on each older entry. The details are in [Local access layer](#local-access-layer). (Changed on 2026-11-28.)
+27. **Only live feed entries leave the machine automatically.** A runtime uploads a feed entry automatically only when it reads the entry live: while it runs, the rule is on and the runtime is not stopped. Older entries leave only on an explicit request of the owner with a confirmation. Shared entries cannot be deleted (decision 12), thus the owner decides on each older entry. The details are in [Local access layer](#local-access-layer).
 28. **Telemetry of the relay service.** OpenTelemetry metrics and traces. The logs go to the output of the container. The alerts are set up in Grafana, outside of this repository.
 29. **Environments of the relay service.** Production and the local stack (Docker Compose and the Playwright stack). The relay service must run fully with the rest of the local stack. The preview deployments have no relay service.
 30. **The grants apply only to the live data.** The end of a grant, its grantee and its revocation limit only the live data and the actions. The consumers control the access to the stored data with their own permissions and their own minimum age. Reason: historical statistics do not work when the stored data disappears with the end of a grant.
@@ -638,7 +638,6 @@ Decisions 1 to 26 are of 2026-11-21, except decision 23. Decisions 27 to 29 are 
     - The versions of Rust, of the MSVC toolset and of the Windows SDK are pinned in the repository. A different version gives a different file.
     - One build script sets the path remapping and the options of the linker that remove the paths and the times of the build machine. The continuous integration uses the same script.
     - Each release publishes the SHA-256 of the program and a manifest with the versions and the SHA-256 of the address, not the address itself. A check of the continuous integration builds the program twice in different folders and compares the files.
-    - In step 3 of the migration, this applies to the Windows program. The Linux program and the AppImage follow in step 5.
 
 ## Open questions
 
