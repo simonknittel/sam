@@ -7,7 +7,7 @@
       "message": {
         "type": "hello",
         "id": "3f2b8c1e-9d4a-4f6b-8a2c-1e5d7f9b0a3c",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "token": "header.payload.signature",
           "runtime_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
@@ -23,7 +23,7 @@
       "message": {
         "type": "hello",
         "id": "3f2b8c1e-9d4a-4f6b-8a2c-1e5d7f9b0a3c",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "token": "header.payload.signature",
           "runtime_id": "7C9E6679-7425-40DE-944B-E07FC1F90AE7",
@@ -39,7 +39,7 @@
       "message": {
         "type": "hello",
         "id": "3f2b8c1e-9d4a-4f6b-8a2c-1e5d7f9b0a3c",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "token": "header.payload.signature",
           "runtime_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
@@ -55,7 +55,7 @@
       "message": {
         "type": "hello",
         "id": "3f2b8c1e-9d4a-4f6b-8a2c-1e5d7f9b0a3c",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "token": "header.payload.signature",
           "runtime_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
@@ -71,7 +71,7 @@
       "message": {
         "type": "announce",
         "id": "0b8f2e47-6a1d-4c3e-9f5a-2d7b8c9e1f04",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "connectors": [
             {
@@ -104,7 +104,7 @@
       "message": {
         "type": "announce",
         "id": "0b8f2e47-6a1d-4c3e-9f5a-2d7b8c9e1f04",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "connectors": [],
           "local_access_layer": {
@@ -120,7 +120,7 @@
       "message": {
         "type": "heartbeat",
         "id": "5e1a9c3b-2f7d-4b8e-a6c4-9d0f3e2b1a75",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {}
       }
     },
@@ -131,7 +131,7 @@
       "message": {
         "type": "token_renewal",
         "id": "5e1a9c3b-2f7d-4b8e-a6c4-9d0f3e2b1a75",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "token": "header.payload.signature"
         }
@@ -239,7 +239,7 @@
       "message": {
         "type": "feed_entries",
         "id": "9a4d7e2c-1b6f-4e3a-8c5d-7f2e9b0a6c13",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "capability_id": "log_entries",
           "capability_version": 1,
@@ -418,7 +418,7 @@
       "message": {
         "type": "ping",
         "id": "5e1a9c3b-2f7d-4b8e-a6c4-9d0f3e2b1a75",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {}
       }
     },
@@ -429,7 +429,7 @@
       "message": {
         "type": "welcome",
         "id": "c2d4e6f8-1a3b-4c5d-9e7f-0a1b2c3d4e5f",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {}
       }
     },
@@ -440,7 +440,7 @@
       "message": {
         "type": "refusal",
         "id": "c2d4e6f8-1a3b-4c5d-9e7f-0a1b2c3d4e5f",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "reason": "update_necessary"
         }
@@ -453,7 +453,7 @@
       "message": {
         "type": "ack",
         "id": "c2d4e6f8-1a3b-4c5d-9e7f-0a1b2c3d4e5f",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "message_id": "9a4d7e2c-1b6f-4e3a-8c5d-7f2e9b0a6c13",
           "result": "accepted",
@@ -468,7 +468,7 @@
       "message": {
         "type": "ack",
         "id": "c2d4e6f8-1a3b-4c5d-9e7f-0a1b2c3d4e5f",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "message_id": "5e1a9c3b-2f7d-4b8e-a6c4-9d0f3e2b1a75",
           "result": "accepted"
@@ -482,7 +482,7 @@
       "message": {
         "type": "ack",
         "id": "c2d4e6f8-1a3b-4c5d-9e7f-0a1b2c3d4e5f",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "message_id": "5e1a9c3b-2f7d-4b8e-a6c4-9d0f3e2b1a75",
           "result": "accepted",
@@ -497,7 +497,7 @@
       "message": {
         "type": "ack",
         "id": "c2d4e6f8-1a3b-4c5d-9e7f-0a1b2c3d4e5f",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "message_id": "9a4d7e2c-1b6f-4e3a-8c5d-7f2e9b0a6c13",
           "result": "refused",
@@ -512,7 +512,7 @@
       "message": {
         "type": "ack",
         "id": "c2d4e6f8-1a3b-4c5d-9e7f-0a1b2c3d4e5f",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "message_id": "9a4d7e2c-1b6f-4e3a-8c5d-7f2e9b0a6c13",
           "result": "refused"
@@ -526,7 +526,7 @@
       "message": {
         "type": "close",
         "id": "c2d4e6f8-1a3b-4c5d-9e7f-0a1b2c3d4e5f",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "reason": "relay_service_restart"
         }
@@ -539,7 +539,7 @@
       "message": {
         "type": "close",
         "id": "c2d4e6f8-1a3b-4c5d-9e7f-0a1b2c3d4e5f",
-        "protocol_version": 1,
+        "protocol_version": 2,
         "content": {
           "reason": "maintenance"
         }
@@ -557,7 +557,7 @@
       }
     },
     {
-      "description": "feed_entry_keys_request of protocol version 2 for the first page of a time window",
+      "description": "feed_entry_keys_request for the first page of a time window",
       "direction": "up",
       "valid": true,
       "message": {
