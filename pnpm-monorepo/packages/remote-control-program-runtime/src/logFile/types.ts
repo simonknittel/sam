@@ -22,6 +22,14 @@ export interface RawMatch {
    * line has the number 1. It orders the lines of one instant.
    */
   readonly lineNumber: number;
+  /**
+   * The game channel of the header of the log file of the match, for example
+   * `LIVE` (`readLogFileHeader` of the domain package). Null: the header has
+   * no valid value.
+   */
+  readonly gameChannel: string | null;
+  /** The game version of the header of the log file of the match, or null */
+  readonly gameVersion: string | null;
 }
 
 /**

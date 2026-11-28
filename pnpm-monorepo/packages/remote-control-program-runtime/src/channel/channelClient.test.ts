@@ -77,6 +77,8 @@ const createLogEntries = (
     raw_line: `line ${firstLineNumber + index}`,
     event_at: "2026-11-23T20:00:00.000Z",
     line_number: firstLineNumber + index,
+    game_channel: "LIVE",
+    game_version: "4.10.201.48085",
   })),
 });
 

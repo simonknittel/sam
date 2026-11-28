@@ -34,6 +34,8 @@ interface ExpectedMatch {
 interface ExpectedFile {
   readonly path: string;
   readonly session_start_from_file_name: string | null;
+  readonly game_channel: string | null;
+  readonly game_version: string | null;
   readonly matches: readonly ExpectedMatch[];
 }
 
@@ -66,7 +68,13 @@ const expectSameMatchWithMarker = (
 describe("createLogFileReader with the shared test data", () => {
   test.each(files)(
     "gives the expected matches of $path",
-    async ({ path, session_start_from_file_name, matches }) => {
+    async ({
+      path,
+      session_start_from_file_name,
+      game_channel,
+      game_version,
+      matches,
+    }) => {
       const fileName = basename(path);
       const bytes = await readFile(new URL(path, LOG_FILES_DIRECTORY));
       const readLogFiles = createLogFileReader();
@@ -82,6 +90,8 @@ describe("createLogFileReader with the shared test data", () => {
         iso_date: match.isoDate,
         raw_line_with_marker: match.rawLine,
         hash: match.hash,
+        game_channel: match.gameChannel,
+        game_version: match.gameVersion,
       }));
 
       expect(foundMatches.sort(compareMatches)).toEqual(
@@ -91,6 +101,8 @@ describe("createLogFileReader with the shared test data", () => {
           iso_date: match.iso_date,
           raw_line_with_marker: match.raw_line_with_marker,
           hash: match.hash,
+          game_channel,
+          game_version,
         })),
       );
       expect(getSessionStartFromFileName(fileName)).toBe(

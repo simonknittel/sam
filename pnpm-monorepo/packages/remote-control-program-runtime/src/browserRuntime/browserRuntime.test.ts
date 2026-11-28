@@ -63,6 +63,8 @@ const createLogFolder = (name: string) => {
         hash: createKey(name, lineNumber),
         groups: {},
         lineNumber,
+        gameChannel: "LIVE",
+        gameVersion: "4.10.201.48085",
       };
       matches.push(match);
       return match;

@@ -62,6 +62,8 @@ const localEntry = (
       hash: hash(hashCharacter),
       groups: { direction: "Entering" },
       lineNumber: 1,
+      gameChannel: "LIVE",
+      gameVersion: "4.10.201.48085",
     },
     OWN_CITIZEN,
   );

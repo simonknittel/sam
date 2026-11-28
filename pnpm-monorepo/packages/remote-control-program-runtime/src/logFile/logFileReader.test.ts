@@ -3,6 +3,7 @@ import {
   LOG_ANALYZER_ENTRY_PATTERNS,
   LogAnalyzerEntryType,
   MAXIMUM_LOG_ANALYZER_RAW_LINE_LENGTH,
+  readLogFileHeader,
   replaceIpAddresses,
 } from "@sam-monorepo/domain";
 import { describe, expect, test, vi } from "vitest";
@@ -20,8 +21,13 @@ const LINE_FEED = 0x0a;
  */
 const WHOLE_FILE_WALK_TIMEOUT_MS = 30_000;
 
+const executableLine = (time: string, channel: string) =>
+  `<${time}> Executable: C:\\Program Files\\Roberts Space Industries\\StarCitizen\\${channel}\\Bin64\\StarCitizen.exe`;
+
 const LOG_CONTENT = [
   "<2026-09-01T10:00:00.000Z> Log started on 01/09/2026 10:00:00",
+  executableLine("2026-09-01T10:00:00.000Z", "LIVE"),
+  "<2026-09-01T10:00:00.000Z> FileVersion: 4.10.201.48085",
   ...Object.values(SAMPLE_LINES),
   "<2026-09-01T12:00:00.000Z> [Notice] Grüße aus Área 18 ✓",
   SAMPLE_CRASH_FILE_END,
@@ -44,12 +50,13 @@ const hasNewerVersionMatch = (
 /** The fields of a match without the fields that come from the line */
 type MatchKeyFields = Pick<
   RawMatch,
-  "type" | "isoDate" | "lineNumber" | "rawLine"
+  "type" | "isoDate" | "lineNumber" | "rawLine" | "gameChannel" | "gameVersion"
 >;
 
 /** One match run over the whole text, for the comparison with the reader */
 const matchWholeText = (text: string) => {
   const matches: MatchKeyFields[] = [];
+  const header = readLogFileHeader(text);
 
   for (const type of Object.values(LogAnalyzerEntryType)) {
     const { regex, takesTimeOfPrecedingLine } =
@@ -69,6 +76,7 @@ const matchWholeText = (text: string) => {
         isoDate,
         rawLine: replaceIpAddresses(match[0]),
         lineNumber: text.slice(0, match.index).split("\n").length,
+        ...header,
       });
     }
   }
@@ -87,7 +95,7 @@ const toMatchKeys = (matches: readonly MatchKeyFields[]) =>
   new Set(
     matches.map(
       (match) =>
-        `${match.type} ${match.isoDate} ${match.lineNumber} ${match.rawLine}`,
+        `${match.type} ${match.isoDate} ${match.lineNumber} ${match.rawLine} ${match.gameChannel} ${match.gameVersion}`,
     ),
   );
 
@@ -150,6 +158,84 @@ describe("createLogFileReader", () => {
 
     expect(matches.map((match) => match.rawLine)).toEqual([
       replaceIpAddresses(newLine),
+    ]);
+  });
+
+  test("gives each match the header of its own file, also when a later read continues the file", async () => {
+    const readLogFiles = createLogFileReader();
+    const joinPuLine = SAMPLE_LINES[LogAnalyzerEntryType.JoinPu];
+    const laterJoinPuLine = joinPuLine.replace("2025-06-22", "2025-06-23");
+    const liveHeader = [
+      "<2025-06-22T09:00:00.000Z> Log started",
+      executableLine("2025-06-22T09:00:00.000Z", "LIVE"),
+      "<2025-06-22T09:00:00.000Z> FileVersion: 4.10.201.48085",
+    ];
+    const backupName = "Game Build(13248297) 21 Jun 25 (11 00 00).log";
+    const backup = {
+      path: `PTU/logbackups/${backupName}`,
+      file: new File(
+        [
+          [
+            "<2025-06-21T09:00:00.000Z> Log started",
+            executableLine("2025-06-21T09:00:00.000Z", "PTU"),
+            "<2025-06-21T09:00:00.000Z> FileVersion: 5.0.202.10025",
+            joinPuLine.replace("2025-06-22", "2025-06-21"),
+          ].join("\r\n"),
+        ],
+        backupName,
+        { lastModified: 1 },
+      ),
+    };
+    const toHeaders = (matches: readonly RawMatch[]) =>
+      matches.map(({ gameChannel, gameVersion }) => ({
+        gameChannel,
+        gameVersion,
+      }));
+    const liveValues = { gameChannel: "LIVE", gameVersion: "4.10.201.48085" };
+
+    const firstRead = await readLogFiles([
+      createLogFile([...liveHeader, joinPuLine, ""].join("\r\n"), 1),
+      backup,
+    ]);
+    expect(toHeaders(firstRead.matches)).toEqual([
+      liveValues,
+      { gameChannel: "PTU", gameVersion: "5.0.202.10025" },
+    ]);
+
+    /**
+     * The read continues at the last complete line of the read before, thus
+     * it reads no header line
+     */
+    const laterRead = await readLogFiles([
+      createLogFile(
+        [...liveHeader, joinPuLine, laterJoinPuLine, ""].join("\r\n"),
+        2,
+      ),
+      backup,
+    ]);
+    expect(laterRead.matches).toContainEqual(
+      expect.objectContaining({
+        rawLine: replaceIpAddresses(laterJoinPuLine),
+        ...liveValues,
+      }),
+    );
+    for (const header of toHeaders(laterRead.matches))
+      expect(header).toEqual(liveValues);
+
+    /** The log of a new session, without the line of the executable */
+    const newSessionRead = await readLogFiles([
+      createLogFile(
+        [
+          "<2025-06-24T09:00:00.000Z> Log started",
+          "<2025-06-24T09:00:00.000Z> FileVersion: 4.10.202.48190",
+          joinPuLine.replace("2025-06-22", "2025-06-24"),
+          "",
+        ].join("\r\n"),
+        3,
+      ),
+    ]);
+    expect(toHeaders(newSessionRead.matches)).toEqual([
+      { gameChannel: null, gameVersion: "4.10.202.48190" },
     ]);
   });
 
