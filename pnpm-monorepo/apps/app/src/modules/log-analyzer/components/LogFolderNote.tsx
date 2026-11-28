@@ -14,8 +14,12 @@ import {
   type BrowserRuntimeSnapshot,
 } from "@/modules/remote-control-program/runtime/types";
 import { useBrowserRuntime } from "@/modules/remote-control-program/runtime/useBrowserRuntime";
-import { BROWSER_NOT_SUPPORTED_TEXT } from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
+import {
+  BROWSER_NOT_SUPPORTED_TEXT,
+  NO_CHANNEL_FOLDER_TEXT,
+} from "@/modules/remote-control-program/utils/remoteControlProgramTexts";
 import { CapabilityId } from "@sam-monorepo/domain";
+import { BrowserRuntimeErrorCode } from "@sam-monorepo/remote-control-program-runtime";
 import type { ComponentProps } from "react";
 import { FaTowerBroadcast } from "react-icons/fa6";
 
@@ -40,6 +44,7 @@ const DESKTOP_COMPANION_NOTE: FolderNote = {
 const getFolderNote = ({
   folder,
   isRunning,
+  error,
 }: BrowserRuntimeSnapshot): FolderNote | null => {
   switch (folder.state) {
     case LogFolderState.Checking:
@@ -55,7 +60,7 @@ const getFolderNote = ({
     case LogFolderState.NotSelected:
       return {
         type: "info",
-        text: "Wähle im Remote Control Program den Ordner deiner Star-Citizen-Installation aus, damit der Log Analyzer auch deine eigenen Einträge anzeigt.",
+        text: "Wähle im Remote Control Program den Ordner „StarCitizen“ oder einen Kanal wie „LIVE“ aus, damit der Log Analyzer auch deine eigenen Einträge anzeigt.",
         location: LOG_FOLDER_LOCATION,
       };
 
@@ -67,14 +72,21 @@ const getFolderNote = ({
       };
 
     case LogFolderState.Granted:
-      return isRunning
-        ? null
-        : {
-            type: "info",
-            text: "Die Runtime ist gestoppt, deshalb werden deine Logs gerade nicht gelesen. Du kannst sie im Remote Control Program starten.",
-            // The start button is above the sub-tabs of the connectors
-            location: BROWSER_RUNTIME_LOCATION,
-          };
+      if (!isRunning)
+        return {
+          type: "info",
+          text: "Die Runtime ist gestoppt, deshalb werden deine Logs gerade nicht gelesen. Du kannst sie im Remote Control Program starten.",
+          // The start button is above the sub-tabs of the connectors
+          location: BROWSER_RUNTIME_LOCATION,
+        };
+
+      return error === BrowserRuntimeErrorCode.NoChannelFolder
+        ? {
+            type: "warning",
+            text: NO_CHANNEL_FOLDER_TEXT,
+            location: LOG_FOLDER_LOCATION,
+          }
+        : null;
 
     default:
       throw new Error(`Unknown folder state: ${folder.state satisfies never}`);

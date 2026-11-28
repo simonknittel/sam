@@ -28,12 +28,18 @@ export const LogFileConnectorGuide = () => {
               <wbr />
               StarCitizen
             </code>
-            . Er darf nicht unter{" "}
-            <code className="font-mono text-white/90">
-              C:\Program Files
-            </code>{" "}
+            , oder den Ordner eines Kanals wie{" "}
+            <code className="font-mono text-white/90">LIVE</code>. Er darf nicht
+            unter{" "}
+            <code className="font-mono text-white/90">C:\Program Files</code>{" "}
             liegen. Nach einem Neustart des Browsers musst du einmal auf{" "}
             <UiLabel>Zugriff erlauben</UiLabel> klicken.
+          </p>
+          <p>
+            Die Runtime liest in jedem Kanal nur{" "}
+            <code className="font-mono text-white/90">Game.log</code> und die
+            Logs in <code className="font-mono text-white/90">logbackups</code>,
+            keine anderen Dateien.
           </p>
         </SharingPopoverTopic>
 
