@@ -338,11 +338,6 @@ test.describe("the sub-tab of the desktop companion", () => {
     );
     await createRuntimePresence(prisma, owner.entity.id, RuntimeKind.browser);
     await page.reload();
-    await expect(
-      page.getByText(
-        "Dein Desktop Companion lädt deine eigenen Einträge hoch.",
-      ),
-    ).toBeVisible();
 
     const section = await showDesktopCompanionSection(page);
     const connected = section.getByRole("region", { name: "Verbunden" });
@@ -352,5 +347,11 @@ test.describe("the sub-tab of the desktop companion", () => {
     await expect(companions).toContainText(
       "Version 0.1.0 · Aktive Connectors: Game Logs",
     );
+
+    // After the presence of the desktop companion is loaded: the own entries
+    // come from it, thus no note asks for the folder of this browser
+    await expect(
+      page.getByText("braucht das Remote Control Program deinen Log-Ordner"),
+    ).toHaveCount(0);
   });
 });
